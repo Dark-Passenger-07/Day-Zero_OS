@@ -1,0 +1,10 @@
+{
+  "description": "Effortlessly convert markdown content into various formats, streamlining documentation and content creation for writers and developers.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
