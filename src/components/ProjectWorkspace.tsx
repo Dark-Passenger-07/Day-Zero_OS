@@ -1,365 +1,1070 @@
-import { useState } from 'react'
-import { ArrowLeft, CheckCircle2, Circle, Clock, Plus, GitCommit, Link2, FileText, BookOpen, Cpu, MoreHorizontal } from 'lucide-react'
-import type { Screen } from '../App'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useParams } from 'react-router-dom'
+import { ArrowLeft, CheckCircle2, Circle, Clock, Plus, FileText, BookOpen, MoreHorizontal, Trash2, Upload, Pencil } from 'lucide-react'
+import type { Screen } from '@/types/navigation'
+import { useAuth } from '@/app/providers/AuthProvider'
+import { LoadingState } from '@/components/feedback/LoadingState'
+import { useFormDialog } from '@/components/ui/FormDialog'
+import {
+  createDecision,
+  createBug,
+  createContent,
+  createDebt,
+  createDevelopmentNote,
+  createKnowledgeEntry,
+  createMilestone,
+  createProjectAssetLink,
+  createRepository,
+  createTask,
+  deleteBug,
+  deleteContent,
+  deleteDebt,
+  deleteDecision,
+  deleteProject,
+  deleteDevelopmentNote,
+  deleteKnowledgeEntry,
+  deleteMilestone,
+  deleteProjectAsset,
+  deleteRepository,
+  deleteTask,
+  fetchProjectWorkspace,
+  updateBug,
+  updateContent,
+  updateDebt,
+  updateDecision,
+  updateDevelopmentNote,
+  updateKnowledgeEntry,
+  updateMilestone,
+  updateProject,
+  updateRepository,
+  updateTask,
+  uploadProjectAsset,
+  type ProjectWorkspaceData,
+  type WorkspaceAsset,
+  type WorkspaceKnowledge,
+  type WorkspaceMilestone,
+} from '@/features/project-workspace/services/project-workspace.service'
+import type { Priority, ProjectStatus } from '@/types/enums'
 
 type Tab = 'overview' | 'planning' | 'development' | 'knowledge' | 'assets' | 'activity'
+type WorkspaceTab = Tab | 'content' | 'architecture' | 'settings'
 
 interface Props {
   onNavigate: (s: Screen) => void
 }
 
-const tabs: { id: Tab; label: string }[] = [
+const tabs: { id: WorkspaceTab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'planning', label: 'Planning' },
   { id: 'development', label: 'Development' },
   { id: 'knowledge', label: 'Knowledge' },
   { id: 'assets', label: 'Assets' },
+  { id: 'content', label: 'Content' },
+  { id: 'architecture', label: 'Architecture' },
   { id: 'activity', label: 'Activity' },
+  { id: 'settings', label: 'Settings' },
 ]
 
-const milestones = [
-  { name: 'Project Setup & Architecture', status: 'completed', date: 'Jun 15', tasks: 8, done: 8 },
-  { name: 'Database Schema Design', status: 'completed', date: 'Jun 28', tasks: 5, done: 5 },
-  { name: 'API Development', status: 'active', date: 'Jul 18', tasks: 12, done: 4 },
-  { name: 'Frontend Integration', status: 'pending', date: 'Aug 1', tasks: 10, done: 0 },
-  { name: 'Testing & QA', status: 'pending', date: 'Aug 10', tasks: 7, done: 0 },
-  { name: 'Deployment', status: 'pending', date: 'Aug 15', tasks: 4, done: 0 },
-]
+const statusColor: Record<ProjectStatus, string> = {
+  active: 'var(--status-blue)',
+  'in-progress': 'var(--status-orange)',
+  completed: 'var(--status-green)',
+  overdue: 'var(--status-red)',
+  archived: 'var(--muted-foreground)',
+}
 
-const tasks = [
-  { name: 'Implement POST /auth/login', status: 'in-progress', assignee: 'AJ', priority: 'high' },
-  { name: 'Implement GET /auth/refresh', status: 'todo', assignee: 'AJ', priority: 'high' },
-  { name: 'Add rate limiting middleware', status: 'todo', assignee: 'AJ', priority: 'medium' },
-  { name: 'Write OpenAPI docs', status: 'todo', assignee: 'AJ', priority: 'low' },
-  { name: 'Database connection pooling', status: 'done', assignee: 'AJ', priority: 'high' },
-  { name: 'Redis cache layer', status: 'done', assignee: 'AJ', priority: 'medium' },
-]
-
-const activity = [
-  { icon: <GitCommit size={13} />, text: 'Committed "feat: redis cache layer"', time: '2h ago', color: 'var(--status-blue)' },
-  { icon: <CheckCircle2 size={13} />, text: 'Completed "Database connection pooling"', time: '4h ago', color: 'var(--status-green)' },
-  { icon: <FileText size={13} />, text: 'Updated architecture notes', time: '6h ago', color: 'var(--status-purple)' },
-  { icon: <Circle size={13} />, text: 'Started milestone "API Development"', time: 'Yesterday', color: 'var(--muted-foreground)' },
-  { icon: <CheckCircle2 size={13} />, text: 'Completed milestone "Database Schema Design"', time: '2d ago', color: 'var(--status-green)' },
-]
+const contentStageColor: Record<ProjectWorkspaceData['content'][number]['status'], string> = {
+  idea: 'var(--muted-foreground)',
+  research: 'var(--status-blue)',
+  outline: 'var(--status-purple)',
+  script: 'var(--status-purple)',
+  recording: 'var(--status-orange)',
+  editing: 'var(--status-blue)',
+  thumbnail: 'var(--status-orange)',
+  seo: 'var(--status-purple)',
+  published: 'var(--status-green)',
+  analytics: 'var(--status-blue)',
+}
 
 export default function ProjectWorkspace({ onNavigate }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>('overview')
+  const { projectId } = useParams()
+  const { user } = useAuth()
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>('overview')
+  const [data, setData] = useState<ProjectWorkspaceData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { openForm, FormDialog } = useFormDialog()
+
+  const loadWorkspace = useCallback(async () => {
+    if (!projectId) return
+    setLoading(true)
+    setError(null)
+    try {
+      setData(await fetchProjectWorkspace(projectId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load project workspace.')
+    } finally {
+      setLoading(false)
+    }
+  }, [projectId])
+
+  async function mutate(action: () => Promise<void>) {
+    if (!projectId) return
+    setSaving(true)
+    setError(null)
+    try {
+      await action()
+      setData(await fetchProjectWorkspace(projectId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Action failed.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  useEffect(() => {
+    loadWorkspace()
+  }, [loadWorkspace])
+
+  const handleEditProject = async () => {
+    if (!projectId || !data) return
+    const values = await openForm({
+      title: 'Edit Project',
+      fields: [
+        { name: 'name', label: 'Project name', value: data.project.name, required: true },
+        { name: 'description', label: 'Description', type: 'textarea', value: data.project.description },
+        { name: 'progress', label: 'Progress', type: 'number', value: String(data.project.progress) },
+        { name: 'technologies', label: 'Technologies', value: data.project.technologies.join(', ') },
+      ],
+    })
+    if (!values?.name.trim()) return
+    const progressValue = Number(values.progress || data.project.progress)
+    await mutate(() =>
+      updateProject(projectId, {
+        name: values.name.trim(),
+        description: values.description,
+        progress: Number.isFinite(progressValue) ? Math.max(0, Math.min(100, progressValue)) : data.project.progress,
+        technologies: values.technologies.split(',').map(item => item.trim()).filter(Boolean),
+      }),
+    )
+  }
+
+  const handleUpdateProjectState = async () => {
+    if (!projectId || !data) return
+    const values = await openForm({
+      title: 'Update Execution State',
+      fields: [
+        { name: 'status', label: 'Status', type: 'select', value: data.project.status, options: ['active', 'in-progress', 'completed', 'overdue', 'archived'] },
+        { name: 'priority', label: 'Priority', type: 'select', value: data.project.priority, options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'deadline', label: 'Deadline', type: 'date', value: data.project.deadline ?? '' },
+      ],
+    })
+    if (!values) return
+    const status = values.status as ProjectStatus
+    const priority = values.priority as Priority
+    const deadline = values.deadline || null
+    await mutate(() => updateProject(projectId, { status, priority, deadline }))
+  }
+
+  const handleAddDecision = async () => {
+    if (!projectId || !user) return
+    const values = await openForm({
+      title: 'New Architecture Decision',
+      fields: [
+        { name: 'decision', label: 'Decision Summary', required: true },
+        { name: 'problem', label: 'Problem / Context', type: 'textarea' },
+        { name: 'reason', label: 'Rationale', type: 'textarea' },
+        { name: 'alternatives', label: 'Alternatives Considered', type: 'textarea' },
+        { name: 'impact', label: 'Impact', type: 'textarea' },
+      ],
+    })
+    if (!values?.decision.trim()) return
+    await mutate(() =>
+      createDecision({
+        projectId,
+        userId: user.id,
+        decision: values.decision.trim(),
+        reason: values.reason ?? '',
+        alternatives: values.alternatives ?? '',
+        impact: values.impact ?? '',
+      }),
+    )
+    if (values.problem?.trim()) {
+      const refreshed = await fetchProjectWorkspace(projectId)
+      const latest = refreshed.decisions[0]
+      if (latest) await updateDecision(latest.id, { problem: values.problem.trim() })
+    }
+  }
+
+  const handleEditDecision = async (item: ProjectWorkspaceData['decisions'][number]) => {
+    const values = await openForm({
+      title: 'Edit Architecture Decision',
+      fields: [
+        { name: 'decision', label: 'Decision Summary', value: item.decision, required: true },
+        { name: 'problem', label: 'Problem / Context', type: 'textarea', value: item.problem ?? '' },
+        { name: 'reason', label: 'Rationale', type: 'textarea', value: item.reason ?? '' },
+        { name: 'alternatives', label: 'Alternatives Considered', type: 'textarea', value: item.alternatives ?? '' },
+        { name: 'consequences', label: 'Consequences', type: 'textarea', value: item.consequences ?? '' },
+        { name: 'impact', label: 'Impact', type: 'textarea', value: item.impact ?? '' },
+        { name: 'references', label: 'References (comma separated)', value: item.references.join(', ') },
+      ],
+    })
+    if (!values?.decision.trim()) return
+    const references = values.references ? values.references.split(',').map(v => v.trim()).filter(Boolean) : []
+    await mutate(() => updateDecision(item.id, {
+      problem: values.problem || null,
+      decision: values.decision.trim(),
+      reason: values.reason || null,
+      alternatives_considered: values.alternatives || null,
+      consequences: values.consequences || null,
+      impact: values.impact || null,
+      reference_links: references,
+    }))
+  }
+
+  const handleAddMilestone = async () => {
+    if (!projectId) return
+    const values = await openForm({
+      title: 'New Milestone',
+      fields: [
+        { name: 'title', label: 'Milestone Title', required: true },
+        { name: 'description', label: 'Description', type: 'textarea' },
+        { name: 'due_date', label: 'Due Date', type: 'date' },
+        { name: 'priority', label: 'Priority', type: 'select', value: 'medium', options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'estimated_hours', label: 'Estimated Hours', type: 'number' },
+        { name: 'notes', label: 'Notes', type: 'textarea' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(() => createMilestone(projectId, {
+      title: values.title.trim(),
+      description: values.description || null,
+      due_date: values.due_date || null,
+      priority: values.priority as Priority,
+      estimated_hours: values.estimated_hours ? Number(values.estimated_hours) || null : null,
+      notes: values.notes || null,
+    }))
+  }
+
+  const handleEditMilestone = async (milestone: WorkspaceMilestone) => {
+    const values = await openForm({
+      title: 'Edit Milestone',
+      fields: [
+        { name: 'title', label: 'Milestone Title', value: milestone.title, required: true },
+        { name: 'status', label: 'Status', type: 'select', value: milestone.status, options: ['todo', 'in-progress', 'completed'] },
+        { name: 'description', label: 'Description', type: 'textarea', value: milestone.description ?? '' },
+        { name: 'priority', label: 'Priority', type: 'select', value: milestone.priority, options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'progress', label: 'Progress (0-100)', type: 'number', value: String(milestone.progress) },
+        { name: 'due_date', label: 'Due Date', type: 'date', value: milestone.dueDate ?? '' },
+        { name: 'estimated_hours', label: 'Estimated Hours', type: 'number', value: String(milestone.estimatedHours ?? '') },
+        { name: 'notes', label: 'Notes', type: 'textarea', value: milestone.notes ?? '' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    const progress = Number(values.progress)
+    await mutate(() =>
+      updateMilestone(milestone.id, {
+        title: values.title.trim(),
+        description: values.description || null,
+        status: values.status as WorkspaceMilestone['status'],
+        priority: values.priority as Priority,
+        progress: Number.isFinite(progress) ? Math.max(0, Math.min(100, progress)) : milestone.progress,
+        due_date: values.due_date || null,
+        estimated_hours: values.estimated_hours ? Number(values.estimated_hours) || null : null,
+        notes: values.notes || null,
+        completed_date: values.status === 'completed' ? new Date().toISOString().slice(0, 10) : null,
+      }),
+    )
+  }
+
+  const handleDeleteMilestone = async (milestone: WorkspaceMilestone) => {
+    const confirm = await openForm({
+      title: 'Delete Milestone',
+      description: `Are you sure you want to delete milestone "${milestone.title}"?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!confirm) return
+    await mutate(() => deleteMilestone(milestone.id))
+  }
+
+  const handleAddKnowledge = async () => {
+    if (!projectId || !user) return
+    const values = await openForm({
+      title: 'New Knowledge Note',
+      fields: [
+        { name: 'title', label: 'Title', required: true },
+        { name: 'body', label: 'Content (Markdown)', type: 'textarea' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(() => createKnowledgeEntry({ projectId, ownerId: user.id, title: values.title.trim(), body: values.body || '' }))
+  }
+
+  const handleEditKnowledge = async (entry: WorkspaceKnowledge) => {
+    const values = await openForm({
+      title: 'Edit Knowledge Note',
+      fields: [
+        { name: 'title', label: 'Title', value: entry.title, required: true },
+        { name: 'body', label: 'Content (Markdown)', type: 'textarea', value: entry.body ?? '' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(() => updateKnowledgeEntry(entry.id, { title: values.title.trim(), body: values.body || '' }))
+  }
+
+  const handleDeleteKnowledge = async (entry: WorkspaceKnowledge) => {
+    const confirm = await openForm({
+      title: 'Delete Knowledge Entry',
+      description: `Are you sure you want to delete "${entry.title}"?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!confirm) return
+    await mutate(() => deleteKnowledgeEntry(entry.id))
+  }
+
+  const handleAddAssetLink = async () => {
+    if (!projectId || !user) return
+    const values = await openForm({
+      title: 'New Asset Link',
+      fields: [
+        { name: 'name', label: 'Name', required: true },
+        { name: 'url', label: 'URL', required: true },
+      ],
+    })
+    if (!values?.name.trim() || !values?.url.trim()) return
+    await mutate(() => createProjectAssetLink({ projectId, ownerId: user.id, name: values.name.trim(), url: values.url.trim() }))
+  }
+
+  const handleAddTask = async () => {
+    if (!projectId) return
+    const values = await openForm({
+      title: 'New Task',
+      fields: [
+        { name: 'title', label: 'Title', required: true },
+        { name: 'description', label: 'Description', type: 'textarea' },
+        { name: 'priority', label: 'Priority', type: 'select', value: 'medium', options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'estimate_hours', label: 'Estimated Hours', type: 'number' },
+        { name: 'due_date', label: 'Due Date', type: 'date' },
+        { name: 'dependencies', label: 'Dependencies (comma separated)' },
+        { name: 'labels', label: 'Labels (comma separated)' },
+        { name: 'notes', label: 'Notes', type: 'textarea' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    const dependencies = values.dependencies ? values.dependencies.split(',').map(item => item.trim()).filter(Boolean) : []
+    const labels = values.labels ? values.labels.split(',').map(item => item.trim()).filter(Boolean) : []
+    await mutate(() => createTask(projectId, {
+      title: values.title.trim(),
+      description: values.description || null,
+      priority: values.priority as Priority,
+      estimate_hours: values.estimate_hours ? Number(values.estimate_hours) || null : null,
+      due_date: values.due_date || null,
+      dependencies,
+      labels,
+      notes: values.notes || null,
+    }))
+  }
+
+  const handleEditTask = async (item: ProjectWorkspaceData['tasks'][number]) => {
+    const values = await openForm({
+      title: 'Edit Task',
+      fields: [
+        { name: 'title', label: 'Title', value: item.title, required: true },
+        { name: 'status', label: 'Status', type: 'select', value: item.status, options: ['todo', 'in-progress', 'blocked', 'done'] },
+        { name: 'priority', label: 'Priority', type: 'select', value: item.priority, options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'description', label: 'Description', type: 'textarea', value: item.description ?? '' },
+        { name: 'estimateHours', label: 'Estimate Hours', type: 'number', value: String(item.estimateHours ?? '') },
+        { name: 'dueDate', label: 'Due Date', type: 'date', value: item.dueDate ?? '' },
+        { name: 'dependencies', label: 'Dependencies (comma separated)', value: item.dependencies.join(', ') },
+        { name: 'labels', label: 'Labels (comma separated)', value: item.labels.join(', ') },
+        { name: 'notes', label: 'Notes', type: 'textarea', value: item.notes ?? '' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    const dependencies = values.dependencies ? values.dependencies.split(',').map(value => value.trim()).filter(Boolean) : []
+    const labels = values.labels ? values.labels.split(',').map(value => value.trim()).filter(Boolean) : []
+    await mutate(() => updateTask(item.id, {
+      title: values.title.trim(),
+      description: values.description || null,
+      status: values.status as any,
+      priority: values.priority as Priority,
+      estimate_hours: values.estimateHours ? Number(values.estimateHours) || null : null,
+      due_date: values.dueDate || null,
+      dependencies,
+      labels,
+      notes: values.notes || null,
+      completed_at: values.status === 'done' ? new Date().toISOString() : null,
+    }))
+  }
+
+  const handleAddBug = async () => {
+    if (!projectId) return
+    const values = await openForm({
+      title: 'Report Bug',
+      fields: [
+        { name: 'title', label: 'Bug Title', required: true },
+        { name: 'description', label: 'Description', type: 'textarea' },
+        { name: 'severity', label: 'Severity', type: 'select', value: 'medium', options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'priority', label: 'Priority', type: 'select', value: 'medium', options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'steps_to_reproduce', label: 'Reproduction Steps', type: 'textarea' },
+        { name: 'expected_behavior', label: 'Expected Behavior', type: 'textarea' },
+        { name: 'actual_behavior', label: 'Actual Behavior', type: 'textarea' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(() => createBug(projectId, {
+      title: values.title.trim(),
+      description: values.description || null,
+      severity: values.severity as Priority,
+      priority: values.priority as Priority,
+      steps_to_reproduce: values.steps_to_reproduce || null,
+      expected_behavior: values.expected_behavior || null,
+      actual_behavior: values.actual_behavior || null,
+    }))
+  }
+
+  const handleEditBug = async (item: ProjectWorkspaceData['bugs'][number]) => {
+    const values = await openForm({
+      title: 'Edit Bug',
+      fields: [
+        { name: 'title', label: 'Bug Title', value: item.title, required: true },
+        { name: 'status', label: 'Status', type: 'select', value: item.status, options: ['open', 'triage', 'fixing', 'fixed', 'closed'] },
+        { name: 'severity', label: 'Severity', type: 'select', value: item.severity, options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'priority', label: 'Priority', type: 'select', value: item.priority, options: ['critical', 'high', 'medium', 'low'] },
+        { name: 'description', label: 'Description', type: 'textarea', value: item.description ?? '' },
+        { name: 'stepsToReproduce', label: 'Reproduction Steps', type: 'textarea', value: item.stepsToReproduce ?? '' },
+        { name: 'expectedBehavior', label: 'Expected Behavior', type: 'textarea', value: item.expectedBehavior ?? '' },
+        { name: 'actualBehavior', label: 'Actual Behavior', type: 'textarea', value: item.actualBehavior ?? '' },
+        { name: 'resolution', label: 'Resolution', type: 'textarea', value: item.resolution ?? '' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(() => updateBug(item.id, {
+      title: values.title.trim(),
+      description: values.description || null,
+      status: values.status as any,
+      severity: values.severity as Priority,
+      priority: values.priority as Priority,
+      steps_to_reproduce: values.stepsToReproduce || null,
+      expected_behavior: values.expectedBehavior || null,
+      actual_behavior: values.actualBehavior || null,
+      resolution: values.resolution || null,
+    }))
+  }
+
+  const handleAddDebt = async () => {
+    if (!projectId) return
+    const values = await openForm({
+      title: 'New Technical Debt',
+      fields: [
+        { name: 'title', label: 'Debt Title', required: true },
+        { name: 'impact', label: 'Impact / Details', type: 'textarea' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(async () => {
+      await createDebt(projectId, values.title.trim())
+      if (values.impact?.trim()) {
+        const refreshed = await fetchProjectWorkspace(projectId)
+        const latest = refreshed.debt[0]
+        if (latest) await updateDebt(latest.id, { impact: values.impact.trim() })
+      }
+    })
+  }
+
+  const handleEditDebt = async (item: ProjectWorkspaceData['debt'][number]) => {
+    const values = await openForm({
+      title: 'Edit Technical Debt',
+      fields: [
+        { name: 'title', label: 'Debt Title', value: item.title, required: true },
+        { name: 'status', label: 'Status', type: 'select', value: item.status, options: ['open', 'planned', 'resolved'] },
+        { name: 'impact', label: 'Impact / Details', type: 'textarea', value: item.impact ?? '' },
+        { name: 'proposedFix', label: 'Proposed Fix', type: 'textarea', value: item.proposedFix ?? '' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(() => updateDebt(item.id, { title: values.title.trim(), status: values.status as any, impact: values.impact || null, proposed_fix: values.proposedFix || null }))
+  }
+
+  const handleAddRepository = async () => {
+    if (!projectId) return
+    const values = await openForm({
+      title: 'Link Repository',
+      fields: [
+        { name: 'name', label: 'Repository Name', required: true },
+        { name: 'url', label: 'Repository URL', required: true },
+        { name: 'branch', label: 'Default Branch', value: 'main' },
+      ],
+    })
+    if (!values?.name.trim() || !values?.url.trim()) return
+    await mutate(async () => {
+      await createRepository(projectId, values.name.trim(), values.url.trim())
+      if (values.branch?.trim() && values.branch !== 'main') {
+        const refreshed = await fetchProjectWorkspace(projectId)
+        const latest = refreshed.repositories[0]
+        if (latest) await updateRepository(latest.id, { branch: values.branch.trim() })
+      }
+    })
+  }
+
+  const handleEditRepository = async (item: ProjectWorkspaceData['repositories'][number]) => {
+    const values = await openForm({
+      title: 'Edit Repository',
+      fields: [
+        { name: 'name', label: 'Repository Name', value: item.name, required: true },
+        { name: 'url', label: 'Repository URL', value: item.url, required: true },
+        { name: 'branch', label: 'Branch', value: item.branch ?? '' },
+      ],
+    })
+    if (!values?.name.trim() || !values?.url.trim()) return
+    await mutate(() => updateRepository(item.id, { name: values.name.trim(), url: values.url.trim(), branch: values.branch || null }))
+  }
+
+  const handleAddDevelopmentNote = async () => {
+    if (!projectId) return
+    const values = await openForm({
+      title: 'New Development Note',
+      fields: [
+        { name: 'title', label: 'Title', required: true },
+        { name: 'body', label: 'Note Content (Markdown)', type: 'textarea' },
+        { name: 'tags', label: 'Tags (comma separated)' },
+      ],
+    })
+    if (!values?.title.trim()) return
+    const tags = values.tags ? values.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+    await mutate(() => createDevelopmentNote(projectId, values.title.trim(), values.body || '', tags))
+  }
+
+  const handleEditDevelopmentNote = async (item: ProjectWorkspaceData['developmentNotes'][number]) => {
+    const values = await openForm({
+      title: 'Edit Development Note',
+      fields: [
+        { name: 'title', label: 'Title', value: item.title, required: true },
+        { name: 'body', label: 'Note Content (Markdown)', type: 'textarea', value: item.body ?? '' },
+        { name: 'tags', label: 'Tags (comma separated)', value: item.tags.join(', ') },
+      ],
+    })
+    if (!values?.title.trim()) return
+    const tags = values.tags ? values.tags.split(',').map(tag => tag.trim()).filter(Boolean) : []
+    await mutate(() => updateDevelopmentNote(item.id, { title: values.title.trim(), body: values.body || '', tags, autosaved_at: new Date().toISOString() }))
+  }
+
+  const handleUploadAsset = async (file: File | undefined) => {
+    if (!projectId || !user || !file) return
+    await mutate(() => uploadProjectAsset({ projectId, ownerId: user.id, file }))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleAddContent = async () => {
+    if (!projectId) return
+    const values = await openForm({
+      title: 'New Content Engine Item',
+      fields: [
+        { name: 'title', label: 'Content Title', required: true },
+        { name: 'platform', label: 'Platform', value: 'YouTube', required: true },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(() => createContent(projectId, values.title.trim(), values.platform.trim() || 'YouTube'))
+  }
+
+  const handleEditContent = async (item: ProjectWorkspaceData['content'][number]) => {
+    const values = await openForm({
+      title: 'Edit Content Item',
+      fields: [
+        { name: 'title', label: 'Content Title', value: item.title, required: true },
+        { name: 'status', label: 'Status', type: 'select', value: item.status, options: ['idea', 'research', 'outline', 'script', 'recording', 'editing', 'thumbnail', 'seo', 'published', 'analytics'] },
+        { name: 'platform', label: 'Platform', value: item.platform, required: true },
+        { name: 'researchNotes', label: 'Research Notes', type: 'textarea', value: item.researchNotes ?? '' },
+        { name: 'outline', label: 'Outline', type: 'textarea', value: item.outline ?? '' },
+        { name: 'script', label: 'Script', type: 'textarea', value: item.script ?? '' },
+        { name: 'publishDate', label: 'Publish Date', type: 'date', value: item.publishDate ?? '' },
+        { name: 'views', label: 'Manual Views Count', type: 'number', value: String(item.analytics.views ?? '') },
+      ],
+    })
+    if (!values?.title.trim()) return
+    await mutate(() =>
+      updateContent(item.id, {
+        title: values.title.trim(),
+        status: values.status as any,
+        platform: values.platform,
+        research_notes: values.researchNotes || null,
+        outline: values.outline || null,
+        script: values.script || null,
+        publish_date: values.publishDate || null,
+        analytics: values.views ? { ...item.analytics, views: Number(values.views) || 0 } : item.analytics,
+      }),
+    )
+  }
+
+  const handleDeleteProject = async () => {
+    if (!projectId || !data) return
+    const confirm = await openForm({
+      title: 'Delete Project',
+      description: `Are you sure you want to delete project "${data.project.name}"? This action cannot be undone.`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!confirm) return
+    await mutate(() => deleteProject(projectId))
+    onNavigate('projects')
+  }
+
+  const handleDeleteAsset = async (asset: WorkspaceAsset) => {
+    const confirm = await openForm({
+      title: 'Delete Asset',
+      description: `Are you sure you want to delete asset "${asset.name}"?`,
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!confirm) return
+    await mutate(() => deleteProjectAsset(asset))
+  }
+
+  if (loading) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LoadingState label="Loading project workspace" />
+      </div>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <div style={{ height: '100%', padding: '32px' }}>
+        <BackButton onClick={() => onNavigate('projects')} />
+        <div style={{ marginTop: '32px', color: 'var(--muted-foreground)' }}>{error ?? 'Project not found.'}</div>
+      </div>
+    )
+  }
+
+  const { project, milestones, decisions, activity, knowledge, assets, content } = data
+  const completedMilestones = milestones.filter(item => item.status === 'completed').length
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      {/* Top bar */}
-      <div style={{
-        padding: '16px 32px',
-        borderBottom: '1px solid var(--border)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px',
-        flexShrink: 0,
-      }}>
-        <button
-          onClick={() => onNavigate('projects')}
-          style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: 0 }}
-        >
-          <ArrowLeft size={14} /> Projects
-        </button>
+      <div style={{ padding: '16px 32px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+        <BackButton onClick={() => onNavigate('projects')} />
         <span style={{ color: 'var(--border)' }}>/</span>
-        <span style={{ fontSize: '13px', fontWeight: 500 }}>StreamKit v2</span>
+        <span style={{ fontSize: '13px', fontWeight: 500 }}>{project.name}</span>
         <div style={{ flex: 1 }} />
-        <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(59,130,246,0.12)', color: 'var(--status-blue)', fontWeight: 500 }}>Active</span>
-        <button style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px',
-          padding: '6px 12px', color: 'var(--secondary-foreground)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit',
-        }}>
-          <Plus size={12} /> Add Task
-        </button>
+        {error && <span style={{ color: 'var(--status-red)', fontSize: '12px' }}>{error}</span>}
+        <span style={{ fontSize: '11px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(59,130,246,0.12)', color: statusColor[project.status], fontWeight: 500 }}>{project.status}</span>
+        <ActionButton onClick={handleAddDecision} disabled={saving} icon={<Plus size={12} />} label="Add Decision" />
       </div>
 
-      {/* Project header */}
       <div style={{ padding: '24px 32px 0', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '32px', marginBottom: '20px' }}>
           <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: '24px', fontWeight: 600, margin: '0 0 6px', letterSpacing: '-0.03em' }}>StreamKit v2</h1>
-            <p style={{ color: 'var(--muted-foreground)', fontSize: '14px', margin: '0 0 14px' }}>
-              Real-time data streaming infrastructure with WebSocket support and Redis-backed pub/sub
-            </p>
+            <h1 style={{ fontSize: '24px', fontWeight: 600, margin: '0 0 6px', letterSpacing: '-0.03em' }}>{project.name}</h1>
+            <p style={{ color: 'var(--muted-foreground)', fontSize: '14px', margin: '0 0 14px' }}>{project.description}</p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {['TypeScript', 'Node.js', 'Redis', 'PostgreSQL', 'WebSocket'].map(t => (
-                <span key={t} style={{ fontSize: '11px', padding: '3px 8px', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--secondary-foreground)' }}>{t}</span>
-              ))}
+              {project.technologies.map(tech => <Tag key={tech}>{tech}</Tag>)}
             </div>
           </div>
-
-          {/* Stats */}
           <div style={{ display: 'flex', gap: '24px', flexShrink: 0 }}>
             {[
-              { label: 'Progress', value: '62%', sub: 'overall' },
-              { label: 'Deadline', value: 'Aug 1', sub: '22 days' },
-              { label: 'Tasks', value: '17/46', sub: 'done' },
-              { label: 'Commits', value: '48', sub: 'this month' },
-            ].map(stat => (
-              <div key={stat.label} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.03em', fontFamily: 'monospace' }}>{stat.value}</div>
-                <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>{stat.label}</div>
-                <div style={{ fontSize: '10px', color: 'var(--muted-foreground)' }}>{stat.sub}</div>
-              </div>
-            ))}
+              { label: 'Progress', value: `${project.progress}%`, sub: 'overall' },
+              { label: 'Deadline', value: project.deadline ?? '-', sub: 'target' },
+              { label: 'Milestones', value: `${completedMilestones}/${milestones.length}`, sub: 'done' },
+              { label: 'Decisions', value: String(decisions.length), sub: 'recorded' },
+            ].map(stat => <Stat key={stat.label} {...stat} />)}
           </div>
         </div>
-
-        {/* Progress bar */}
         <div style={{ background: 'var(--secondary)', borderRadius: '4px', height: '4px', marginBottom: '20px' }}>
-          <div style={{ background: 'var(--status-blue)', height: '4px', borderRadius: '4px', width: '62%' }} />
+          <div style={{ background: statusColor[project.status], height: '4px', borderRadius: '4px', width: `${project.progress}%` }} />
         </div>
-
-        {/* Tabs */}
         <div style={{ display: 'flex', gap: '0', borderBottom: '1px solid var(--border)' }}>
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              style={{
-                padding: '8px 16px',
-                border: 'none',
-                borderBottom: activeTab === t.id ? '2px solid var(--foreground)' : '2px solid transparent',
-                background: 'transparent',
-                color: activeTab === t.id ? 'var(--foreground)' : 'var(--muted-foreground)',
-                fontSize: '13px',
-                fontWeight: activeTab === t.id ? 500 : 400,
-                cursor: 'pointer',
-                marginBottom: '-1px',
-                fontFamily: 'inherit',
-                transition: 'color 0.12s',
-              }}
-            >
-              {t.label}
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{ padding: '8px 16px', border: 'none', borderBottom: activeTab === tab.id ? '2px solid var(--foreground)' : '2px solid transparent', background: 'transparent', color: activeTab === tab.id ? 'var(--foreground)' : 'var(--muted-foreground)', fontSize: '13px', fontWeight: activeTab === tab.id ? 500 : 400, cursor: 'pointer', marginBottom: '-1px', fontFamily: 'inherit' }}>
+              {tab.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Tab content */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
         {activeTab === 'overview' && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            {/* Objectives */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>Objectives</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {[
-                  { text: 'Build scalable WebSocket infrastructure supporting 10k concurrent connections', done: true },
-                  { text: 'Implement Redis pub/sub for real-time event broadcasting', done: true },
-                  { text: 'Design REST API with full OpenAPI documentation', done: false },
-                  { text: 'Ship with 95%+ test coverage on all critical paths', done: false },
-                  { text: 'Deploy with zero-downtime blue/green strategy', done: false },
-                ].map((obj, i) => (
-                  <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                    {obj.done
-                      ? <CheckCircle2 size={14} color="var(--status-green)" style={{ marginTop: '1px', flexShrink: 0 }} />
-                      : <Circle size={14} color="var(--muted-foreground)" style={{ marginTop: '1px', flexShrink: 0 }} />
-                    }
-                    <span style={{ fontSize: '13px', color: obj.done ? 'var(--muted-foreground)' : 'var(--foreground)', textDecoration: obj.done ? 'line-through' : 'none', lineHeight: 1.5 }}>
-                      {obj.text}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Milestones */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>Milestones</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {milestones.map(m => {
-                  const color = m.status === 'completed' ? 'var(--status-green)' : m.status === 'active' ? 'var(--status-blue)' : 'var(--border)'
-                  return (
-                    <div key={m.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                      <span style={{ fontSize: '13px', flex: 1 }}>{m.name}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{m.done}/{m.tasks}</span>
-                      <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{m.date}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Links */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>Links</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {[
-                  { label: 'GitHub Repo', href: 'github.com/alexj/streamkit-v2', icon: <GitCommit size={13} /> },
-                  { label: 'Figma Design', href: 'figma.com/file/...', icon: <Link2 size={13} /> },
-                  { label: 'API Docs', href: 'docs.streamkit.dev', icon: <FileText size={13} /> },
-                  { label: 'Staging', href: 'staging.streamkit.dev', icon: <Cpu size={13} /> },
-                ].map(l => (
-                  <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px', borderRadius: '6px', background: 'var(--secondary)', cursor: 'pointer' }}>
-                    <span style={{ color: 'var(--muted-foreground)' }}>{l.icon}</span>
-                    <span style={{ fontSize: '12px', fontWeight: 500 }}>{l.label}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.href}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>Recent Activity</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {activity.map((a, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                    <span style={{ color: a.color, marginTop: '1px', flexShrink: 0 }}>{a.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '12px' }}>{a.text}</div>
-                    </div>
-                    <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{a.time}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <Panel title="Project Details" action={<ActionButton onClick={handleEditProject} disabled={saving} icon={<Pencil size={12} />} label="Edit" />}>
+              <DetailRows rows={[['Status', project.status], ['Priority', project.priority], ['Deadline', project.deadline ?? '-'], ['Progress', `${project.progress}%`]]} />
+            </Panel>
+            <Panel title="Milestones" action={<ActionButton onClick={handleAddMilestone} disabled={saving} icon={<Plus size={12} />} label="Add" />}>
+              <MilestoneList milestones={milestones.slice(0, 5)} onEdit={handleEditMilestone} onDelete={handleDeleteMilestone} />
+            </Panel>
+            <Panel title="Decisions" action={<ActionButton onClick={handleAddDecision} disabled={saving} icon={<Plus size={12} />} label="Add" />}>
+              <DecisionList decisions={decisions.slice(0, 5)} onEdit={handleEditDecision} onDelete={item => mutate(() => deleteDecision(item.id))} />
+            </Panel>
+            <Panel title="Recent Activity">
+              <ActivityList activity={activity.slice(0, 6)} />
+            </Panel>
           </div>
         )}
 
         {activeTab === 'planning' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {milestones.map(m => {
-              const color = m.status === 'completed' ? 'var(--status-green)' : m.status === 'active' ? 'var(--status-blue)' : 'var(--muted-foreground)'
-              return (
-                <div key={m.name} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
-                  <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                    <span style={{ fontSize: '14px', fontWeight: 500 }}>{m.name}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{m.date}</span>
-                    <div style={{ flex: 1 }} />
-                    <span style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>{m.done}/{m.tasks} tasks</span>
-                  </div>
-                  <div style={{ padding: '8px 20px' }}>
-                    {tasks.slice(0, 3).map((task, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 0', borderBottom: i < 2 ? '1px solid var(--border)' : 'none' }}>
-                        {task.status === 'done' ? <CheckCircle2 size={13} color="var(--status-green)" /> : <Circle size={13} color="var(--muted-foreground)" />}
-                        <span style={{ fontSize: '13px', flex: 1, color: task.status === 'done' ? 'var(--muted-foreground)' : 'var(--foreground)', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>{task.name}</span>
-                        <span style={{ fontSize: '11px', padding: '2px 6px', background: 'var(--secondary)', borderRadius: '3px', color: 'var(--muted-foreground)' }}>{task.priority}</span>
-                        <button style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer' }}>
-                          <MoreHorizontal size={13} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <Panel title="Planning" action={<ActionButton onClick={handleAddMilestone} disabled={saving} icon={<Plus size={12} />} label="New Milestone" />}>
+            <MilestoneList milestones={milestones} onEdit={handleEditMilestone} onDelete={handleDeleteMilestone} />
+          </Panel>
         )}
 
         {activeTab === 'development' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
-              <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)', fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tasks · Sprint 4</div>
-              {tasks.map((task, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px', borderBottom: i < tasks.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                  {task.status === 'done' ? <CheckCircle2 size={14} color="var(--status-green)" /> : task.status === 'in-progress' ? <Clock size={14} color="var(--status-orange)" /> : <Circle size={14} color="var(--muted-foreground)" />}
-                  <span style={{ flex: 1, fontSize: '13px', color: task.status === 'done' ? 'var(--muted-foreground)' : 'var(--foreground)', textDecoration: task.status === 'done' ? 'line-through' : 'none' }}>{task.name}</span>
-                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, color: '#fff' }}>
-                    {task.assignee}
-                  </div>
-                  <span style={{ fontSize: '11px', padding: '2px 7px', borderRadius: '3px', background: task.priority === 'high' ? 'rgba(249,115,22,0.12)' : 'var(--secondary)', color: task.priority === 'high' ? 'var(--status-orange)' : 'var(--muted-foreground)' }}>
-                    {task.priority}
-                  </span>
-                  <button style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer' }}>
-                    <MoreHorizontal size={13} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            {/* Commit history */}
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '14px' }}>Recent Commits</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {[
-                  { hash: 'a7f3c21', msg: 'feat: redis cache layer for session management', date: '2h ago' },
-                  { hash: 'b2e9d4f', msg: 'fix: connection pool timeout handling', date: '8h ago' },
-                  { hash: 'c1a8b30', msg: 'chore: update dependencies to latest stable', date: '1d ago' },
-                  { hash: 'd5f2e19', msg: 'feat: database schema migrations v3', date: '2d ago' },
-                ].map(commit => (
-                  <div key={commit.hash} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <GitCommit size={13} color="var(--status-blue)" />
-                    <code style={{ fontSize: '11px', color: 'var(--status-blue)', fontFamily: 'monospace', background: 'rgba(59,130,246,0.1)', padding: '2px 5px', borderRadius: '3px' }}>{commit.hash}</code>
-                    <span style={{ fontSize: '13px', flex: 1 }}>{commit.msg}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{commit.date}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <Panel title="Execution State" action={<ActionButton onClick={handleUpdateProjectState} disabled={saving} icon={<Pencil size={12} />} label="Update" />}>
+              <DetailRows rows={[['Status', project.status], ['Priority', project.priority], ['Progress', `${project.progress}%`], ['Tech Stack', project.technologies.join(', ') || '-']]} />
+            </Panel>
+            <Panel title="Tasks" action={<ActionButton onClick={handleAddTask} disabled={saving} icon={<Plus size={12} />} label="Add" />}>
+              <SimpleEditableList
+                items={data.tasks}
+                empty="No development tasks yet."
+                getMeta={item => `${item.status} · ${item.priority}`}
+                onEdit={handleEditTask}
+                onDelete={item => mutate(() => deleteTask(item.id))}
+              />
+            </Panel>
+            <Panel title="Bugs" action={<ActionButton onClick={handleAddBug} disabled={saving} icon={<Plus size={12} />} label="Add" />}>
+              <SimpleEditableList
+                items={data.bugs}
+                empty="No bugs tracked."
+                getMeta={item => `${item.status} · ${item.severity}`}
+                onEdit={handleEditBug}
+                onDelete={item => mutate(() => deleteBug(item.id))}
+              />
+            </Panel>
+            <Panel title="Technical Debt" action={<ActionButton onClick={handleAddDebt} disabled={saving} icon={<Plus size={12} />} label="Add" />}>
+              <SimpleEditableList
+                items={data.debt}
+                empty="No technical debt tracked."
+                getMeta={item => item.status}
+                onEdit={handleEditDebt}
+                onDelete={item => mutate(() => deleteDebt(item.id))}
+              />
+            </Panel>
+            <Panel title="Repositories" action={<ActionButton onClick={handleAddRepository} disabled={saving} icon={<Plus size={12} />} label="Add" />}>
+              <SimpleEditableList
+                items={data.repositories}
+                empty="No repositories linked."
+                getTitle={item => item.name}
+                getMeta={item => item.branch ? `${item.url} · ${item.branch}` : item.url}
+                onEdit={handleEditRepository}
+                onDelete={item => mutate(() => deleteRepository(item.id))}
+              />
+            </Panel>
+            <Panel title="Development Notes" action={<ActionButton onClick={handleAddDevelopmentNote} disabled={saving} icon={<Plus size={12} />} label="Add" />}>
+              <SimpleEditableList
+                items={data.developmentNotes}
+                empty="No development notes yet."
+                getMeta={item => item.body ?? ''}
+                onEdit={handleEditDevelopmentNote}
+                onDelete={item => mutate(() => deleteDevelopmentNote(item.id))}
+              />
+            </Panel>
+            <Panel title="Content Pipeline" action={<ActionButton onClick={handleAddContent} disabled={saving} icon={<Plus size={12} />} label="Add" />}>
+              <ContentList content={content} onEdit={handleEditContent} onDelete={item => mutate(() => deleteContent(item.id))} />
+            </Panel>
           </div>
         )}
 
-        {(activeTab === 'knowledge' || activeTab === 'assets' || activeTab === 'activity') && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {activeTab === 'knowledge' && (
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
-                {[
-                  { title: 'Architecture Decision Records', icon: <BookOpen size={13} />, tag: 'ADR', date: 'Jul 8' },
-                  { title: 'Redis Pub/Sub Implementation Notes', icon: <FileText size={13} />, tag: 'Notes', date: 'Jul 6' },
-                  { title: 'WebSocket Protocol Comparison', icon: <FileText size={13} />, tag: 'Research', date: 'Jun 30' },
-                  { title: 'Lessons: Scaling Node.js Streams', icon: <BookOpen size={13} />, tag: 'Lessons', date: 'Jun 25' },
-                ].map((n, i, arr) => (
-                  <div key={n.title} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 20px', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }}
-                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--secondary)')}
-                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
-                  >
-                    <span style={{ color: 'var(--muted-foreground)' }}>{n.icon}</span>
-                    <span style={{ fontSize: '13px', flex: 1 }}>{n.title}</span>
-                    <span style={{ fontSize: '11px', padding: '2px 6px', background: 'var(--secondary)', borderRadius: '3px', color: 'var(--muted-foreground)' }}>{n.tag}</span>
-                    <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{n.date}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+        {activeTab === 'knowledge' && (
+          <Panel title="Knowledge" action={<ActionButton onClick={handleAddKnowledge} disabled={saving} icon={<Plus size={12} />} label="New Entry" />}>
+            <KnowledgeList entries={knowledge} onEdit={handleEditKnowledge} onDelete={handleDeleteKnowledge} />
+          </Panel>
+        )}
 
-            {activeTab === 'assets' && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-                {[
-                  { name: 'architecture.pdf', type: 'PDF', size: '2.4 MB' },
-                  { name: 'schema-v3.png', type: 'Image', size: '840 KB' },
-                  { name: 'api-spec.yaml', type: 'File', size: '18 KB' },
-                  { name: 'design-system.fig', type: 'Figma', size: '12 MB' },
-                ].map(asset => (
-                  <div key={asset.name} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px', cursor: 'pointer' }}
-                    onMouseEnter={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--ring)')}
-                    onMouseLeave={e => ((e.currentTarget as HTMLElement).style.borderColor = 'var(--border)')}
-                  >
-                    <div style={{ width: '100%', height: '60px', background: 'var(--secondary)', borderRadius: '6px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <FileText size={20} color="var(--muted-foreground)" />
-                    </div>
-                    <div style={{ fontSize: '12px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{asset.name}</div>
-                    <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '2px' }}>{asset.type} · {asset.size}</div>
-                  </div>
-                ))}
+        {activeTab === 'assets' && (
+          <Panel
+            title="Assets"
+            action={
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={event => handleUploadAsset(event.target.files?.[0])} />
+                <ActionButton onClick={() => fileInputRef.current?.click()} disabled={saving} icon={<Upload size={12} />} label="Upload" />
+                <ActionButton onClick={handleAddAssetLink} disabled={saving} icon={<Plus size={12} />} label="Add Link" />
               </div>
-            )}
+            }
+          >
+            <AssetList assets={assets} onDelete={handleDeleteAsset} />
+          </Panel>
+        )}
 
-            {activeTab === 'activity' && (
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                  {[...activity, ...activity].map((a, i) => (
-                    <div key={i} style={{ display: 'flex', gap: '12px', padding: '12px 0', borderBottom: i < 9 ? '1px solid var(--border)' : 'none' }}>
-                      <span style={{ color: a.color, marginTop: '1px', flexShrink: 0 }}>{a.icon}</span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '13px' }}>{a.text}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '2px' }}>Alex Johnson</div>
-                      </div>
-                      <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{a.time}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+        {activeTab === 'content' && (
+          <Panel title="Content" action={<ActionButton onClick={handleAddContent} disabled={saving} icon={<Plus size={12} />} label="New Content" />}>
+            <ContentList content={content} onEdit={handleEditContent} onDelete={item => mutate(() => deleteContent(item.id))} detailed />
+          </Panel>
+        )}
+
+        {activeTab === 'architecture' && (
+          <Panel title="Architecture Decisions" action={<ActionButton onClick={handleAddDecision} disabled={saving} icon={<Plus size={12} />} label="Add Decision" />}>
+            <DecisionList decisions={decisions} onEdit={handleEditDecision} onDelete={item => mutate(() => deleteDecision(item.id))} />
+          </Panel>
+        )}
+
+        {activeTab === 'activity' && (
+          <Panel title="Activity Timeline" action={<ActionButton onClick={loadWorkspace} disabled={saving} icon={<Clock size={12} />} label="Refresh" />}>
+            <ActivityList activity={activity} detailed />
+          </Panel>
+        )}
+
+        {activeTab === 'settings' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <Panel title="Project Settings" action={<ActionButton onClick={handleEditProject} disabled={saving} icon={<Pencil size={12} />} label="Edit" />}>
+              <DetailRows rows={[['Name', project.name], ['Description', project.description], ['Status', project.status], ['Priority', project.priority], ['Deadline', project.deadline ?? '-']]} />
+            </Panel>
+            <Panel title="Danger Zone" action={<ActionButton onClick={handleDeleteProject} disabled={saving} icon={<Trash2 size={12} />} label="Delete" />}>
+              <EmptyLine text="Soft delete moves this project out of active views while preserving related records." />
+            </Panel>
           </div>
         )}
       </div>
+      {FormDialog}
+    </div>
+  )
+}
+
+function BackButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', padding: 0 }}>
+      <ArrowLeft size={14} /> Projects
+    </button>
+  )
+}
+
+function ActionButton({ onClick, disabled, icon, label }: { onClick: () => void; disabled?: boolean; icon: React.ReactNode; label: string }) {
+  return (
+    <button onClick={onClick} disabled={disabled} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '6px 12px', color: 'var(--secondary-foreground)', fontSize: '12px', cursor: disabled ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+      {icon} {label}
+    </button>
+  )
+}
+
+function Panel({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{title}</div>
+        {action}
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function Stat({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: '20px', fontWeight: 600, letterSpacing: '-0.03em', fontFamily: 'monospace' }}>{value}</div>
+      <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>{label}</div>
+      <div style={{ fontSize: '10px', color: 'var(--muted-foreground)' }}>{sub}</div>
+    </div>
+  )
+}
+
+function Tag({ children }: { children: React.ReactNode }) {
+  return <span style={{ fontSize: '11px', padding: '3px 8px', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--secondary-foreground)' }}>{children}</span>
+}
+
+function DetailRows({ rows }: { rows: [string, string][] }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {rows.map(([label, value]) => (
+        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', fontSize: '13px' }}>
+          <span style={{ color: 'var(--muted-foreground)' }}>{label}</span>
+          <span>{value}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MilestoneList({ milestones, onEdit, onDelete }: { milestones: ProjectWorkspaceData['milestones']; onEdit: (milestone: WorkspaceMilestone) => void; onDelete: (milestone: WorkspaceMilestone) => void }) {
+  if (milestones.length === 0) return <EmptyLine text="No milestones yet." />
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {milestones.map(item => {
+        const color = item.status === 'completed' ? 'var(--status-green)' : item.status === 'in-progress' ? 'var(--status-blue)' : 'var(--border)'
+        return (
+          <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {item.status === 'completed' ? <CheckCircle2 size={14} color={color} /> : item.status === 'in-progress' ? <Clock size={14} color={color} /> : <Circle size={14} color="var(--muted-foreground)" />}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '13px' }}>{item.title}</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>{item.description || item.notes || `${item.priority} · ${item.progress}% · ${item.estimatedHours ?? 0}h`}</div>
+            </div>
+            <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{item.dueDate ?? '-'}</span>
+            <IconButton onClick={() => onEdit(item)} icon={<Pencil size={13} />} />
+            <IconButton onClick={() => onDelete(item)} icon={<Trash2 size={13} />} />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function DecisionList({
+  decisions,
+  onEdit,
+  onDelete,
+}: {
+  decisions: ProjectWorkspaceData['decisions']
+  onEdit: (item: ProjectWorkspaceData['decisions'][number]) => void
+  onDelete: (item: ProjectWorkspaceData['decisions'][number]) => void
+}) {
+  if (decisions.length === 0) return <EmptyLine text="No decisions recorded yet." />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {decisions.map(item => (
+        <div key={item.id} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '10px', display: 'flex', gap: '10px' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px', fontWeight: 500 }}>{item.decision}</div>
+            {item.problem && <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '3px' }}>Problem: {item.problem}</div>}
+            {item.reason && <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '3px' }}>{item.reason}</div>}
+            {item.alternatives && <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '4px' }}>Alternatives: {item.alternatives}</div>}
+            {item.consequences && <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '4px' }}>Consequences: {item.consequences}</div>}
+            {item.impact && <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '4px' }}>Impact: {item.impact}</div>}
+            {item.references.length > 0 && <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '4px' }}>References: {item.references.join(', ')}</div>}
+          </div>
+          <IconButton onClick={() => onEdit(item)} icon={<Pencil size={13} />} />
+          <IconButton onClick={() => onDelete(item)} icon={<Trash2 size={13} />} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ContentList({
+  content,
+  onEdit,
+  onDelete,
+  detailed = false,
+}: {
+  content: ProjectWorkspaceData['content']
+  onEdit: (item: ProjectWorkspaceData['content'][number]) => void
+  onDelete: (item: ProjectWorkspaceData['content'][number]) => void
+  detailed?: boolean
+}) {
+  if (content.length === 0) return <EmptyLine text="No content items linked to this project." />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {content.map(item => (
+        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <FileText size={13} color={contentStageColor[item.status]} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px' }}>{item.title}</div>
+            {detailed && <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>{item.researchNotes || item.outline || item.script || 'No production notes yet.'}</div>}
+          </div>
+          <Tag>{item.status}</Tag>
+          <span style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>{item.platform}</span>
+          <IconButton onClick={() => onEdit(item)} icon={<Pencil size={13} />} />
+          <IconButton onClick={() => onDelete(item)} icon={<Trash2 size={13} />} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function SimpleEditableList<T extends { id: string; title?: string }>({
+  items,
+  empty,
+  getTitle,
+  getMeta,
+  onEdit,
+  onDelete,
+}: {
+  items: T[]
+  empty: string
+  getTitle?: (item: T) => string
+  getMeta: (item: T) => string
+  onEdit: (item: T) => void
+  onDelete: (item: T) => void
+}) {
+  if (items.length === 0) return <EmptyLine text={empty} />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {items.map(item => (
+        <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Circle size={13} color="var(--muted-foreground)" />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getTitle ? getTitle(item) : item.title}</div>
+            <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getMeta(item)}</div>
+          </div>
+          <IconButton onClick={() => onEdit(item)} icon={<Pencil size={13} />} />
+          <IconButton onClick={() => onDelete(item)} icon={<Trash2 size={13} />} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function KnowledgeList({ entries, onEdit, onDelete }: { entries: WorkspaceKnowledge[]; onEdit: (entry: WorkspaceKnowledge) => void; onDelete: (entry: WorkspaceKnowledge) => void }) {
+  if (entries.length === 0) return <EmptyLine text="No project knowledge yet." icon={<BookOpen size={13} />} />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {entries.map(entry => (
+        <div key={entry.id} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '12px', display: 'flex', gap: '12px' }}>
+          <BookOpen size={14} color="var(--status-blue)" />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px', fontWeight: 500 }}>{entry.title}</div>
+            {entry.body && <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '4px', whiteSpace: 'pre-wrap' }}>{entry.body}</div>}
+            <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}><Tag>{entry.category}</Tag>{entry.tags.map(tag => <Tag key={tag}>{tag}</Tag>)}</div>
+          </div>
+          <IconButton onClick={() => onEdit(entry)} icon={<Pencil size={13} />} />
+          <IconButton onClick={() => onDelete(entry)} icon={<Trash2 size={13} />} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function AssetList({ assets, onDelete }: { assets: WorkspaceAsset[]; onDelete: (asset: WorkspaceAsset) => void }) {
+  if (assets.length === 0) return <EmptyLine text="No project assets yet." icon={<FileText size={13} />} />
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '12px' }}>
+      {assets.map(asset => (
+        <div key={asset.id} style={{ border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', background: 'var(--secondary)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+            <FileText size={14} color="var(--muted-foreground)" />
+            <span style={{ fontSize: '13px', fontWeight: 500, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{asset.name}</span>
+            <IconButton onClick={() => onDelete(asset)} icon={<Trash2 size={13} />} />
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>{asset.assetType}</div>
+          {asset.fileUrl && <a href={asset.fileUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--status-blue)', fontSize: '12px', textDecoration: 'none' }}>Open asset</a>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function ActivityList({ activity, detailed = false }: { activity: ProjectWorkspaceData['activity']; detailed?: boolean }) {
+  if (activity.length === 0) return <EmptyLine text="No activity logged yet." />
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {activity.map(item => (
+        <div key={item.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+          <Circle size={13} color="var(--muted-foreground)" style={{ marginTop: '1px' }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px' }}>{item.action}</div>
+            <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>{item.entityType}{detailed ? ` · ${new Date(item.createdAt).toLocaleString()}` : ''}</div>
+          </div>
+          <button style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer' }}>
+            <MoreHorizontal size={13} />
+          </button>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function IconButton({ onClick, icon }: { onClick: () => void; icon: React.ReactNode }) {
+  return <button onClick={onClick} style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', padding: '4px', display: 'flex' }}>{icon}</button>
+}
+
+function EmptyLine({ text, icon }: { text: string; icon?: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--muted-foreground)' }}>
+      {icon}
+      {text}
     </div>
   )
 }

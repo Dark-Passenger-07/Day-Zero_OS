@@ -1,36 +1,11 @@
-import { useState } from 'react'
-import { Plus, Play, BarChart2, Lightbulb, CheckCircle2, Clock, Edit3, MoreHorizontal } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Plus, Play, BarChart2, Lightbulb, CheckCircle2, Edit3, Pencil, Trash2 } from 'lucide-react'
+import { LoadingState } from '@/components/feedback/LoadingState'
+import { createContentItem, listContentItems, type ContentItem } from '@/features/content/services/content.service'
+import { useFormDialog } from '@/components/ui/FormDialog'
+import { updateContent, deleteContent } from '@/features/project-workspace/services/project-workspace.service'
 
 type ContentTab = 'ideas' | 'production' | 'published' | 'analytics'
-
-interface ContentItem {
-  title: string
-  project: string
-  stage: string
-  platform: string
-  date: string
-  views?: number
-}
-
-const ideas: ContentItem[] = [
-  { title: 'Building a Real-time Dashboard with Redis Pub/Sub', project: 'StreamKit v2', stage: 'idea', platform: 'YouTube', date: 'Jul 10' },
-  { title: 'Why Most SaaS Products Fail at Onboarding', project: 'SaaSify', stage: 'idea', platform: 'Blog', date: 'Jul 9' },
-  { title: 'My Go-to Stack for Indie Hackers in 2026', project: 'General', stage: 'idea', platform: 'YouTube', date: 'Jul 8' },
-  { title: 'Rate Limiting: 5 Strategies Compared', project: 'StreamKit v2', stage: 'idea', platform: 'Blog', date: 'Jul 7' },
-]
-
-const production: ContentItem[] = [
-  { title: 'Building a SaaS Auth System from Scratch', project: 'StreamKit v2', stage: 'recording', platform: 'YouTube', date: 'Jul 12' },
-  { title: 'CLI Tools Every Dev Should Know in 2026', project: 'CLI Toolkit', stage: 'editing', platform: 'YouTube', date: 'Jul 15' },
-  { title: 'My Tech Stack for 2026', project: 'General', stage: 'thumbnail', platform: 'YouTube', date: 'Jul 11' },
-  { title: 'How I Structure My Codebase', project: 'General', stage: 'script', platform: 'Blog', date: 'Jul 18' },
-]
-
-const published: ContentItem[] = [
-  { title: 'Building a SaaS in 30 Days', project: 'SaaSify', stage: 'published', platform: 'YouTube', date: 'Jul 3', views: 14200 },
-  { title: 'The Tools I Used to Ship My Last Project', project: 'StreamKit v2', stage: 'published', platform: 'YouTube', date: 'Jun 26', views: 8750 },
-  { title: 'Why I Chose Go for My CLI Tool', project: 'CLI Toolkit', stage: 'published', platform: 'Blog', date: 'Jun 20', views: 3200 },
-]
 
 const stageConfig: Record<string, { label: string; color: string }> = {
   idea: { label: 'Idea', color: 'var(--muted-foreground)' },
@@ -39,198 +14,302 @@ const stageConfig: Record<string, { label: string; color: string }> = {
   recording: { label: 'Recording', color: 'var(--status-orange)' },
   editing: { label: 'Editing', color: 'var(--status-blue)' },
   thumbnail: { label: 'Thumbnail', color: 'var(--status-orange)' },
+  seo: { label: 'SEO', color: 'var(--status-purple)' },
   published: { label: 'Published', color: 'var(--status-green)' },
+  analytics: { label: 'Analytics', color: 'var(--status-blue)' },
 }
 
-const workflowStages = ['Idea', 'Outline', 'Script', 'Recording', 'Editing', 'Thumbnail', 'Publish', 'Analytics']
+const workflowStages = ['Idea', 'Outline', 'Script', 'Recording', 'Editing', 'Thumbnail', 'SEO', 'Published', 'Analytics']
 
 export default function ContentEngine() {
   const [tab, setTab] = useState<ContentTab>('ideas')
+  const [items, setItems] = useState<ContentItem[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const { openForm, FormDialog } = useFormDialog()
+
+  const handleEditContent = async (item: ContentItem) => {
+    const values = await openForm({
+      title: 'Edit Content Item',
+      fields: [
+        { name: 'title', label: 'Title', value: item.title, required: true },
+        { name: 'platform', label: 'Platform', value: item.platform, required: true },
+        { name: 'status', label: 'Status', type: 'select', value: item.status, options: ['idea', 'outline', 'script', 'recording', 'editing', 'thumbnail', 'seo', 'published', 'analytics'] },
+        { name: 'publishDate', label: 'Publish Date', type: 'date', value: item.publishDate ?? '' },
+        { name: 'views', label: 'Manual views count', type: 'number', value: String(item.analytics.views ?? '') },
+      ],
+    })
+    if (!values) return
+    setLoading(true)
+    try {
+      await updateContent(item.id, {
+        title: values.title.trim(),
+        platform: values.platform.trim(),
+        status: values.status as any,
+        publish_date: values.publishDate || null,
+        analytics: values.views ? { ...item.analytics, views: Number(values.views) || 0 } : item.analytics,
+      })
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update content.')
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteContent = async (id: string) => {
+    const confirm = await openForm({
+      title: 'Delete Content Item',
+      description: 'Are you sure you want to delete this content item?',
+      confirmLabel: 'Delete',
+      destructive: true,
+    })
+    if (!confirm) return
+    setLoading(true)
+    try {
+      await deleteContent(id)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete content.')
+      setLoading(false)
+    }
+  }
+
+  const stageKeys = ['idea', 'outline', 'script', 'recording', 'editing', 'thumbnail', 'seo', 'published', 'analytics']
+
+  async function handleSetStage(stageIndex: number) {
+    if (!selectedId) return
+    const newStatus = stageKeys[stageIndex] as any
+    setLoading(true)
+    try {
+      await updateContent(selectedId, { status: newStatus })
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update stage.')
+      setLoading(false)
+    }
+  }
+
+  async function load() {
+    setLoading(true)
+    setError(null)
+    try {
+      const loaded = await listContentItems()
+      setItems(loaded)
+      if (loaded.length > 0) {
+        setSelectedId(current => {
+          if (current && loaded.some(item => item.id === current)) return current
+          return loaded[0].id
+        })
+      } else {
+        setSelectedId(null)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load content.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  async function handleCreateContent() {
+    const values = await openForm({
+      title: 'New Content Item',
+      fields: [
+        { name: 'title', label: 'Content Title', required: true },
+        { name: 'platform', label: 'Platform', value: 'YouTube', required: true },
+      ],
+    })
+    if (!values?.title.trim()) return
+
+    setCreating(true)
+    setError(null)
+    try {
+      await createContentItem(values.title.trim(), values.platform.trim() || 'YouTube')
+      await load()
+      setTab('ideas')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create content.')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <LoadingState label="Loading content" />
+      </div>
+    )
+  }
+
+  const selectedItem = items.find(item => item.id === selectedId) || items[0]
+  const currentStageIndex = selectedItem ? stageKeys.indexOf(selectedItem.status) : -1
+
+  const ideas = items.filter(item => item.status === 'idea' || item.status === 'outline')
+  const production = items.filter(item => ['script', 'recording', 'editing', 'thumbnail', 'seo'].includes(item.status))
+  const published = items.filter(item => item.status === 'published' || item.status === 'analytics')
+  const visible = tab === 'ideas' ? ideas : tab === 'production' ? production : published
+  const totalViews = published.reduce((sum, item) => sum + Number(item.analytics.views ?? 0), 0)
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', padding: '32px 36px' }}>
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.03em' }}>Content Engine</h1>
-          <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: 0 }}>
-            Turn your projects into content
-          </p>
+          <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: 0 }}>Turn your projects into content</p>
         </div>
-        <button style={{
-          display: 'flex', alignItems: 'center', gap: '6px',
-          background: 'var(--foreground)', color: 'var(--background)',
-          border: 'none', borderRadius: '6px', padding: '9px 16px',
-          fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-        }}>
-          <Plus size={14} /> New Content
+        <button onClick={handleCreateContent} disabled={creating} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--foreground)', color: 'var(--background)', border: 'none', borderRadius: '6px', padding: '9px 16px', fontSize: '13px', fontWeight: 600, cursor: creating ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+          <Plus size={14} /> {creating ? 'Creating' : 'New Content'}
         </button>
       </div>
 
-      {/* Workflow pipeline */}
+      {error && <div style={{ border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: 'var(--status-red)', borderRadius: '8px', padding: '10px 12px', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
+
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px', marginBottom: '24px' }}>
-        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
-          Pipeline
+        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>Pipeline {selectedItem ? `· ${selectedItem.title}` : ''}</span>
+          {selectedItem && <span style={{ textTransform: 'none', color: 'var(--status-blue)', fontWeight: 500 }}>Click any stage to update status</span>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0', overflowX: 'auto' }}>
-          {workflowStages.map((stage, i) => (
-            <div key={stage} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-              <div style={{ textAlign: 'center', minWidth: '72px' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: i < 5 ? 'var(--status-blue)' : 'var(--secondary)',
-                  border: `2px solid ${i < 5 ? 'var(--status-blue)' : 'var(--border)'}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 6px',
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: i < 5 ? '#fff' : 'var(--muted-foreground)',
-                }}>
-                  {i < 4 ? <CheckCircle2 size={14} /> : i === 4 ? <Clock size={14} /> : <span>{i + 1}</span>}
-                </div>
-                <div style={{ fontSize: '10px', color: i < 5 ? 'var(--foreground)' : 'var(--muted-foreground)', fontWeight: i === 4 ? 600 : 400 }}>
-                  {stage}
-                </div>
-              </div>
-              {i < workflowStages.length - 1 && (
-                <div style={{ flex: 1, height: '2px', background: i < 4 ? 'var(--status-blue)' : 'var(--border)', opacity: 0.5, minWidth: '16px' }} />
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
-        {[
-          { label: 'Total Views', value: '26.1K', change: '+12%', icon: <BarChart2 size={14} />, color: 'var(--status-blue)' },
-          { label: 'Published', value: '3', change: 'this month', icon: <CheckCircle2 size={14} />, color: 'var(--status-green)' },
-          { label: 'In Production', value: '4', change: 'videos', icon: <Play size={14} />, color: 'var(--status-orange)' },
-          { label: 'Ideas', value: '4', change: 'backlog', icon: <Lightbulb size={14} />, color: 'var(--status-purple)' },
-        ].map(s => (
-          <div key={s.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-              <span style={{ color: s.color }}>{s.icon}</span>
-              <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
-            </div>
-            <div style={{ fontSize: '22px', fontWeight: 600, letterSpacing: '-0.03em', fontFamily: 'monospace' }}>{s.value}</div>
-            <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginTop: '2px' }}>{s.change}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Tab nav */}
-      <div style={{ display: 'flex', gap: '4px', background: 'var(--secondary)', borderRadius: '7px', padding: '3px', width: 'fit-content', marginBottom: '20px' }}>
-        {([['ideas', 'Ideas'], ['production', 'Production'], ['published', 'Published'], ['analytics', 'Analytics']] as [ContentTab, string][]).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '5px',
-              border: 'none',
-              background: tab === id ? 'var(--card)' : 'transparent',
-              color: tab === id ? 'var(--foreground)' : 'var(--muted-foreground)',
-              fontSize: '13px',
-              fontWeight: tab === id ? 500 : 400,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-              transition: 'all 0.12s',
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Content lists */}
-      {tab !== 'analytics' && (
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 80px 40px', padding: '10px 20px', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            <div>Title</div>
-            <div>Project</div>
-            <div>Stage</div>
-            <div>Platform</div>
-            <div>{tab === 'published' ? 'Views' : 'Target'}</div>
-            <div />
-          </div>
-          {(tab === 'ideas' ? ideas : tab === 'production' ? production : published).map((item, i, arr) => {
-            const sc = stageConfig[item.stage] || stageConfig.idea
+          {workflowStages.map((stage, index) => {
+            const isActive = index === currentStageIndex
+            const isCompleted = index < currentStageIndex
+            const isHighlighted = index <= currentStageIndex
             return (
-              <div
-                key={item.title}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '2fr 1fr 1fr 1fr 80px 40px',
-                  padding: '13px 20px',
-                  borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
-                  alignItems: 'center',
-                  cursor: 'pointer',
-                  transition: 'background 0.12s',
-                }}
-                onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--secondary)')}
-                onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Edit3 size={13} color="var(--muted-foreground)" />
-                  <span style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</span>
+              <div key={stage} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                <div 
+                  onClick={() => handleSetStage(index)}
+                  style={{ textAlign: 'center', minWidth: '72px', cursor: selectedItem ? 'pointer' : 'default' }}
+                >
+                  <div style={{ 
+                    width: '32px', 
+                    height: '32px', 
+                    borderRadius: '50%', 
+                    background: isHighlighted ? 'var(--status-blue)' : 'var(--secondary)', 
+                    border: `2px solid ${isHighlighted ? 'var(--status-blue)' : 'var(--border)'}`, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    margin: '0 auto 6px', 
+                    fontSize: '11px', 
+                    fontWeight: 600, 
+                    color: isHighlighted ? '#fff' : 'var(--muted-foreground)',
+                    transition: 'all 0.12s'
+                  }}>
+                    {isCompleted ? <CheckCircle2 size={14} /> : index + 1}
+                  </div>
+                  <div style={{ fontSize: '10px', color: isHighlighted ? 'var(--foreground)' : 'var(--muted-foreground)', fontWeight: isActive ? 600 : 400 }}>{stage}</div>
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>{item.project}</div>
-                <div>
-                  <span style={{ fontSize: '11px', fontWeight: 500, color: sc.color }}>{sc.label}</span>
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--secondary-foreground)' }}>{item.platform}</div>
-                <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>
-                  {item.views ? item.views.toLocaleString() : item.date}
-                </div>
-                <div>
-                  <button style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', padding: '4px' }} onClick={e => e.stopPropagation()}>
-                    <MoreHorizontal size={13} />
-                  </button>
-                </div>
+                {index < workflowStages.length - 1 && (
+                  <div style={{ 
+                    flex: 1, 
+                    height: '2px', 
+                    background: isCompleted ? 'var(--status-blue)' : 'var(--border)', 
+                    opacity: 0.5, 
+                    minWidth: '16px',
+                    transition: 'background 0.12s'
+                  }} />
+                )}
               </div>
             )
           })}
         </div>
-      )}
+      </div>
 
-      {tab === 'analytics' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px', gridColumn: 'span 2' }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '20px' }}>Views over time</div>
-            <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '80px' }}>
-              {[30, 45, 28, 62, 78, 54, 90, 142, 88, 105, 127, 96].map((v, i) => (
-                <div key={i} style={{ flex: 1, background: 'var(--status-blue)', borderRadius: '3px 3px 0 0', height: `${(v / 142) * 100}%`, opacity: 0.7, minWidth: '6px', transition: 'opacity 0.12s' }} />
-              ))}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+        {[
+          { label: 'Total Views', value: totalViews.toLocaleString(), icon: <BarChart2 size={14} />, color: 'var(--status-blue)' },
+          { label: 'Published', value: String(published.length), icon: <CheckCircle2 size={14} />, color: 'var(--status-green)' },
+          { label: 'In Production', value: String(production.length), icon: <Play size={14} />, color: 'var(--status-orange)' },
+          { label: 'Ideas', value: String(ideas.length), icon: <Lightbulb size={14} />, color: 'var(--status-purple)' },
+        ].map(stat => (
+          <div key={stat.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+              <span style={{ color: stat.color }}>{stat.icon}</span>
+              <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{stat.label}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
-              {['Jun 19', 'Jun 26', 'Jul 3', 'Jul 10'].map(d => (
-                <span key={d} style={{ fontSize: '10px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{d}</span>
-              ))}
-            </div>
+            <div style={{ fontSize: '22px', fontWeight: 600, letterSpacing: '-0.03em', fontFamily: 'monospace' }}>{stat.value}</div>
           </div>
-          {published.map(item => (
-            <div key={item.title} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-              <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '8px' }}>{item.title}</div>
-              <div style={{ display: 'flex', gap: '16px' }}>
-                <div>
-                  <div style={{ fontSize: '22px', fontWeight: 600, fontFamily: 'monospace', letterSpacing: '-0.02em' }}>{(item.views || 0).toLocaleString()}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>views</div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: '4px', background: 'var(--secondary)', borderRadius: '7px', padding: '3px', width: 'fit-content', marginBottom: '20px' }}>
+        {(['ideas', 'production', 'published', 'analytics'] as ContentTab[]).map(id => (
+          <button key={id} onClick={() => setTab(id)} style={{ padding: '6px 14px', borderRadius: '5px', border: 'none', background: tab === id ? 'var(--card)' : 'transparent', color: tab === id ? 'var(--foreground)' : 'var(--muted-foreground)', fontSize: '13px', fontWeight: tab === id ? 500 : 400, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>
+            {id}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'analytics' ? (
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '20px' }}>Analytics</div>
+          <div style={{ color: 'var(--muted-foreground)', fontSize: '13px' }}>Manual analytics are stored per content item for MVP.</div>
+        </div>
+      ) : (
+        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 80px 80px', padding: '10px 20px', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div>Title</div>
+            <div>Project</div>
+            <div>Stage</div>
+            <div>Platform</div>
+            <div>Target</div>
+            <div />
+          </div>
+          {visible.length === 0 ? (
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '14px' }}>No content items found.</div>
+          ) : (
+            visible.map(item => {
+              const stage = stageConfig[item.status] ?? stageConfig.idea
+              return (
+                <div 
+                  key={item.id} 
+                  onClick={() => setSelectedId(item.id)}
+                  style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '2fr 1fr 1fr 1fr 80px 80px', 
+                    padding: '13px 20px', 
+                    borderBottom: '1px solid var(--border)', 
+                    alignItems: 'center',
+                    background: item.id === selectedId ? 'rgba(59,130,246,0.08)' : 'transparent',
+                    cursor: 'pointer',
+                    transition: 'background 0.15s'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Edit3 size={13} color="var(--muted-foreground)" />
+                    <span style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>{item.projectName}</div>
+                  <div><span style={{ fontSize: '11px', fontWeight: 500, color: stage.color }}>{stage.label}</span></div>
+                  <div style={{ fontSize: '12px', color: 'var(--secondary-foreground)' }}>{item.platform}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{item.publishDate ?? '-'}</div>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleEditContent(item); }} 
+                      style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', padding: '4px' }}
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteContent(item.id); }} 
+                      style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', padding: '4px' }}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '22px', fontWeight: 600, fontFamily: 'monospace', letterSpacing: '-0.02em' }}>{Math.round((item.views || 0) * 0.042)}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>likes</div>
-                </div>
-              </div>
-              <div style={{ marginTop: '10px', fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>Published {item.date} · {item.platform}</div>
-            </div>
-          ))}
+              )
+            })
+          )}
         </div>
       )}
+      {FormDialog}
     </div>
   )
 }

@@ -45,6 +45,23 @@
   --status-purple: #a855f7;
 }
 
+.light {
+  --background: #fcfcfc;
+  --foreground: #09090b;
+  --card: #f4f4f5;
+  --card-foreground: #09090b;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --secondary: #e4e4e7;
+  --secondary-foreground: #3f3f46;
+  --muted: #eaeaea;
+  --muted-foreground: #71717a;
+  --accent: #16a34a;
+  --accent-foreground: #ffffff;
+  --border: #d4d4d8;
+  --ring: #2563eb;
+}
+
 * {
   box-sizing: border-box;
 }

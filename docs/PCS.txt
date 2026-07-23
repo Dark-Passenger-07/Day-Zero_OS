@@ -1,0 +1,10437 @@
+
+--- PAGE 1 ---
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 1 — Product Philosophy & Operating Principles 
+Version: 1.0 MVP​
+ Status: Draft (Living Document) 
+ 
+1. Vision 
+Day Zero OS is not a task manager. 
+It is not a Notion clone. 
+It is not a Jira clone. 
+It is not a second brain. 
+It is an Operating System for Builders. 
+A builder should be able to manage an entire startup, product, YouTube channel, research, learning journey, and personal execution without leaving Day Zero OS. 
+Every feature must answer one question: 
+Does this help a builder execute better? 
+If not, it does not belong. 
+ 
+2. Design Philosophy 
+The interface should feel like: 
+●​
+Linear 
+●​
+Raycast 
+●​
+Notion 
+●​
+GitHub 
+●​
+VS Code 
+combined together. 
+Not visually. 
+Functionally. 
+The application should prioritize: 
+●​
+Speed 
+●​
+Clarity 
+●​
+Focus 
+●​
+Minimal friction 
+●​
+Deep organization 
+ 
+3. Product Principles 
+Every module follows these principles. 
+ 
+Principle 1 
+Everything belongs to a Project. 
+Examples: 
+Projects 
+↓ 
+Knowledge 
+↓ 
+Assets 
+↓ 
+Content 
+↓ 
+
+--- PAGE 2 ---
+Architecture Decisions 
+↓ 
+Activity 
+↓ 
+Milestones 
+Nothing exists in isolation. 
+Projects are the center of the OS. 
+ 
+Principle 2 
+Every action creates history. 
+Example: 
+Create Project 
+↓ 
+Activity Timeline 
+Edit Description 
+↓ 
+Activity Timeline 
+Upload Asset 
+↓ 
+Activity Timeline 
+Publish Content 
+↓ 
+Activity Timeline 
+Delete Milestone 
+↓ 
+Activity Timeline 
+Nothing important happens silently. 
+ 
+Principle 3 
+Everything is connected. 
+Knowledge references Projects. 
+Projects reference Assets. 
+Assets reference Content. 
+Content references Knowledge. 
+Architecture Decisions reference Development. 
+No duplicated information. 
+Only relationships. 
+ 
+Principle 4 
+Fast Capture. 
+The user should never spend more than a few seconds creating something. 
+Example: 
+New Project 
+↓ 
+Enter Name 
+↓ 
+Create 
+
+--- PAGE 3 ---
+↓ 
+Continue working 
+Everything else can be edited later. 
+ 
+Principle 5 
+Progressive Detail. 
+Users first create. 
+Then enrich. 
+Not the opposite. 
+Never force long forms. 
+ 
+Principle 6 
+Everything is editable. 
+No locked pages. 
+No permanent decisions. 
+Every field. 
+Every section. 
+Every card. 
+Every item. 
+Should be editable. 
+ 
+Principle 7 
+Delete is always available. 
+Every entity supports: 
+Create 
+Read 
+Update 
+Delete 
+unless there is a strong reason not to. 
+Deleting should require confirmation. 
+ 
+Principle 8 
+Archive instead of destroy. 
+Whenever possible: 
+Archive 
+instead of 
+Delete. 
+Users can restore archived items later. 
+ 
+Principle 9 
+No dead screens. 
+There should never be: 
+Coming Soon 
+Placeholder 
+Under Construction 
+Empty White Page 
+
+--- PAGE 4 ---
+Instead: 
+Show helpful empty states. 
+Example: 
+"No milestones yet." 
+↓ 
+"Create your first milestone." 
+with a button. 
+ 
+Principle 10 
+Every page has purpose. 
+Opening any page should immediately answer: 
+Why does this page exist? 
+What can I do here? 
+What should I do next? 
+ 
+4. UX Rules 
+Every page must contain: 
+Loading State 
+Empty State 
+Error State 
+Success State 
+Confirmation Dialog 
+Keyboard Navigation 
+Responsive Layout 
+ 
+5. CRUD Rule 
+Every data entity supports: 
+Create 
+Read 
+Update 
+Delete 
+Search 
+Filter 
+Sort 
+Bulk Operations (where applicable) 
+Undo (where practical) 
+ 
+6. Navigation Rules 
+Maximum three clicks to reach anything. 
+Primary Navigation: 
+Mission Control 
+Projects 
+Content 
+Knowledge 
+Assets 
+
+--- PAGE 5 ---
+Weekly Debrief 
+Settings 
+Search (Ctrl/Cmd + K) 
+ 
+7. Data Ownership 
+Every user owns: 
+Workspace 
+↓ 
+Projects 
+↓ 
+Everything else 
+No orphan records. 
+No floating data. 
+ 
+8. AI Philosophy 
+AI is optional. 
+AI is disabled by default. 
+The OS must remain fully usable without AI. 
+AI should enhance workflows, not replace them. 
+No feature should require AI. 
+ 
+9. Quality Standards 
+Every feature must: 
+Persist to Supabase 
+Support edit 
+Support delete 
+Handle failures gracefully 
+Provide user feedback 
+Maintain activity history 
+Pass build 
+Pass lint 
+Pass typecheck 
+ 
+10. Definition of Complete 
+A feature is NOT complete when the UI appears. 
+A feature is complete only when: 
+●​
+UI is implemented 
+●​
+CRUD is implemented 
+●​
+Validation exists 
+●​
+Empty state exists 
+●​
+Loading state exists 
+●​
+Error state exists 
+●​
+Activity logging exists 
+●​
+Navigation works 
+●​
+Supabase persistence works 
+●​
+Build passes 
+●​
+Lint passes 
+●​
+Typecheck passes 
+Only then is it considered complete. 
+
+--- PAGE 6 ---
+Chapter 2 — Complete Application Architecture & Navigation Map 
+ 
+2.1 Application Hierarchy 
+Day Zero OS is organized into six primary domains. 
+Day Zero OS 
+│ 
+├── Mission Control 
+├── Projects 
+├── Content Engine 
+├── Knowledge Base 
+├── Asset Vault 
+├── Weekly Debrief 
+│ 
+├── Search (Global) 
+├── Notifications 
+├── Settings 
+└── Profile 
+Everything in the application belongs to one of these domains. 
+ 
+2.2 Global Navigation 
+The left sidebar is the permanent navigation. 
+🏠 Mission Control 
+ 
+📁 Projects 
+ 
+🎬 Content Engine 
+ 
+📚 Knowledge Base 
+ 
+🗂 Asset Vault 
+ 
+📅 Weekly Debrief 
+ 
+────────────── 
+ 
+🔍 Search 
+ 
+🔔 Notifications 
+ 
+⚙ Settings 
+ 
+👤 Profile 
+The sidebar must remain consistent throughout the application. 
+ 
+2.3 Mission Control 
+Purpose: 
+The homepage of Day Zero OS. 
+It answers one question: 
+What should I work on right now? 
+Mission Control contains: 
+Today's Focus 
+ 
+Current Project 
+ 
+Current Video 
+ 
+Today's Tasks 
+ 
+Upcoming Deadlines 
+ 
+Recent Activity 
+ 
+Quick Actions 
+ 
+Project Health 
+ 
+Content Pipeline 
+ 
+Weekly Progress 
+ 
+Recent Projects 
+ 
+Recent Knowledge 
+ 
+Recent Assets 
+ 
+Recent Decisions 
+Mission Control never stores data. 
+
+--- PAGE 7 ---
+It only summarizes information from the rest of the OS. 
+ 
+2.4 Projects 
+Projects are the core entity. 
+Every other module connects to a Project. 
+Projects 
+ 
+├── Project List 
+ 
+├── Create Project 
+ 
+├── Archive 
+ 
+├── Trash 
+ 
+├── Templates 
+ 
+└── Favorites 
+Each Project opens the Project Workspace. 
+ 
+2.5 Project Workspace 
+Every project contains: 
+Project Workspace 
+ 
+├── Overview 
+ 
+├── Planning 
+ 
+├── Development 
+ 
+├── Knowledge 
+ 
+├── Assets 
+ 
+├── Content 
+ 
+├── Architecture 
+ 
+├── Activity 
+ 
+└── Settings 
+This is the heart of Day Zero OS. 
+ 
+2.6 Overview 
+Purpose: 
+Project homepage. 
+Contains: 
+Project Information 
+ 
+Description 
+ 
+Priority 
+ 
+Status 
+ 
+Progress 
+ 
+Technology 
+ 
+Deadline 
+ 
+Team (future) 
+ 
+Cover Image 
+ 
+Tags 
+ 
+Recent Activity 
+ 
+Quick Links 
+ 
+Quick Statistics 
+ 
+2.7 Planning 
+Purpose: 
+
+--- PAGE 8 ---
+Plan execution. 
+Contains: 
+Milestones 
+ 
+Tasks 
+ 
+Sprint Goals 
+ 
+Roadmap 
+ 
+Calendar 
+ 
+Dependencies 
+ 
+Timeline 
+ 
+2.8 Development 
+Purpose: 
+Engineering workspace. 
+Contains: 
+Development Notes 
+ 
+GitHub Repository 
+ 
+Repository URL 
+ 
+Branch 
+ 
+Commit Reference 
+ 
+Bug List 
+ 
+Technical Debt 
+ 
+Sprint Notes 
+ 
+Deployment Notes 
+ 
+Testing Checklist 
+ 
+2.9 Knowledge 
+Purpose: 
+Project-specific second brain. 
+Contains: 
+Markdown Notes 
+ 
+Research 
+ 
+Reference Links 
+ 
+Meeting Notes 
+ 
+Prompt Library 
+ 
+Bookmarks 
+ 
+Learning 
+ 
+Ideas 
+ 
+2.10 Assets 
+Purpose: 
+Central file manager. 
+Contains: 
+Images 
+ 
+Videos 
+ 
+PDFs 
+ 
+Documents 
+ 
+Brand Assets 
+ 
+Icons 
+ 
+Fonts 
+ 
+Logos 
+ 
+Figma Files 
+ 
+
+--- PAGE 9 ---
+GitHub Links 
+ 
+External URLs 
+ 
+2.11 Content 
+Purpose: 
+Manage all content related to the project. 
+Pipeline: 
+Idea 
+ 
+↓ 
+ 
+Research 
+ 
+↓ 
+ 
+Outline 
+ 
+↓ 
+ 
+Script 
+ 
+↓ 
+ 
+Recording 
+ 
+↓ 
+ 
+Editing 
+ 
+↓ 
+ 
+Thumbnail 
+ 
+↓ 
+ 
+SEO 
+ 
+↓ 
+ 
+Publishing 
+ 
+↓ 
+ 
+Analytics 
+ 
+2.12 Architecture 
+Purpose: 
+Record important technical decisions. 
+Each entry contains: 
+Decision 
+ 
+Reason 
+ 
+Alternatives 
+ 
+Impact 
+ 
+Related Files 
+ 
+Date 
+ 
+Author 
+These act like permanent engineering records. 
+ 
+2.13 Activity 
+Purpose: 
+Chronological history of the project. 
+Automatically records: 
+Project Created 
+ 
+Milestone Added 
+ 
+Milestone Completed 
+ 
+Knowledge Added 
+ 
+Asset Uploaded 
+ 
+Decision Created 
+ 
+Content Published 
+
+--- PAGE 10 ---
+ 
+Project Updated 
+Nothing is entered manually. 
+ 
+2.14 Content Engine (Global) 
+Purpose: 
+View all content across all projects. 
+Views: 
+Board 
+ 
+Calendar 
+ 
+Table 
+ 
+Published 
+ 
+Draft 
+ 
+Analytics 
+ 
+2.15 Knowledge Base (Global) 
+Purpose: 
+View all knowledge across projects. 
+Views: 
+All Notes 
+ 
+Research 
+ 
+Prompt Library 
+ 
+Bookmarks 
+ 
+Recently Edited 
+ 
+Favorites 
+ 
+2.16 Asset Vault (Global) 
+Purpose: 
+Central media library. 
+Views: 
+Grid 
+ 
+List 
+ 
+Recent Uploads 
+ 
+Images 
+ 
+Videos 
+ 
+Documents 
+ 
+Logos 
+ 
+Unused Assets 
+ 
+2.17 Weekly Debrief 
+Purpose: 
+Weekly reflection. 
+Contains: 
+Wins 
+ 
+Mistakes 
+ 
+Lessons 
+ 
+Productivity 
+ 
+AI Discoveries 
+ 
+Hours Worked 
+ 
+
+--- PAGE 11 ---
+Next Week Goals 
+ 
+Weekly Metrics 
+ 
+2.18 Search 
+Global search. 
+Keyboard shortcut: 
+Ctrl + K 
+ 
+or 
+ 
+⌘ + K 
+Searches: 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Architecture Decisions 
+ 
+Commands 
+ 
+Settings 
+ 
+2.19 Notifications 
+Contains: 
+Project Updates 
+ 
+Due Milestones 
+ 
+Content Reminders 
+ 
+System Notifications 
+ 
+Success Messages 
+ 
+Warnings 
+ 
+2.20 Settings 
+Contains: 
+Profile 
+ 
+Workspace 
+ 
+Appearance 
+ 
+Theme 
+ 
+Notifications 
+ 
+Keyboard Shortcuts 
+ 
+AI 
+ 
+Storage 
+ 
+Export 
+ 
+Import 
+ 
+Danger Zone 
+ 
+2.21 Relationships 
+Workspace 
+ 
+↓ 
+ 
+Projects 
+ 
+├── Planning 
+ 
+├── Development 
+ 
+├── Knowledge 
+ 
+├── Assets 
+ 
+├── Content 
+ 
+├── Architecture 
+
+--- PAGE 12 ---
+ 
+└── Activity 
+Global modules aggregate data from all projects. 
+Projects 
+      ↓ 
+Content Engine 
+ 
+Projects 
+      ↓ 
+Knowledge Base 
+ 
+Projects 
+      ↓ 
+Asset Vault 
+ 
+Projects 
+      ↓ 
+Mission Control 
+ 
+2.22 Navigation Rules 
+Every page must be reachable within three clicks. 
+Every entity links back to its parent. 
+No dead ends. 
+Every page includes: 
+●​
+Breadcrumb navigation 
+●​
+Back button 
+●​
+Search access 
+●​
+Current project context (where applicable) 
+Chapter 3 — Mission Control (Complete Functional Specification) 
+ 
+3.1 Purpose 
+Mission Control is the homepage of Day Zero OS. 
+It should never be a dashboard that simply displays data. 
+It should answer one question immediately: 
+"What should I do next?" 
+The screen should eliminate decision fatigue. 
+When the application opens, the user must instantly understand: 
+●​
+Current priorities 
+●​
+Active project 
+●​
+Deadlines 
+●​
+Progress 
+●​
+Work requiring attention 
+●​
+Recent work 
+●​
+Suggested next action 
+Mission Control never creates data. 
+It only summarizes and visualizes data from all other modules. 
+ 
+3.2 Screen Layout 
+Mission Control contains the following sections. 
+Mission Control 
+ 
+──────────────────────── 
+ 
+Today's Mission 
+ 
+Quick Actions 
+ 
+──────────────────────── 
+ 
+Current Project 
+ 
+Current Video 
+ 
+Upcoming Deadline 
+ 
+──────────────────────── 
+ 
+Weekly Progress 
+ 
+Project Health 
+ 
+Content Pipeline 
+
+--- PAGE 13 ---
+ 
+──────────────────────── 
+ 
+Today's Tasks 
+ 
+Recent Activity 
+ 
+Recent Decisions 
+ 
+──────────────────────── 
+ 
+Recent Projects 
+ 
+Recent Knowledge 
+ 
+Recent Assets 
+ 
+──────────────────────── 
+ 
+System Status 
+ 
+3.3 Today's Mission 
+Purpose 
+Displays today's primary objective. 
+Examples 
+Finish Project Workspace 
+ 
+Record Episode 3 
+ 
+Complete Sprint Planning 
+ 
+Publish YouTube Video 
+Functions 
+●​
+Edit 
+●​
+Save 
+●​
+Clear 
+●​
+Auto-update from Weekly Debrief (optional) 
+Database 
+user_settings.today_mission 
+ 
+3.4 Quick Actions 
+Purpose 
+Fast access to frequently used actions. 
+Buttons 
+New Project 
+ 
+New Knowledge 
+ 
+Upload Asset 
+ 
+New Content 
+ 
+New Decision 
+ 
+New Milestone 
+Requirements 
+Every button opens its creation modal immediately. 
+Keyboard shortcuts 
+Ctrl + Shift + P 
+ 
+New Project 
+ 
+Ctrl + Shift + N 
+ 
+New Note 
+ 
+Ctrl + Shift + U 
+ 
+Upload 
+ 
+Ctrl + Shift + C 
+ 
+New Content 
+ 
+3.5 Current Project Card 
+Shows 
+
+--- PAGE 14 ---
+●​
+Project Name 
+●​
+Status 
+●​
+Progress 
+●​
+Priority 
+●​
+Deadline 
+●​
+Last Edited 
+Buttons 
+Open 
+ 
+Edit 
+ 
+Archive 
+ 
+Delete 
+Clicking the card opens Project Workspace. 
+ 
+3.6 Current Video 
+Displays 
+Current YouTube episode. 
+Fields 
+Title 
+ 
+Stage 
+ 
+Estimated Publish Date 
+ 
+Progress 
+ 
+Thumbnail 
+Buttons 
+Open 
+ 
+Edit 
+ 
+Continue Writing 
+ 
+3.7 Upcoming Deadlines 
+Shows 
+Next five deadlines. 
+Fields 
+Title 
+ 
+Project 
+ 
+Due Date 
+ 
+Days Remaining 
+ 
+Priority 
+Sorting 
+Ascending. 
+Color Rules 
+Overdue 
+ 
+Red 
+ 
+3 Days 
+ 
+Orange 
+ 
+7 Days 
+ 
+Yellow 
+ 
+Safe 
+ 
+Green 
+ 
+3.8 Weekly Progress 
+Shows 
+Projects Completed 
+ 
+Videos Published 
+ 
+
+--- PAGE 15 ---
+Knowledge Added 
+ 
+Assets Uploaded 
+ 
+Milestones Completed 
+ 
+Hours Worked 
+Visualization 
+Progress bars. 
+ 
+3.9 Project Health 
+Calculated automatically. 
+Inputs 
+Missed Deadlines 
+ 
+Completed Milestones 
+ 
+Progress % 
+ 
+Activity Frequency 
+ 
+Open Tasks 
+Outputs 
+Excellent 
+ 
+Good 
+ 
+Needs Attention 
+ 
+Critical 
+ 
+3.10 Content Pipeline 
+Shows 
+Ideas 
+ 
+Research 
+ 
+Outline 
+ 
+Script 
+ 
+Recording 
+ 
+Editing 
+ 
+Published 
+Each stage displays count. 
+Click opens Content Engine. 
+ 
+3.11 Today's Tasks 
+Displays 
+Tasks due today. 
+Supports 
+Complete 
+ 
+Edit 
+ 
+Delete 
+ 
+Reschedule 
+Completion automatically updates activity. 
+ 
+3.12 Recent Activity 
+Displays latest actions. 
+Examples 
+Project Created 
+ 
+
+--- PAGE 16 ---
+Milestone Completed 
+ 
+Knowledge Added 
+ 
+Asset Uploaded 
+ 
+Video Published 
+ 
+Decision Added 
+Click navigates to related item. 
+ 
+3.13 Recent Decisions 
+Displays 
+Latest Architecture Decisions. 
+Fields 
+Decision 
+ 
+Project 
+ 
+Date 
+ 
+Impact 
+Click opens Decision. 
+ 
+3.14 Recent Projects 
+Displays 
+Last five opened projects. 
+Functions 
+Open 
+ 
+Pin 
+ 
+Archive 
+ 
+Delete 
+ 
+3.15 Recent Knowledge 
+Displays 
+Recently edited notes. 
+Click opens Markdown editor. 
+ 
+3.16 Recent Assets 
+Displays 
+Recent uploads. 
+Supports 
+Preview. 
+Download. 
+Open. 
+Delete. 
+ 
+3.17 System Status 
+Displays 
+Supabase 
+ 
+Connected 
+ 
+Authentication 
+
+--- PAGE 17 ---
+ 
+Online 
+ 
+Storage 
+ 
+Usage 
+ 
+AI 
+ 
+Disabled / Enabled 
+ 
+Last Sync 
+Purpose 
+Instant system diagnostics. 
+ 
+3.18 CRUD 
+Mission Control itself creates nothing. 
+Everything is read-only except: 
+Today's Mission. 
+Quick Actions. 
+ 
+3.19 Empty States 
+Examples 
+No active projects. 
+ 
+Create your first project. 
+ 
+[Create Project] 
+No content yet. 
+ 
+Start your first video. 
+ 
+[Create Content] 
+ 
+3.20 Loading 
+Use skeleton cards. 
+Never blank screen. 
+ 
+3.21 Error State 
+Show 
+Unable to load projects. 
+ 
+Retry 
+Never show raw errors. 
+ 
+3.22 Database Sources 
+Mission Control reads from 
+projects 
+ 
+milestones 
+ 
+content_items 
+ 
+activity_logs 
+ 
+architecture_decisions 
+ 
+knowledge_entries 
+ 
+assets 
+ 
+weekly_debriefs 
+ 
+user_settings 
+ 
+
+--- PAGE 18 ---
+3.23 Completion Criteria 
+Mission Control is complete when 
+✓ Every widget loads real Supabase data 
+✓ Every Quick Action works 
+✓ Clicking every card navigates correctly 
+✓ All statistics calculate automatically 
+✓ Empty states exist 
+✓ Loading states exist 
+✓ Error states exist 
+✓ Build passes 
+✓ Lint passes 
+✓ Typecheck passes 
+ 
+END OF CHAPTER 3 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 4 — Projects Module (Complete Functional Specification) 
+ 
+4.1 Purpose 
+Projects are the central entity of Day Zero OS. 
+Everything belongs to a Project. 
+Knowledge. 
+Assets. 
+Content. 
+Architecture. 
+Milestones. 
+Activity. 
+Nothing exists independently. 
+ 
+4.2 Projects Screen Layout 
+Projects 
+ 
+──────────────────── 
+ 
+Search 
+ 
+Filters 
+ 
+Sort 
+ 
+Views 
+ 
+──────────────────── 
+ 
+Project List 
+ 
+──────────────────── 
+ 
+Pagination 
+ 
+Bulk Actions 
+ 
+4.3 Header Actions 
+
+--- PAGE 19 ---
+Buttons 
+New Project 
+ 
+Import 
+ 
+Templates 
+ 
+Archived 
+ 
+Trash 
+ 
+4.4 Project Card 
+Displays 
+Cover Image 
+ 
+Project Name 
+ 
+Status 
+ 
+Priority 
+ 
+Progress 
+ 
+Deadline 
+ 
+Technology 
+ 
+Recent Activity 
+Actions 
+Open 
+ 
+Edit 
+ 
+Duplicate 
+ 
+Archive 
+ 
+Delete 
+ 
+Favorite 
+ 
+4.5 Create Project 
+Minimum fields 
+Project Name 
+Optional 
+Description 
+ 
+Priority 
+ 
+Status 
+ 
+Technology 
+ 
+Tags 
+ 
+Deadline 
+ 
+Cover 
+Quick create should remain the default. 
+ 
+4.6 Edit Project 
+Editable 
+Everything. 
+Autosave supported. 
+ 
+4.7 Delete Project 
+Confirmation Dialog 
+Delete Project? 
+ 
+This action cannot be undone. 
+ 
+Cancel 
+ 
+
+--- PAGE 20 ---
+Delete 
+Delete removes 
+Knowledge 
+Assets 
+Milestones 
+Content 
+Activity 
+Architecture 
+through database relationships. 
+ 
+4.8 Archive 
+Moves project to Archived. 
+Restore available. 
+ 
+4.9 Duplicate 
+Creates full copy. 
+Option 
+Duplicate with Assets 
+ 
+Duplicate without Assets 
+ 
+4.10 Favorite 
+Pinned to Mission Control. 
+ 
+4.11 Search 
+Searches 
+Project Name 
+ 
+Description 
+ 
+Technology 
+ 
+Tags 
+Instant. 
+ 
+4.12 Filters 
+Status 
+ 
+Priority 
+ 
+Technology 
+ 
+Deadline 
+ 
+Archived 
+ 
+Favorites 
+Multiple filters allowed. 
+ 
+4.13 Sorting 
+Recently Updated 
+ 
+Recently Created 
+ 
+Name 
+ 
+
+--- PAGE 21 ---
+Deadline 
+ 
+Priority 
+ 
+Progress 
+Ascending/Descending. 
+ 
+4.14 Views 
+Grid 
+ 
+List 
+ 
+Board 
+ 
+Timeline 
+ 
+4.15 Bulk Actions 
+Supports 
+Archive 
+ 
+Delete 
+ 
+Export 
+ 
+Favorite 
+ 
+Tag 
+ 
+4.16 Empty State 
+No Projects 
+ 
+Create your first project. 
+ 
+[New Project] 
+ 
+4.17 Loading 
+Skeleton project cards. 
+ 
+4.18 Error State 
+Unable to load projects. 
+ 
+Retry 
+ 
+4.19 Database Behaviour 
+Reads 
+projects 
+Writes 
+projects 
+ 
+activity_logs 
+Updates 
+Mission Control automatically. 
+ 
+4.20 Navigation 
+Click Project 
+↓ 
+Open Project Workspace. 
+ 
+
+--- PAGE 22 ---
+4.21 Completion Criteria 
+Projects module is complete when 
+✓ Create 
+✓ Read 
+✓ Update 
+✓ Delete 
+✓ Archive 
+✓ Duplicate 
+✓ Search 
+✓ Filters 
+✓ Sort 
+✓ Bulk Actions 
+✓ Views 
+✓ Favorites 
+✓ Empty State 
+✓ Loading State 
+✓ Error State 
+✓ Activity Logging 
+✓ Supabase Persistence 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+Chapter 5 — Project Workspace (Complete Functional Specification) 
+ 
+5.1 Purpose 
+The Project Workspace is the heart of Day Zero OS. 
+Everything related to a project is managed here. 
+The Project Workspace should become the place where a builder spends 90% of their time. 
+The user should never need to leave the workspace to manage a project. 
+ 
+5.2 Navigation 
+Project Workspace 
+ 
+──────────────────────── 
+ 
+Overview 
+ 
+Planning 
+ 
+Development 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Architecture 
+ 
+Activity 
+ 
+Settings 
+Top Navigation: 
+← Back to Projects 
+ 
+Project Name 
+ 
+Favorite 
+ 
+Archive 
+
+--- PAGE 23 ---
+ 
+Delete 
+ 
+Search Inside Project 
+ 
+Share (Future) 
+ 
+5.3 Workspace Header 
+Contains 
+Project Cover 
+ 
+Project Name 
+ 
+Status 
+ 
+Priority 
+ 
+Progress 
+ 
+Technology 
+ 
+Deadline 
+ 
+Created Date 
+ 
+Updated Date 
+Quick Actions 
+Edit 
+ 
+Archive 
+ 
+Delete 
+ 
+Duplicate 
+ 
+Favorite 
+ 
+Export 
+ 
+5.4 Workspace Sidebar 
+Persistent. 
+Displays 
+Overview 
+ 
+Planning 
+ 
+Development 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Architecture 
+ 
+Activity 
+ 
+Settings 
+Shows badge counts. 
+Example 
+Knowledge (18) 
+ 
+Assets (42) 
+ 
+Content (6) 
+ 
+Milestones (12) 
+ 
+5.5 Project Context 
+Every page inside Workspace knows 
+Project ID 
+ 
+Workspace ID 
+ 
+Project Name 
+ 
+Current User 
+Never ask user to select project again. 
+ 
+
+--- PAGE 24 ---
+5.6 Universal Project Toolbar 
+Appears on every tab. 
+Contains 
+Search 
+ 
+Quick Add 
+ 
+Notifications 
+ 
+Recent Activity 
+ 
+Command Palette 
+ 
+Project Settings 
+ 
+5.7 Quick Add Menu 
+Available everywhere. 
++ 
+ 
+↓ 
+ 
+Milestone 
+ 
+Task 
+ 
+Knowledge 
+ 
+Asset 
+ 
+Content 
+ 
+Decision 
+ 
+Note 
+ 
+5.8 Project Search 
+Search only inside current project. 
+Searches 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Architecture 
+ 
+Milestones 
+ 
+Activity 
+ 
+5.9 Project Statistics 
+Visible in Workspace. 
+Completion % 
+ 
+Milestones 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Videos 
+ 
+Recent Activity 
+ 
+Health 
+ 
+Open Issues 
+ 
+5.10 Workspace State 
+Every tab supports 
+Loading 
+ 
+Empty 
+ 
+Success 
+ 
+Error 
+ 
+
+--- PAGE 25 ---
+5.11 CRUD Rule 
+Every section supports 
+Create 
+ 
+Read 
+ 
+Update 
+ 
+Delete 
+Unless explicitly read-only. 
+ 
+5.12 Navigation Rule 
+Switching tabs never loses data. 
+Unsaved changes prompt 
+Leave? 
+ 
+Save 
+ 
+Discard 
+ 
+Cancel 
+ 
+5.13 Autosave 
+Supported for 
+Description 
+ 
+Notes 
+ 
+Markdown 
+ 
+Research 
+ 
+Development Notes 
+ 
+Scripts 
+Every 5 seconds after changes. 
+ 
+5.14 Activity Logging 
+Every important action logs automatically. 
+Examples 
+Description Updated 
+ 
+Milestone Added 
+ 
+Knowledge Created 
+ 
+Asset Deleted 
+ 
+Decision Edited 
+ 
+Video Published 
+ 
+5.15 Database Relationships 
+Workspace reads 
+projects 
+ 
+milestones 
+ 
+knowledge_entries 
+ 
+assets 
+ 
+content_items 
+ 
+architecture_decisions 
+ 
+activity_logs 
+ 
+5.16 Keyboard Shortcuts 
+
+--- PAGE 26 ---
+Ctrl+S 
+ 
+Save 
+ 
+Ctrl+K 
+ 
+Search 
+ 
+Ctrl+/ 
+ 
+Command Palette 
+ 
+Ctrl+Shift+N 
+ 
+New Note 
+ 
+Ctrl+Shift+M 
+ 
+New Milestone 
+ 
+5.17 Completion Criteria 
+Workspace is complete when 
+✓ Navigation works 
+✓ Every tab loads 
+✓ Shared toolbar works 
+✓ Search works 
+✓ Quick Add works 
+✓ Activity logging works 
+✓ Autosave works 
+✓ Supabase integration works 
+ 
+END OF CHAPTER 5 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 6 — Overview Module (Complete Functional Specification) 
+ 
+6.1 Purpose 
+Overview is the homepage of a Project. 
+It answers 
+What is the current state of this project? 
+A builder should understand the project within 10 seconds. 
+ 
+6.2 Layout 
+Overview 
+ 
+──────────────────────── 
+ 
+Cover Image 
+ 
+Project Information 
+ 
+──────────────────────── 
+ 
+Progress 
+ 
+Health 
+ 
+Deadline 
+ 
+──────────────────────── 
+ 
+Description 
+ 
+──────────────────────── 
+ 
+
+--- PAGE 27 ---
+Technology 
+ 
+Tags 
+ 
+──────────────────────── 
+ 
+Quick Links 
+ 
+──────────────────────── 
+ 
+Recent Activity 
+ 
+──────────────────────── 
+ 
+Statistics 
+ 
+6.3 Cover Image 
+Functions 
+Upload 
+ 
+Replace 
+ 
+Remove 
+ 
+Preview 
+Supported 
+PNG 
+ 
+JPG 
+ 
+WEBP 
+ 
+6.4 Project Information 
+Fields 
+Project Name 
+ 
+Description 
+ 
+Status 
+ 
+Priority 
+ 
+Category 
+ 
+Technology 
+ 
+Tags 
+ 
+Start Date 
+ 
+Deadline 
+ 
+Created 
+ 
+Updated 
+Every field editable. 
+ 
+6.5 Progress 
+Displays 
+0–100% 
+ 
+Slider 
+ 
+Numeric 
+ 
+Progress Bar 
+Automatic calculation optional. 
+Manual override allowed. 
+ 
+6.6 Project Health 
+Calculated from 
+Progress 
+ 
+Missed Deadlines 
+ 
+Activity 
+
+--- PAGE 28 ---
+ 
+Milestones 
+ 
+Open Bugs 
+States 
+Excellent 
+ 
+Good 
+ 
+Warning 
+ 
+Critical 
+ 
+6.7 Description 
+Markdown supported. 
+Functions 
+Edit 
+ 
+Autosave 
+ 
+Fullscreen 
+ 
+Preview 
+ 
+6.8 Technology Stack 
+Supports 
+React 
+ 
+Next.js 
+ 
+Supabase 
+ 
+Python 
+ 
+Docker 
+ 
+Node 
+ 
+Custom 
+Searchable tags. 
+ 
+6.9 Tags 
+Unlimited. 
+Colors supported. 
+Examples 
+AI 
+ 
+Startup 
+ 
+YouTube 
+ 
+MVP 
+ 
+Learning 
+ 
+6.10 Quick Links 
+Supports 
+GitHub 
+ 
+Figma 
+ 
+Website 
+ 
+Documentation 
+ 
+Drive 
+ 
+Notion 
+ 
+External URLs 
+Functions 
+Add 
+ 
+
+--- PAGE 29 ---
+Edit 
+ 
+Delete 
+ 
+Open 
+ 
+6.11 Statistics 
+Displays 
+Milestones 
+ 
+Knowledge Notes 
+ 
+Assets 
+ 
+Videos 
+ 
+Architecture Decisions 
+ 
+Activity Count 
+Click opens related section. 
+ 
+6.12 Recent Activity 
+Last 10 activities. 
+Open 
+ 
+Filter 
+ 
+View All 
+ 
+6.13 Favorite 
+Pin project. 
+Mission Control reads favorites. 
+ 
+6.14 Export 
+Supports 
+JSON 
+ 
+Markdown 
+ 
+PDF 
+ 
+ZIP (Future) 
+ 
+6.15 Validation 
+Required 
+Project Name 
+Optional 
+Everything else. 
+ 
+6.16 Loading State 
+Skeleton cards. 
+ 
+6.17 Empty State 
+No Description 
+ 
+Add a project description. 
+ 
+[Edit] 
+No Links 
+
+--- PAGE 30 ---
+ 
+Add your first repository. 
+ 
+[Add Link] 
+ 
+6.18 Error State 
+Unable to load project. 
+ 
+Retry 
+ 
+6.19 CRUD 
+Supports 
+Edit 
+ 
+Save 
+ 
+Delete Cover 
+ 
+Replace Cover 
+ 
+Add Tag 
+ 
+Delete Tag 
+ 
+Add Link 
+ 
+Delete Link 
+ 
+Update Progress 
+ 
+6.20 Database 
+Reads 
+projects 
+Writes 
+projects 
+ 
+activity_logs 
+ 
+6.21 Completion Criteria 
+Overview is complete when 
+✓ All fields editable 
+✓ Autosave works 
+✓ Cover uploads 
+✓ Links work 
+✓ Statistics update 
+✓ Activity logs generated 
+✓ Supabase persistence 
+✓ Loading 
+✓ Empty 
+✓ Error 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+​
+Chapter 9 — Knowledge Module (Complete Functional Specification) 
+ 
+9.1 Purpose 
+The Knowledge Module is the second brain of every project. 
+
+--- PAGE 31 ---
+It stores everything that helps build the project: 
+●​
+Research 
+●​
+Ideas 
+●​
+Documentation 
+●​
+Tutorials 
+●​
+API References 
+●​
+Meeting Notes 
+●​
+AI Prompts 
+●​
+Learnings 
+●​
+Decisions 
+●​
+Bookmarks 
+Nothing should be lost. 
+The user should never think: 
+"Where did I save that note?" 
+ 
+9.2 Layout 
+Knowledge 
+ 
+──────────────────────── 
+ 
+Search 
+ 
+Categories 
+ 
+Tags 
+ 
+Views 
+ 
+──────────────────────── 
+ 
+Knowledge List 
+ 
+──────────────────────── 
+ 
+Editor 
+ 
+──────────────────────── 
+ 
+Linked Resources 
+ 
+──────────────────────── 
+ 
+Related Notes 
+ 
+9.3 Views 
+Support: 
+Grid 
+ 
+List 
+ 
+Tree 
+ 
+Timeline 
+ 
+Favorites 
+ 
+9.4 Categories 
+Every note belongs to a category. 
+Default categories: 
+Research 
+ 
+Ideas 
+ 
+Documentation 
+ 
+Meeting Notes 
+ 
+Tutorials 
+ 
+API Docs 
+ 
+AI Prompts 
+ 
+References 
+ 
+Learning 
+ 
+Bookmarks 
+ 
+Personal Notes 
+Users can create custom categories. 
+ 
+
+--- PAGE 32 ---
+9.5 Knowledge Note 
+Each note contains: 
+Title 
+ 
+Category 
+ 
+Markdown Content 
+ 
+Tags 
+ 
+Created Date 
+ 
+Updated Date 
+ 
+Favorite 
+ 
+Pinned 
+ 
+Project 
+ 
+Author 
+ 
+Attachments 
+ 
+Related Notes 
+ 
+Related Assets 
+ 
+9.6 Markdown Editor 
+Supports: 
+Headings 
+ 
+Lists 
+ 
+Tables 
+ 
+Code Blocks 
+ 
+Images 
+ 
+Links 
+ 
+Task Lists 
+ 
+Block Quotes 
+ 
+Horizontal Rules 
+ 
+Callouts 
+ 
+Emoji 
+ 
+Mermaid Diagrams (Future) 
+Functions: 
+Edit 
+ 
+Preview 
+ 
+Split View 
+ 
+Fullscreen 
+ 
+Word Count 
+ 
+Character Count 
+ 
+Reading Time 
+ 
+Autosave 
+ 
+9.7 Attachments 
+Attach: 
+Images 
+ 
+PDF 
+ 
+Videos 
+ 
+ZIP 
+ 
+Documents 
+ 
+External URLs 
+Actions: 
+Preview 
+ 
+Open 
+ 
+Download 
+
+--- PAGE 33 ---
+ 
+Replace 
+ 
+Delete 
+ 
+9.8 AI Prompt Library 
+A special category. 
+Each prompt contains: 
+Title 
+ 
+Prompt 
+ 
+Purpose 
+ 
+Tags 
+ 
+Model Used 
+ 
+Last Used 
+ 
+Favorite 
+Functions: 
+Copy 
+ 
+Edit 
+ 
+Duplicate 
+ 
+Delete 
+ 
+Pin 
+ 
+9.9 Bookmarks 
+Store: 
+Websites 
+ 
+YouTube 
+ 
+GitHub 
+ 
+Papers 
+ 
+Blogs 
+ 
+Courses 
+Display: 
+Title 
+ 
+URL 
+ 
+Description 
+ 
+Category 
+ 
+Thumbnail 
+ 
+Added Date 
+ 
+9.10 Search 
+Searches: 
+Title 
+ 
+Markdown 
+ 
+Tags 
+ 
+Category 
+ 
+Attachments 
+ 
+Prompt Content 
+Instant search. 
+ 
+9.11 Filters 
+Category 
+ 
+Tags 
+ 
+
+--- PAGE 34 ---
+Favorites 
+ 
+Pinned 
+ 
+Recently Edited 
+ 
+Recently Created 
+ 
+9.12 Relationships 
+Every note can link to: 
+Project 
+ 
+Assets 
+ 
+Content 
+ 
+Architecture Decisions 
+ 
+Other Notes 
+Backlinks should be displayed automatically. 
+ 
+9.13 CRUD 
+Supports: 
+Create 
+ 
+Read 
+ 
+Update 
+ 
+Delete 
+ 
+Duplicate 
+ 
+Archive 
+ 
+Favorite 
+ 
+Pin 
+ 
+Export 
+ 
+9.14 Export 
+Formats: 
+Markdown 
+ 
+PDF 
+ 
+JSON 
+ 
+9.15 Empty State 
+No Knowledge Yet 
+ 
+Capture your first idea. 
+ 
+[New Note] 
+ 
+9.16 Loading 
+Skeleton list. 
+ 
+9.17 Error 
+Unable to load knowledge. 
+ 
+Retry 
+ 
+9.18 Database 
+Reads: 
+
+--- PAGE 35 ---
+knowledge_entries 
+Revision Required: 
+knowledge_categories 
+knowledge_tags 
+knowledge_links 
+bookmarks 
+prompt_library 
+ 
+9.19 Activity 
+Automatically records: 
+Knowledge Created 
+ 
+Knowledge Updated 
+ 
+Knowledge Deleted 
+ 
+Bookmark Added 
+ 
+Prompt Saved 
+ 
+9.20 Completion Criteria 
+Knowledge Module is complete when: 
+●​
+Markdown works 
+●​
+Autosave works 
+●​
+Search works 
+●​
+Categories work 
+●​
+Tags work 
+●​
+Attachments work 
+●​
+Prompt Library works 
+●​
+Bookmarks work 
+●​
+CRUD complete 
+●​
+Export complete 
+●​
+Activity logging complete 
+●​
+Supabase persistence complete 
+ 
+END OF CHAPTER 9 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 10 — Asset Vault (Complete Functional Specification) 
+ 
+10.1 Purpose 
+The Asset Vault is the Digital Asset Management (DAM) system for Day Zero OS. 
+It stores every file related to every project. 
+The user should never need to search their Downloads folder again. 
+ 
+10.2 Layout 
+Asset Vault 
+ 
+──────────────────────── 
+ 
+Search 
+ 
+Filters 
+ 
+Views 
+ 
+──────────────────────── 
+ 
+Folders 
+ 
+──────────────────────── 
+ 
+Assets Grid/List 
+ 
+──────────────────────── 
+ 
+
+--- PAGE 36 ---
+Preview Panel 
+ 
+──────────────────────── 
+ 
+Storage Statistics 
+ 
+10.3 Supported Asset Types 
+Images 
+ 
+Videos 
+ 
+Audio 
+ 
+PDF 
+ 
+Word 
+ 
+Excel 
+ 
+PowerPoint 
+ 
+ZIP 
+ 
+Code Files 
+ 
+Fonts 
+ 
+Icons 
+ 
+Logos 
+ 
+SVG 
+ 
+JSON 
+ 
+Markdown 
+ 
+Design Files 
+ 
+External Links 
+ 
+10.4 Asset Card 
+Displays: 
+Preview 
+ 
+File Name 
+ 
+File Type 
+ 
+Size 
+ 
+Project 
+ 
+Upload Date 
+ 
+Tags 
+ 
+Storage Location 
+ 
+10.5 Upload 
+Supports: 
+Click Upload 
+ 
+Drag & Drop 
+ 
+Paste Image 
+ 
+Import URL 
+ 
+10.6 Preview 
+Images 
+Videos 
+PDF 
+Markdown 
+Text Files 
+Audio 
+Preview opens inside the application. 
+No download required. 
+
+--- PAGE 37 ---
+ 
+10.7 File Actions 
+Open 
+ 
+Preview 
+ 
+Download 
+ 
+Rename 
+ 
+Replace 
+ 
+Duplicate 
+ 
+Move 
+ 
+Copy Link 
+ 
+Delete 
+ 
+Archive 
+ 
+10.8 Folder Management 
+Supports: 
+Create Folder 
+ 
+Rename 
+ 
+Move 
+ 
+Delete 
+ 
+Nested Folders 
+ 
+Color Labels 
+ 
+10.9 Tags 
+Unlimited tags. 
+Color coded. 
+Searchable. 
+ 
+10.10 Search 
+Searches: 
+File Name 
+ 
+Tags 
+ 
+Project 
+ 
+Extension 
+ 
+Folder 
+ 
+Description 
+ 
+10.11 Filters 
+File Type 
+ 
+Project 
+ 
+Upload Date 
+ 
+Recently Opened 
+ 
+Favorites 
+ 
+Unused Assets 
+ 
+Large Files 
+ 
+10.12 Views 
+Grid 
+ 
+List 
+ 
+
+--- PAGE 38 ---
+Gallery 
+ 
+Timeline 
+ 
+10.13 Storage 
+Displays: 
+Total Storage 
+ 
+Used Storage 
+ 
+Remaining Storage 
+ 
+Largest Files 
+ 
+Recent Uploads 
+ 
+10.14 External Links 
+Supports: 
+GitHub 
+ 
+Figma 
+ 
+Google Drive 
+ 
+YouTube 
+ 
+Website 
+ 
+API Documentation 
+ 
+10.15 Image Viewer 
+Supports: 
+Zoom 
+ 
+Rotate 
+ 
+Fullscreen 
+ 
+Next 
+ 
+Previous 
+ 
+Download 
+ 
+10.16 CRUD 
+Supports: 
+Upload 
+ 
+Edit 
+ 
+Rename 
+ 
+Replace 
+ 
+Delete 
+ 
+Archive 
+ 
+Restore 
+ 
+10.17 Empty State 
+No Assets Yet 
+ 
+Upload your first file. 
+ 
+[Upload] 
+ 
+10.18 Loading 
+Upload progress. 
+Skeleton previews. 
+ 
+
+--- PAGE 39 ---
+10.19 Error 
+Upload Failed 
+ 
+Retry 
+ 
+Cancel 
+ 
+10.20 Database 
+Current: 
+assets 
+Revision Required: 
+asset_folders 
+asset_tags 
+asset_links 
+asset_versions 
+ 
+10.21 Activity 
+Automatically logs: 
+Asset Uploaded 
+ 
+Asset Deleted 
+ 
+Asset Renamed 
+ 
+Folder Created 
+ 
+Folder Deleted 
+ 
+Asset Downloaded 
+ 
+10.22 Completion Criteria 
+Asset Vault is complete when: 
+●​
+Upload works 
+●​
+Preview works 
+●​
+Image viewer works 
+●​
+Folder management works 
+●​
+Search works 
+●​
+Filters work 
+●​
+Tags work 
+●​
+Storage statistics work 
+●​
+CRUD complete 
+●​
+Activity logging complete 
+●​
+Supabase Storage integration complete 
+ 
+END OF CHAPTER 10 
+ 
+📌 Database Revision Log 
+Revision 2 
+New tables introduced: 
+knowledge_categories 
+knowledge_tags 
+knowledge_links 
+bookmarks 
+prompt_library 
+ 
+asset_folders 
+asset_tags 
+asset_links 
+asset_versions 
+These will be included in the final consolidated migration after the PCS is complete. 
+Chapter 11 — Content Engine Module (Complete Functional Specification) 
+ 
+11.1 Purpose 
+
+--- PAGE 40 ---
+The Content Engine manages the complete lifecycle of every piece of content created by the user. 
+This module is not limited to YouTube. 
+It should support future expansion to: 
+●​
+YouTube 
+●​
+LinkedIn 
+●​
+X (Twitter) 
+●​
+Instagram 
+●​
+Blog 
+●​
+Newsletter 
+●​
+Podcast 
+●​
+Documentation 
+For Version 1, YouTube is the primary workflow. 
+ 
+11.2 Layout 
+Content 
+ 
+──────────────────────── 
+ 
+Pipeline 
+ 
+──────────────────────── 
+ 
+Content List 
+ 
+──────────────────────── 
+ 
+Editor 
+ 
+──────────────────────── 
+ 
+Publishing 
+ 
+──────────────────────── 
+ 
+Analytics 
+ 
+11.3 Content Pipeline 
+Each content item moves through fixed stages. 
+Idea 
+ 
+↓ 
+ 
+Research 
+ 
+↓ 
+ 
+Outline 
+ 
+↓ 
+ 
+Script 
+ 
+↓ 
+ 
+Recording 
+ 
+↓ 
+ 
+Editing 
+ 
+↓ 
+ 
+Thumbnail 
+ 
+↓ 
+ 
+SEO 
+ 
+↓ 
+ 
+Ready 
+ 
+↓ 
+ 
+Published 
+ 
+↓ 
+ 
+Archived 
+Users can drag and drop between stages. 
+ 
+11.4 Content Item 
+Each content item contains 
+Title 
+ 
+
+--- PAGE 41 ---
+Platform 
+ 
+Series 
+ 
+Episode Number 
+ 
+Project 
+ 
+Status 
+ 
+Priority 
+ 
+Publish Date 
+ 
+Description 
+ 
+Thumbnail 
+ 
+Tags 
+ 
+Keywords 
+ 
+Notes 
+ 
+11.5 Research 
+Contains 
+Research Notes 
+ 
+References 
+ 
+Links 
+ 
+Competitors 
+ 
+Videos 
+ 
+Articles 
+ 
+Papers 
+ 
+Screenshots 
+ 
+11.6 Outline 
+Supports 
+Sections 
+ 
+Bullet Points 
+ 
+Time Estimates 
+ 
+References 
+ 
+Objectives 
+ 
+11.7 Script Editor 
+Markdown editor. 
+Supports 
+Formatting 
+ 
+Code Blocks 
+ 
+Images 
+ 
+Tables 
+ 
+Callouts 
+ 
+Comments 
+ 
+Autosave 
+ 
+Version History 
+Statistics 
+Characters 
+ 
+Words 
+ 
+Estimated Duration 
+ 
+Reading Time 
+ 
+11.8 Recording 
+
+--- PAGE 42 ---
+Track 
+Recording Date 
+ 
+Equipment 
+ 
+Camera 
+ 
+Microphone 
+ 
+Lighting 
+ 
+Location 
+ 
+Duration 
+ 
+Take Count 
+ 
+11.9 Editing 
+Fields 
+Editor 
+ 
+Software 
+ 
+Progress 
+ 
+Export Version 
+ 
+Notes 
+ 
+Revision History 
+ 
+11.10 Thumbnail 
+Stores 
+Thumbnail Image 
+ 
+PSD/Figma Link 
+ 
+Title Variations 
+ 
+Design Notes 
+ 
+11.11 SEO 
+Contains 
+Title 
+ 
+Description 
+ 
+Keywords 
+ 
+Tags 
+ 
+Hashtags 
+ 
+Chapters 
+ 
+Pinned Comment 
+ 
+11.12 Publishing 
+Stores 
+Platform 
+ 
+Publish Date 
+ 
+URL 
+ 
+Visibility 
+ 
+Playlist 
+ 
+Category 
+ 
+11.13 Analytics 
+Displays 
+Views 
+ 
+Watch Time 
+ 
+
+--- PAGE 43 ---
+CTR 
+ 
+Subscribers Gained 
+ 
+Revenue (Future) 
+ 
+Comments 
+ 
+Likes 
+Manual entry for MVP. 
+ 
+11.14 Search 
+Searches 
+Title 
+ 
+Script 
+ 
+Tags 
+ 
+Platform 
+ 
+Series 
+ 
+11.15 Filters 
+Status 
+ 
+Platform 
+ 
+Series 
+ 
+Publish Date 
+ 
+Priority 
+ 
+11.16 CRUD 
+Supports 
+Create 
+ 
+Edit 
+ 
+Delete 
+ 
+Duplicate 
+ 
+Archive 
+ 
+Export 
+ 
+Move Between Stages 
+ 
+11.17 Activity 
+Automatically logs 
+Content Created 
+ 
+Script Updated 
+ 
+Recording Completed 
+ 
+Published 
+ 
+Thumbnail Updated 
+ 
+11.18 Empty State 
+No Content Yet 
+ 
+Create your first video. 
+ 
+[New Content] 
+ 
+11.19 Loading 
+Skeleton cards. 
+ 
+
+--- PAGE 44 ---
+11.20 Error 
+Unable to load content. 
+ 
+Retry 
+ 
+11.21 Database 
+Current 
+content_items 
+Revision Required 
+content_series 
+ 
+content_versions 
+ 
+seo_metadata 
+ 
+content_analytics 
+ 
+11.22 Completion Criteria 
+Content Engine complete when 
+✓ Pipeline 
+✓ Script Editor 
+✓ Research 
+✓ SEO 
+✓ Publishing 
+✓ Analytics 
+✓ Search 
+✓ Filters 
+✓ CRUD 
+✓ Activity 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+END OF CHAPTER 11 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 12 — Architecture Decisions Module (Complete Functional 
+Specification) 
+ 
+12.1 Purpose 
+This is one of the signature features of Day Zero OS. 
+Instead of forgetting why technical decisions were made, every important architectural decision is permanently recorded. 
+Think of it as a project's engineering memory. 
+ 
+12.2 Layout 
+
+--- PAGE 45 ---
+Architecture Decisions 
+ 
+──────────────────────── 
+ 
+Decision Timeline 
+ 
+──────────────────────── 
+ 
+Decision List 
+ 
+──────────────────────── 
+ 
+Decision Details 
+ 
+──────────────────────── 
+ 
+Related Resources 
+ 
+12.3 Decision Record 
+Every decision contains 
+Title 
+ 
+Decision 
+ 
+Problem Statement 
+ 
+Reason 
+ 
+Alternatives Considered 
+ 
+Chosen Solution 
+ 
+Consequences 
+ 
+Impact 
+ 
+Status 
+ 
+Priority 
+ 
+Author 
+ 
+Created Date 
+ 
+Updated Date 
+ 
+12.4 Status 
+Proposed 
+ 
+Approved 
+ 
+Implemented 
+ 
+Deprecated 
+ 
+Rejected 
+ 
+12.5 Priority 
+Critical 
+ 
+High 
+ 
+Medium 
+ 
+Low 
+ 
+12.6 Related Items 
+Every decision may link to 
+Project 
+ 
+Milestone 
+ 
+Task 
+ 
+Knowledge Note 
+ 
+Asset 
+ 
+Content 
+ 
+GitHub Repository 
+ 
+Bug 
+ 
+Technical Debt 
+ 
+
+--- PAGE 46 ---
+12.7 Decision Timeline 
+Displays 
+Newest 
+ 
+Oldest 
+ 
+Grouped by Sprint 
+ 
+Grouped by Milestone 
+ 
+12.8 Templates 
+Provide templates for 
+Architecture 
+ 
+Database 
+ 
+UI 
+ 
+Backend 
+ 
+API 
+ 
+Security 
+ 
+Infrastructure 
+ 
+Performance 
+ 
+AI 
+ 
+12.9 Search 
+Searches 
+Title 
+ 
+Decision 
+ 
+Reason 
+ 
+Alternatives 
+ 
+Impact 
+ 
+12.10 Filters 
+Status 
+ 
+Priority 
+ 
+Author 
+ 
+Project 
+ 
+Date 
+ 
+12.11 CRUD 
+Supports 
+Create 
+ 
+Edit 
+ 
+Delete 
+ 
+Duplicate 
+ 
+Archive 
+ 
+Export 
+ 
+12.12 Export 
+Formats 
+Markdown 
+ 
+PDF 
+ 
+JSON 
+ 
+
+--- PAGE 47 ---
+12.13 Activity 
+Automatically logs 
+Decision Created 
+ 
+Decision Updated 
+ 
+Decision Approved 
+ 
+Decision Archived 
+ 
+Decision Deleted 
+ 
+12.14 Empty State 
+No Architecture Decisions 
+ 
+Document your first important decision. 
+ 
+[New Decision] 
+ 
+12.15 Loading 
+Skeleton cards. 
+ 
+12.16 Error 
+Unable to load architecture decisions. 
+ 
+Retry 
+ 
+12.17 Database 
+Current 
+architecture_decisions 
+Revision Required 
+decision_templates 
+ 
+decision_links 
+ 
+12.18 Completion Criteria 
+Architecture module complete when 
+✓ CRUD 
+✓ Timeline 
+✓ Templates 
+✓ Search 
+✓ Filters 
+✓ Export 
+✓ Related Resources 
+✓ Activity 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+Chapter 13 — Activity Timeline Module (Complete Functional Specification) 
+ 
+13.1 Purpose 
+
+--- PAGE 48 ---
+The Activity Timeline is the permanent history of a project. 
+It automatically records every important action performed inside Day Zero OS. 
+The user should never manually create an activity entry. 
+The timeline becomes the project's audit log and historical record. 
+ 
+13.2 Objectives 
+The Activity Timeline should answer: 
+●​
+What happened? 
+●​
+Who performed it? 
+●​
+When did it happen? 
+●​
+Why did it happen? 
+●​
+Which project did it affect? 
+●​
+Which module generated it? 
+ 
+13.3 Layout 
+Activity Timeline 
+ 
+──────────────────────── 
+ 
+Search 
+ 
+Filters 
+ 
+──────────────────────── 
+ 
+Timeline 
+ 
+──────────────────────── 
+ 
+Activity Details 
+ 
+──────────────────────── 
+ 
+Statistics 
+ 
+13.4 Timeline Card 
+Each activity contains 
+Icon 
+ 
+Title 
+ 
+Description 
+ 
+Module 
+ 
+Project 
+ 
+Timestamp 
+ 
+User 
+ 
+Related Resource 
+Example 
+📁 Project Created 
+ 
+Day Zero OS 
+ 
+2 minutes ago 
+ 
+Open 
+ 
+13.5 Activity Types 
+Support 
+Project 
+ 
+Milestone 
+ 
+Task 
+ 
+Knowledge 
+ 
+Content 
+ 
+Asset 
+ 
+Decision 
+ 
+Bug 
+
+--- PAGE 49 ---
+ 
+Deployment 
+ 
+Settings 
+ 
+Authentication 
+ 
+AI 
+ 
+Import 
+ 
+Export 
+ 
+13.6 Generated Activities 
+Examples 
+Project Created 
+ 
+Project Updated 
+ 
+Project Deleted 
+ 
+Milestone Added 
+ 
+Milestone Completed 
+ 
+Task Completed 
+ 
+Knowledge Created 
+ 
+Knowledge Edited 
+ 
+Asset Uploaded 
+ 
+Asset Deleted 
+ 
+Decision Approved 
+ 
+Content Published 
+ 
+Bug Closed 
+ 
+Deployment Updated 
+ 
+Profile Updated 
+ 
+13.7 Activity Details 
+Opening an activity displays 
+Summary 
+ 
+Previous Value 
+ 
+New Value 
+ 
+Related Module 
+ 
+Open Resource 
+ 
+Timestamp 
+ 
+User 
+ 
+13.8 Search 
+Searches 
+Title 
+ 
+Description 
+ 
+Project 
+ 
+Module 
+ 
+User 
+ 
+13.9 Filters 
+Today 
+ 
+Yesterday 
+ 
+Last Week 
+ 
+Project 
+ 
+Module 
+ 
+User 
+ 
+Success 
+
+--- PAGE 50 ---
+ 
+Failure 
+ 
+13.10 Grouping 
+Support 
+Today 
+ 
+Yesterday 
+ 
+This Week 
+ 
+This Month 
+ 
+Older 
+ 
+13.11 Timeline Views 
+Chronological 
+ 
+Grouped 
+ 
+Compact 
+ 
+Detailed 
+ 
+13.12 Statistics 
+Displays 
+Today's Activities 
+ 
+Weekly Activities 
+ 
+Most Active Project 
+ 
+Most Active Module 
+ 
+Average Daily Activity 
+ 
+13.13 Navigation 
+Every activity links back to its origin. 
+Example 
+Activity 
+ 
+↓ 
+ 
+Project 
+ 
+↓ 
+ 
+Knowledge 
+ 
+↓ 
+ 
+Specific Note 
+ 
+13.14 Export 
+Formats 
+JSON 
+ 
+CSV 
+ 
+PDF 
+ 
+Markdown 
+ 
+13.15 CRUD 
+Activities are immutable. 
+Supports 
+Read 
+ 
+Search 
+ 
+Filter 
+
+--- PAGE 51 ---
+ 
+Export 
+No Edit. 
+No Delete. 
+(Except system cleanup.) 
+ 
+13.16 Empty State 
+No Activity Yet 
+ 
+Start building. 
+ 
+Everything you do will appear here. 
+ 
+13.17 Loading 
+Skeleton timeline. 
+ 
+13.18 Error 
+Unable to load activity. 
+ 
+Retry 
+ 
+13.19 Database 
+Current 
+activity_logs 
+Revision 
+activity_metadata 
+ 
+13.20 Completion Criteria 
+Activity Timeline complete when 
+✓ Automatic logging 
+✓ Search 
+✓ Filters 
+✓ Timeline 
+✓ Navigation 
+✓ Export 
+✓ Statistics 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+END OF CHAPTER 13 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 14 — Global Content Engine (Cross-Project Content Management) 
+ 
+
+--- PAGE 52 ---
+14.1 Purpose 
+Unlike the Project Workspace Content tab, this module manages all content across all projects. 
+It provides a centralized production dashboard. 
+ 
+14.2 Layout 
+Content Engine 
+ 
+──────────────────────── 
+ 
+Pipeline 
+ 
+──────────────────────── 
+ 
+Calendar 
+ 
+──────────────────────── 
+ 
+Content Library 
+ 
+──────────────────────── 
+ 
+Analytics 
+ 
+──────────────────────── 
+ 
+Publishing Queue 
+ 
+14.3 Dashboard 
+Displays 
+Total Videos 
+ 
+Drafts 
+ 
+Recording 
+ 
+Editing 
+ 
+Ready 
+ 
+Published 
+ 
+Scheduled 
+ 
+14.4 Pipeline Board 
+Kanban 
+Ideas 
+ 
+↓ 
+ 
+Research 
+ 
+↓ 
+ 
+Outline 
+ 
+↓ 
+ 
+Script 
+ 
+↓ 
+ 
+Recording 
+ 
+↓ 
+ 
+Editing 
+ 
+↓ 
+ 
+Thumbnail 
+ 
+↓ 
+ 
+SEO 
+ 
+↓ 
+ 
+Ready 
+ 
+↓ 
+ 
+Published 
+Drag & Drop supported. 
+ 
+
+--- PAGE 53 ---
+14.5 Calendar View 
+Shows 
+Recording 
+ 
+Editing 
+ 
+Publishing 
+ 
+Deadlines 
+Views 
+Daily 
+ 
+Weekly 
+ 
+Monthly 
+ 
+14.6 Content Library 
+Each card displays 
+Thumbnail 
+ 
+Title 
+ 
+Project 
+ 
+Series 
+ 
+Stage 
+ 
+Publish Date 
+ 
+Platform 
+ 
+14.7 Publishing Queue 
+Displays 
+Ready 
+ 
+Scheduled 
+ 
+Failed 
+ 
+Published 
+Supports manual publish status for MVP. 
+ 
+14.8 Analytics Dashboard 
+Shows 
+Views 
+ 
+Subscribers 
+ 
+CTR 
+ 
+Watch Time 
+ 
+Comments 
+ 
+Likes 
+Manual entry for Version 1. 
+Future API integrations. 
+ 
+14.9 Search 
+Searches 
+Title 
+ 
+Project 
+ 
+Series 
+ 
+Tags 
+ 
+Platform 
+ 
+
+--- PAGE 54 ---
+14.10 Filters 
+Project 
+ 
+Stage 
+ 
+Platform 
+ 
+Series 
+ 
+Published 
+ 
+Scheduled 
+ 
+14.11 Views 
+Board 
+ 
+Table 
+ 
+Calendar 
+ 
+Gallery 
+ 
+14.12 Bulk Actions 
+Archive 
+ 
+Delete 
+ 
+Move Stage 
+ 
+Export 
+ 
+Duplicate 
+ 
+14.13 Templates 
+Templates for 
+Tutorial 
+ 
+Course 
+ 
+Vlog 
+ 
+Podcast 
+ 
+Product Demo 
+ 
+Shorts 
+ 
+Announcement 
+ 
+14.14 Relationships 
+Every content item links to 
+Project 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Architecture Decisions 
+ 
+Scripts 
+ 
+14.15 Empty State 
+No Content Available 
+ 
+Create your first content item. 
+ 
+[Create] 
+ 
+14.16 Loading 
+Skeleton board. 
+ 
+
+--- PAGE 55 ---
+14.17 Error 
+Unable to load content engine. 
+ 
+Retry 
+ 
+14.18 Database 
+Current 
+content_items 
+ 
+content_series 
+ 
+content_analytics 
+Revision 
+content_templates 
+ 
+publishing_queue 
+ 
+14.19 Completion Criteria 
+Global Content Engine complete when 
+✓ Dashboard 
+✓ Pipeline 
+✓ Calendar 
+✓ Analytics 
+✓ Search 
+✓ Filters 
+✓ Templates 
+✓ Publishing Queue 
+✓ CRUD 
+✓ Activity 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+​
+Chapter 15 — Global Knowledge Base (Cross-Project Knowledge 
+Management) 
+ 
+15.1 Purpose 
+The Global Knowledge Base is the master knowledge hub of Day Zero OS. 
+Unlike the Project Workspace Knowledge tab, this module provides a unified view of knowledge across all projects. 
+It should become the user's permanent knowledge repository. 
+The user should never need to remember which project contains a specific note. 
+ 
+15.2 Objectives 
+The Knowledge Base should answer: 
+●​
+What do I already know? 
+●​
+Where is that information? 
+●​
+Which project uses it? 
+●​
+What have I recently learned? 
+●​
+What should I review? 
+ 
+
+--- PAGE 56 ---
+15.3 Layout 
+Knowledge Base 
+ 
+──────────────────────── 
+ 
+Search 
+ 
+Filters 
+ 
+Categories 
+ 
+Tags 
+ 
+──────────────────────── 
+ 
+Knowledge Library 
+ 
+──────────────────────── 
+ 
+Knowledge Preview 
+ 
+──────────────────────── 
+ 
+Related Projects 
+ 
+──────────────────────── 
+ 
+Statistics 
+ 
+15.4 Dashboard 
+Displays 
+Total Notes 
+ 
+Favorites 
+ 
+Recently Edited 
+ 
+Recently Created 
+ 
+Most Used Tags 
+ 
+Most Active Projects 
+ 
+Prompt Library 
+ 
+Bookmarks 
+ 
+15.5 Library 
+Views 
+Grid 
+ 
+List 
+ 
+Tree 
+ 
+Timeline 
+Grouping 
+By Project 
+ 
+By Category 
+ 
+By Tag 
+ 
+By Date 
+ 
+Favorites 
+ 
+Recently Edited 
+ 
+15.6 Categories 
+Default 
+Research 
+ 
+Ideas 
+ 
+Learning 
+ 
+Documentation 
+ 
+Meeting Notes 
+ 
+API 
+ 
+Prompt Library 
+ 
+References 
+ 
+
+--- PAGE 57 ---
+Bookmarks 
+ 
+Personal 
+Users may create custom categories. 
+ 
+15.7 Search 
+Global search across 
+Title 
+ 
+Markdown 
+ 
+Tags 
+ 
+Prompt Content 
+ 
+Attachments 
+ 
+Bookmarks 
+ 
+Categories 
+Search should be instant. 
+ 
+15.8 Relationships 
+Every note may link to 
+Project 
+ 
+Asset 
+ 
+Content 
+ 
+Decision 
+ 
+Milestone 
+ 
+Task 
+ 
+Bug 
+ 
+External URL 
+Backlinks generated automatically. 
+ 
+15.9 Knowledge Graph (Future Ready) 
+Although not displayed in MVP, every note should support graph relationships. 
+Example 
+React Authentication 
+ 
+↓ 
+ 
+Supabase Auth 
+ 
+↓ 
+ 
+Day Zero OS 
+ 
+↓ 
+ 
+YouTube Episode 4 
+This allows future graph visualization. 
+ 
+15.10 Favorites 
+Supports 
+Favorite 
+ 
+Unfavorite 
+ 
+Pin 
+ 
+Unpin 
+Favorites appear on Mission Control. 
+ 
+
+--- PAGE 58 ---
+15.11 Recent Notes 
+Displays 
+Last Edited 
+ 
+Recently Created 
+ 
+Most Viewed 
+ 
+Most Linked 
+ 
+15.12 Prompt Library 
+Integrated. 
+Supports 
+Copy 
+ 
+Duplicate 
+ 
+Version History 
+ 
+Export 
+ 
+Favorite 
+ 
+15.13 Bookmarks 
+Supports 
+Website 
+ 
+Video 
+ 
+GitHub 
+ 
+Documentation 
+ 
+Research Paper 
+ 
+Course 
+ 
+External Resource 
+ 
+15.14 Bulk Actions 
+Delete 
+ 
+Archive 
+ 
+Export 
+ 
+Move Category 
+ 
+Tag 
+ 
+Favorite 
+ 
+15.15 Export 
+Formats 
+Markdown 
+ 
+PDF 
+ 
+JSON 
+ 
+ZIP 
+ 
+15.16 Empty State 
+Knowledge Base Empty 
+ 
+Capture your first idea. 
+ 
+[Create Note] 
+ 
+15.17 Loading 
+Skeleton cards. 
+
+--- PAGE 59 ---
+ 
+15.18 Error 
+Unable to load knowledge base. 
+ 
+Retry 
+ 
+15.19 Database 
+Current 
+knowledge_entries 
+ 
+bookmarks 
+ 
+prompt_library 
+Revision Required 
+knowledge_views 
+ 
+knowledge_favorites 
+ 
+15.20 Completion Criteria 
+Knowledge Base complete when 
+✓ Global Search 
+✓ Categories 
+✓ Tags 
+✓ Relationships 
+✓ Prompt Library 
+✓ Bookmarks 
+✓ Favorites 
+✓ Export 
+✓ CRUD 
+✓ Activity 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+END OF CHAPTER 15 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 16 — Global Asset Vault (Cross-Project Digital Asset Management) 
+ 
+16.1 Purpose 
+The Global Asset Vault manages every asset stored inside Day Zero OS. 
+Unlike the Project Workspace Assets tab, this module is a centralized Digital Asset Management system. 
+Every uploaded file should always be discoverable. 
+ 
+
+--- PAGE 60 ---
+16.2 Objectives 
+The Asset Vault answers 
+●​
+Where is my file? 
+●​
+Which project uses it? 
+●​
+Is it duplicated? 
+●​
+Is it unused? 
+●​
+How much storage am I consuming? 
+ 
+16.3 Layout 
+Asset Vault 
+ 
+──────────────────────── 
+ 
+Search 
+ 
+Filters 
+ 
+Views 
+ 
+──────────────────────── 
+ 
+Folders 
+ 
+──────────────────────── 
+ 
+Assets 
+ 
+──────────────────────── 
+ 
+Preview 
+ 
+──────────────────────── 
+ 
+Storage 
+ 
+16.4 Dashboard 
+Displays 
+Total Assets 
+ 
+Images 
+ 
+Videos 
+ 
+Documents 
+ 
+Design Files 
+ 
+Storage Used 
+ 
+Unused Assets 
+ 
+Recent Uploads 
+ 
+16.5 Asset Library 
+Views 
+Grid 
+ 
+Gallery 
+ 
+List 
+ 
+Timeline 
+Grouping 
+Project 
+ 
+Folder 
+ 
+File Type 
+ 
+Upload Date 
+ 
+Tags 
+ 
+16.6 Preview Panel 
+Supports 
+Images 
+ 
+Video 
+ 
+
+--- PAGE 61 ---
+Audio 
+ 
+PDF 
+ 
+Markdown 
+ 
+Text 
+ 
+SVG 
+ 
+JSON 
+Preview inside app. 
+Never force download. 
+ 
+16.7 File Metadata 
+Displays 
+File Name 
+ 
+Extension 
+ 
+File Size 
+ 
+Upload Date 
+ 
+Project 
+ 
+Folder 
+ 
+Tags 
+ 
+Uploader 
+ 
+Version 
+ 
+16.8 Folder System 
+Supports 
+Nested Folders 
+ 
+Move 
+ 
+Rename 
+ 
+Delete 
+ 
+Archive 
+ 
+Color Labels 
+ 
+16.9 Search 
+Searches 
+Filename 
+ 
+Description 
+ 
+Tags 
+ 
+Folder 
+ 
+Project 
+ 
+Extension 
+ 
+16.10 Filters 
+Images 
+ 
+Video 
+ 
+Audio 
+ 
+Documents 
+ 
+Design 
+ 
+Unused 
+ 
+Large Files 
+ 
+Recent 
+ 
+Favorites 
+ 
+
+--- PAGE 62 ---
+16.11 Duplicate Detection 
+System automatically detects 
+Duplicate File 
+ 
+Similar Name 
+ 
+Same Hash 
+Shows suggestions. 
+ 
+16.12 Storage Dashboard 
+Displays 
+Storage Used 
+ 
+Storage Remaining 
+ 
+Largest Files 
+ 
+Most Downloaded 
+ 
+Unused Assets 
+ 
+16.13 Asset Relationships 
+Every asset may relate to 
+Projects 
+ 
+Knowledge 
+ 
+Content 
+ 
+Architecture 
+ 
+Tasks 
+ 
+Milestones 
+ 
+16.14 Version History 
+Supports 
+Version 1 
+ 
+Version 2 
+ 
+Restore 
+ 
+Compare 
+ 
+Download Older 
+ 
+16.15 Bulk Operations 
+Move 
+ 
+Delete 
+ 
+Archive 
+ 
+Rename 
+ 
+Tag 
+ 
+Download 
+ 
+Export 
+ 
+16.16 External Resources 
+Supports 
+GitHub 
+ 
+Figma 
+ 
+Drive 
+ 
+Dropbox 
+ 
+YouTube 
+
+--- PAGE 63 ---
+ 
+Website 
+ 
+API Documentation 
+ 
+16.17 Image Viewer 
+Supports 
+Zoom 
+ 
+Rotate 
+ 
+Fullscreen 
+ 
+Slideshow 
+ 
+Next 
+ 
+Previous 
+ 
+16.18 Empty State 
+No Assets 
+ 
+Upload your first asset. 
+ 
+[Upload] 
+ 
+16.19 Loading 
+Skeleton previews. 
+Upload progress. 
+ 
+16.20 Error 
+Unable to load assets. 
+ 
+Retry 
+ 
+16.21 Database 
+Current 
+assets 
+ 
+asset_folders 
+ 
+asset_tags 
+ 
+asset_versions 
+Revision Required 
+asset_usage 
+ 
+asset_hashes 
+ 
+asset_favorites 
+ 
+16.22 Completion Criteria 
+Asset Vault complete when 
+✓ Upload 
+✓ Preview 
+✓ Search 
+✓ Filters 
+✓ Version History 
+✓ Folder System 
+✓ Duplicate Detection 
+✓ Storage Dashboard 
+
+--- PAGE 64 ---
+✓ Relationships 
+✓ CRUD 
+✓ Activity 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+Chapter 17 — Weekly Debrief (Complete Functional Specification) 
+ 
+17.1 Purpose 
+Weekly Debrief is the reflection and review system of Day Zero OS. 
+It is not a diary. 
+It is not a journal. 
+It is an executive review that answers: 
+●​
+What did I accomplish? 
+●​
+What slowed me down? 
+●​
+What did I learn? 
+●​
+What should I improve next week? 
+Every builder should complete one Weekly Debrief before starting a new week. 
+ 
+17.2 Objectives 
+The Weekly Debrief should help the user: 
+●​
+Reflect on execution 
+●​
+Measure consistency 
+●​
+Track progress 
+●​
+Capture lessons 
+●​
+Plan the following week 
+ 
+17.3 Layout 
+Weekly Debrief 
+ 
+──────────────────────── 
+ 
+Week Summary 
+ 
+──────────────────────── 
+ 
+Wins 
+ 
+Challenges 
+ 
+Lessons 
+ 
+──────────────────────── 
+ 
+Projects Review 
+ 
+──────────────────────── 
+ 
+Content Review 
+ 
+──────────────────────── 
+ 
+Productivity 
+ 
+──────────────────────── 
+ 
+Goals for Next Week 
+ 
+──────────────────────── 
+ 
+Weekly Metrics 
+ 
+17.4 Week Summary 
+Displays 
+Week Number 
+ 
+
+--- PAGE 65 ---
+Date Range 
+ 
+Hours Worked 
+ 
+Projects Worked On 
+ 
+Content Produced 
+ 
+Milestones Completed 
+ 
+Overall Rating 
+ 
+17.5 Wins 
+Purpose 
+Capture meaningful achievements. 
+Fields 
+Title 
+ 
+Description 
+ 
+Related Project 
+ 
+Importance 
+ 
+Date 
+Actions 
+Create 
+ 
+Edit 
+ 
+Delete 
+ 
+Pin 
+ 
+17.6 Challenges 
+Fields 
+Problem 
+ 
+Reason 
+ 
+Impact 
+ 
+Possible Solution 
+ 
+Related Project 
+ 
+17.7 Lessons Learned 
+Each lesson contains 
+Title 
+ 
+Description 
+ 
+Category 
+ 
+Actionable 
+ 
+Related Resource 
+Categories 
+Technical 
+ 
+Business 
+ 
+Productivity 
+ 
+Content 
+ 
+Learning 
+ 
+Personal 
+ 
+Startup 
+ 
+17.8 Projects Review 
+Displays 
+Project 
+ 
+Progress 
+
+--- PAGE 66 ---
+ 
+Completed 
+ 
+Blocked 
+ 
+Health 
+ 
+Notes 
+Click opens project. 
+ 
+17.9 Content Review 
+Displays 
+Videos Published 
+ 
+Scripts Written 
+ 
+Research Completed 
+ 
+Recording Hours 
+ 
+Editing Hours 
+ 
+17.10 Productivity 
+Displays 
+Focus Hours 
+ 
+Tasks Completed 
+ 
+Milestones Completed 
+ 
+Average Daily Work 
+ 
+Streak 
+ 
+Deep Work Sessions 
+ 
+17.11 Weekly Metrics 
+Charts 
+Hours 
+ 
+Projects 
+ 
+Content 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Activity 
+ 
+17.12 Next Week Planning 
+Fields 
+Primary Goal 
+ 
+Top 3 Priorities 
+ 
+Risks 
+ 
+Important Deadlines 
+ 
+Learning Goal 
+ 
+Content Goal 
+ 
+17.13 Search 
+Searches 
+Wins 
+ 
+Lessons 
+ 
+Challenges 
+ 
+Projects 
+ 
+
+--- PAGE 67 ---
+17.14 Filters 
+Week 
+ 
+Month 
+ 
+Year 
+ 
+Project 
+ 
+17.15 Export 
+Supports 
+PDF 
+ 
+Markdown 
+ 
+JSON 
+ 
+17.16 Activity 
+Automatically logs 
+Weekly Debrief Created 
+ 
+Goal Completed 
+ 
+Lesson Added 
+ 
+Challenge Recorded 
+ 
+17.17 Empty State 
+No Weekly Debrief Yet 
+ 
+Reflect on your first week. 
+ 
+[Start Review] 
+ 
+17.18 Loading 
+Skeleton cards. 
+ 
+17.19 Error 
+Unable to load weekly review. 
+ 
+Retry 
+ 
+17.20 Database 
+Current 
+weekly_debriefs 
+Revision Required 
+weekly_wins 
+ 
+weekly_lessons 
+ 
+weekly_challenges 
+ 
+weekly_goals 
+ 
+17.21 Completion Criteria 
+Weekly Debrief complete when 
+✓ Wins 
+✓ Challenges 
+✓ Lessons 
+
+--- PAGE 68 ---
+✓ Productivity 
+✓ Metrics 
+✓ Next Week Planning 
+✓ Export 
+✓ Activity 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+END OF CHAPTER 17 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 18 — Universal Search & Command Palette (Complete Functional 
+Specification) 
+ 
+18.1 Purpose 
+Universal Search is the brain of Day Zero OS. 
+The user should never navigate through multiple pages to find something. 
+Everything should be reachable through one interface. 
+Shortcut 
+Ctrl + K 
+ 
+or 
+ 
+⌘ + K 
+ 
+18.2 Objectives 
+Universal Search should allow users to 
+●​
+Search 
+●​
+Navigate 
+●​
+Execute commands 
+●​
+Open resources 
+●​
+Create new items 
+without leaving the keyboard. 
+ 
+18.3 Layout 
+Command Palette 
+ 
+──────────────────────── 
+ 
+Search Box 
+ 
+──────────────────────── 
+ 
+Recent 
+ 
+Suggestions 
+ 
+Commands 
+ 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Settings 
+
+--- PAGE 69 ---
+ 
+18.4 Search Scope 
+Global search across 
+Projects 
+ 
+Milestones 
+ 
+Tasks 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Architecture Decisions 
+ 
+Development Notes 
+ 
+Repositories 
+ 
+Bugs 
+ 
+Weekly Debriefs 
+ 
+Bookmarks 
+ 
+Prompts 
+ 
+Settings 
+ 
+18.5 Command Execution 
+Commands include 
+New Project 
+ 
+New Note 
+ 
+New Asset 
+ 
+New Content 
+ 
+New Decision 
+ 
+New Milestone 
+ 
+Open Settings 
+ 
+Toggle Theme 
+ 
+Export Project 
+ 
+Weekly Debrief 
+ 
+Logout 
+ 
+18.6 Navigation Commands 
+Go to Mission Control 
+ 
+Go to Projects 
+ 
+Go to Knowledge 
+ 
+Go to Assets 
+ 
+Go to Content 
+ 
+Go to Weekly Debrief 
+ 
+Go to Settings 
+ 
+18.7 Search Result 
+Each result displays 
+Icon 
+ 
+Title 
+ 
+Module 
+ 
+Project 
+ 
+Last Updated 
+ 
+Shortcut 
+ 
+
+--- PAGE 70 ---
+18.8 Recent Searches 
+Stores 
+Last 20 Searches 
+Supports 
+Delete 
+ 
+Clear All 
+ 
+18.9 Favorites 
+Pin frequently used commands. 
+Example 
+New Project 
+ 
+Open Day Zero OS 
+ 
+Upload Asset 
+ 
+Create Video 
+ 
+18.10 Smart Suggestions 
+Based on 
+Recent Projects 
+ 
+Recent Knowledge 
+ 
+Frequently Used Commands 
+ 
+Current Project 
+ 
+Recent Searches 
+ 
+18.11 Search Operators 
+Support 
+project: 
+ 
+tag: 
+ 
+type: 
+ 
+status: 
+ 
+priority: 
+ 
+before: 
+ 
+after: 
+Example 
+project:"Day Zero OS" 
+ 
+type:knowledge 
+ 
+tag:AI 
+ 
+18.12 Keyboard Navigation 
+Supports 
+↑ 
+ 
+↓ 
+ 
+Enter 
+ 
+Esc 
+ 
+Tab 
+ 
+Ctrl + K 
+Mouse not required. 
+ 
+
+--- PAGE 71 ---
+18.13 Filters 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Commands 
+ 
+Settings 
+ 
+18.14 Empty State 
+No Results Found 
+ 
+Try another keyword. 
+ 
+18.15 Loading 
+Instant loading indicator. 
+ 
+18.16 Error 
+Search temporarily unavailable. 
+ 
+Retry 
+ 
+18.17 Database 
+Search indexes 
+projects 
+ 
+knowledge_entries 
+ 
+assets 
+ 
+content_items 
+ 
+architecture_decisions 
+ 
+activity_logs 
+ 
+weekly_debriefs 
+Revision Required 
+search_history 
+ 
+favorite_commands 
+ 
+18.18 Performance 
+Search should return results in 
+<200ms 
+for local workspace data. 
+ 
+18.19 Completion Criteria 
+Search complete when 
+✓ Global Search 
+✓ Command Palette 
+✓ Keyboard Navigation 
+✓ Smart Suggestions 
+✓ Search Operators 
+✓ Recent Searches 
+✓ Favorites 
+
+--- PAGE 72 ---
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+​
+Chapter 19 — Notifications & In-App Alerts (Complete Functional 
+Specification) 
+ 
+19.1 Purpose 
+Notifications ensure the user never misses important information. 
+Notifications should inform, not distract. 
+Every notification must be actionable. 
+The user should always know why they received a notification. 
+ 
+19.2 Objectives 
+Notify users about: 
+●​
+Project updates 
+●​
+Due milestones 
+●​
+Deadlines 
+●​
+Completed actions 
+●​
+Failed actions 
+●​
+Weekly reminders 
+●​
+System events 
+ 
+19.3 Layout 
+Notifications 
+ 
+──────────────────────── 
+ 
+Unread 
+ 
+Today 
+ 
+Yesterday 
+ 
+Earlier 
+ 
+──────────────────────── 
+ 
+Notification Details 
+ 
+──────────────────────── 
+ 
+Notification Settings 
+ 
+19.4 Notification Types 
+Success 
+ 
+Information 
+ 
+Warning 
+ 
+Error 
+ 
+Reminder 
+ 
+System 
+ 
+Project 
+ 
+Content 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Weekly Review 
+ 
+AI (Optional) 
+ 
+
+--- PAGE 73 ---
+19.5 Trigger Events 
+Automatically generate notifications for 
+Project Created 
+ 
+Project Deleted 
+ 
+Milestone Due 
+ 
+Milestone Completed 
+ 
+Task Assigned 
+ 
+Content Published 
+ 
+Asset Upload Failed 
+ 
+Knowledge Created 
+ 
+Weekly Review Due 
+ 
+Backup Completed 
+ 
+System Update 
+ 
+Login From New Device 
+ 
+19.6 Notification Card 
+Displays 
+Icon 
+ 
+Title 
+ 
+Description 
+ 
+Related Project 
+ 
+Timestamp 
+ 
+Read Status 
+ 
+Priority 
+Actions 
+Open 
+ 
+Mark Read 
+ 
+Delete 
+ 
+Archive 
+ 
+Mute Similar 
+ 
+19.7 Priority 
+Critical 
+ 
+High 
+ 
+Medium 
+ 
+Low 
+ 
+19.8 Notification Center 
+Supports 
+Unread Count 
+ 
+Mark All Read 
+ 
+Clear Read 
+ 
+Delete Selected 
+ 
+Search 
+ 
+Filter 
+ 
+19.9 Toast Notifications 
+Temporary alerts 
+Examples 
+Project Saved 
+
+--- PAGE 74 ---
+ 
+Milestone Completed 
+ 
+Asset Uploaded 
+ 
+Changes Saved 
+ 
+Error Occurred 
+Duration 
+2–5 seconds 
+ 
+19.10 Filters 
+Unread 
+ 
+Today 
+ 
+Projects 
+ 
+Content 
+ 
+Knowledge 
+ 
+Assets 
+ 
+System 
+ 
+Errors 
+ 
+19.11 Search 
+Search 
+Title 
+ 
+Description 
+ 
+Project 
+ 
+Module 
+ 
+19.12 Notification Preferences 
+User controls 
+Project Notifications 
+ 
+Content Notifications 
+ 
+Asset Notifications 
+ 
+Weekly Reminder 
+ 
+AI Notifications 
+ 
+Email (Future) 
+ 
+Push (Future) 
+ 
+19.13 Bulk Actions 
+Delete 
+ 
+Mark Read 
+ 
+Archive 
+ 
+Mute 
+ 
+19.14 Empty State 
+You're all caught up. 
+ 
+No notifications. 
+ 
+19.15 Loading 
+Skeleton list. 
+ 
+
+--- PAGE 75 ---
+19.16 Error 
+Unable to load notifications. 
+ 
+Retry 
+ 
+19.17 Database 
+Current 
+notifications 
+Revision Required 
+notification_preferences 
+ 
+notification_queue 
+ 
+19.18 Completion Criteria 
+Notifications complete when 
+✓ Notification Center 
+✓ Toasts 
+✓ Search 
+✓ Filters 
+✓ Preferences 
+✓ CRUD 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+END OF CHAPTER 19 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 20 — Settings & Workspace Configuration (Complete Functional 
+Specification) 
+ 
+20.1 Purpose 
+Settings control the entire behavior of Day Zero OS. 
+Every configurable preference belongs here. 
+Settings should never contain project-specific information. 
+Project-specific settings belong inside Project Workspace → Settings. 
+ 
+20.2 Layout 
+Settings 
+ 
+──────────────────────── 
+ 
+Profile 
+ 
+Appearance 
+ 
+Workspace 
+ 
+
+--- PAGE 76 ---
+Notifications 
+ 
+Keyboard 
+ 
+Storage 
+ 
+Import / Export 
+ 
+AI 
+ 
+Danger Zone 
+ 
+20.3 Profile 
+Fields 
+Name 
+ 
+Username 
+ 
+Profile Picture 
+ 
+Bio 
+ 
+Timezone 
+ 
+Language 
+ 
+Email 
+ 
+Date Format 
+ 
+Time Format 
+Actions 
+Edit 
+ 
+Save 
+ 
+Upload Avatar 
+ 
+Delete Avatar 
+ 
+20.4 Appearance 
+Supports 
+Light 
+ 
+Dark 
+ 
+System Theme 
+ 
+Accent Color 
+ 
+Sidebar Width 
+ 
+Compact Mode 
+ 
+Animations 
+ 
+20.5 Workspace 
+Configuration 
+Default Landing Page 
+ 
+Default Project View 
+ 
+Autosave Interval 
+ 
+Start Week On 
+ 
+Default Folder 
+ 
+Project Templates 
+ 
+20.6 Notifications 
+Settings 
+Enable Notifications 
+ 
+Toast Duration 
+ 
+Weekly Reminder 
+ 
+Deadline Reminder 
+ 
+Daily Summary 
+ 
+
+--- PAGE 77 ---
+Mute Modules 
+ 
+20.7 Keyboard 
+Supports 
+Shortcut List 
+ 
+Reset 
+ 
+Customize (Future) 
+Examples 
+Ctrl + K 
+ 
+Ctrl + S 
+ 
+Ctrl + Shift + N 
+ 
+Ctrl + / 
+ 
+Esc 
+ 
+20.8 Storage 
+Displays 
+Storage Used 
+ 
+Remaining 
+ 
+Largest Files 
+ 
+Cleanup Suggestions 
+Actions 
+Open Asset Vault 
+ 
+Cleanup 
+ 
+Export Storage Report 
+ 
+20.9 Import 
+Supports 
+JSON 
+ 
+Markdown 
+ 
+CSV 
+ 
+ZIP 
+ 
+20.10 Export 
+Supports 
+Workspace 
+ 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Everything 
+Formats 
+JSON 
+ 
+ZIP 
+ 
+Markdown 
+ 
+20.11 AI Settings 
+AI remains optional. 
+Fields 
+
+--- PAGE 78 ---
+Enable AI 
+ 
+Provider 
+ 
+Model 
+ 
+Temperature 
+ 
+Context Length 
+ 
+System Prompt 
+Provider examples 
+OpenAI 
+ 
+Anthropic 
+ 
+Google 
+ 
+OpenRouter 
+ 
+Ollama (Local) 
+AI disabled by default. 
+ 
+20.12 Workspace Backup 
+Supports 
+Manual Backup 
+ 
+Restore 
+ 
+Download Backup 
+ 
+Backup History 
+ 
+20.13 Danger Zone 
+Contains 
+Delete Workspace 
+ 
+Delete All Projects 
+ 
+Delete Account 
+ 
+Reset Settings 
+Every destructive action requires 
+Confirmation 
+ 
+Password 
+ 
+Final Warning 
+ 
+20.14 Search 
+Search all settings. 
+ 
+20.15 Empty State 
+Not applicable. 
+ 
+20.16 Loading 
+Skeleton settings. 
+ 
+20.17 Error 
+Unable to load settings. 
+ 
+Retry 
+ 
+
+--- PAGE 79 ---
+20.18 Database 
+Current 
+profiles 
+ 
+user_settings 
+Revision Required 
+workspace_preferences 
+ 
+backup_history 
+ 
+user_shortcuts 
+ 
+20.19 Completion Criteria 
+Settings complete when 
+✓ Profile 
+✓ Theme 
+✓ Workspace 
+✓ Notifications 
+✓ Storage 
+✓ Import 
+✓ Export 
+✓ Backup 
+✓ AI Settings 
+✓ Danger Zone 
+✓ Search 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+Chapter 19 — Notifications & In-App Alerts (Complete Functional 
+Specification) 
+ 
+19.1 Purpose 
+Notifications ensure the user never misses important information. 
+Notifications should inform, not distract. 
+Every notification must be actionable. 
+The user should always know why they received a notification. 
+ 
+19.2 Objectives 
+Notify users about: 
+●​
+Project updates 
+●​
+Due milestones 
+●​
+Deadlines 
+●​
+Completed actions 
+●​
+Failed actions 
+●​
+Weekly reminders 
+●​
+System events 
+ 
+19.3 Layout 
+
+--- PAGE 80 ---
+Notifications 
+ 
+──────────────────────── 
+ 
+Unread 
+ 
+Today 
+ 
+Yesterday 
+ 
+Earlier 
+ 
+──────────────────────── 
+ 
+Notification Details 
+ 
+──────────────────────── 
+ 
+Notification Settings 
+ 
+19.4 Notification Types 
+Success 
+ 
+Information 
+ 
+Warning 
+ 
+Error 
+ 
+Reminder 
+ 
+System 
+ 
+Project 
+ 
+Content 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Weekly Review 
+ 
+AI (Optional) 
+ 
+19.5 Trigger Events 
+Automatically generate notifications for 
+Project Created 
+ 
+Project Deleted 
+ 
+Milestone Due 
+ 
+Milestone Completed 
+ 
+Task Assigned 
+ 
+Content Published 
+ 
+Asset Upload Failed 
+ 
+Knowledge Created 
+ 
+Weekly Review Due 
+ 
+Backup Completed 
+ 
+System Update 
+ 
+Login From New Device 
+ 
+19.6 Notification Card 
+Displays 
+Icon 
+ 
+Title 
+ 
+Description 
+ 
+Related Project 
+ 
+Timestamp 
+ 
+Read Status 
+ 
+Priority 
+Actions 
+Open 
+ 
+Mark Read 
+ 
+
+--- PAGE 81 ---
+Delete 
+ 
+Archive 
+ 
+Mute Similar 
+ 
+19.7 Priority 
+Critical 
+ 
+High 
+ 
+Medium 
+ 
+Low 
+ 
+19.8 Notification Center 
+Supports 
+Unread Count 
+ 
+Mark All Read 
+ 
+Clear Read 
+ 
+Delete Selected 
+ 
+Search 
+ 
+Filter 
+ 
+19.9 Toast Notifications 
+Temporary alerts 
+Examples 
+Project Saved 
+ 
+Milestone Completed 
+ 
+Asset Uploaded 
+ 
+Changes Saved 
+ 
+Error Occurred 
+Duration 
+2–5 seconds 
+ 
+19.10 Filters 
+Unread 
+ 
+Today 
+ 
+Projects 
+ 
+Content 
+ 
+Knowledge 
+ 
+Assets 
+ 
+System 
+ 
+Errors 
+ 
+19.11 Search 
+Search 
+Title 
+ 
+Description 
+ 
+Project 
+ 
+Module 
+ 
+19.12 Notification Preferences 
+User controls 
+
+--- PAGE 82 ---
+Project Notifications 
+ 
+Content Notifications 
+ 
+Asset Notifications 
+ 
+Weekly Reminder 
+ 
+AI Notifications 
+ 
+Email (Future) 
+ 
+Push (Future) 
+ 
+19.13 Bulk Actions 
+Delete 
+ 
+Mark Read 
+ 
+Archive 
+ 
+Mute 
+ 
+19.14 Empty State 
+You're all caught up. 
+ 
+No notifications. 
+ 
+19.15 Loading 
+Skeleton list. 
+ 
+19.16 Error 
+Unable to load notifications. 
+ 
+Retry 
+ 
+19.17 Database 
+Current 
+notifications 
+Revision Required 
+notification_preferences 
+ 
+notification_queue 
+ 
+19.18 Completion Criteria 
+Notifications complete when 
+✓ Notification Center 
+✓ Toasts 
+✓ Search 
+✓ Filters 
+✓ Preferences 
+✓ CRUD 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+
+--- PAGE 83 ---
+END OF CHAPTER 19 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 20 — Settings & Workspace Configuration (Complete Functional 
+Specification) 
+ 
+20.1 Purpose 
+Settings control the entire behavior of Day Zero OS. 
+Every configurable preference belongs here. 
+Settings should never contain project-specific information. 
+Project-specific settings belong inside Project Workspace → Settings. 
+ 
+20.2 Layout 
+Settings 
+ 
+──────────────────────── 
+ 
+Profile 
+ 
+Appearance 
+ 
+Workspace 
+ 
+Notifications 
+ 
+Keyboard 
+ 
+Storage 
+ 
+Import / Export 
+ 
+AI 
+ 
+Danger Zone 
+ 
+20.3 Profile 
+Fields 
+Name 
+ 
+Username 
+ 
+Profile Picture 
+ 
+Bio 
+ 
+Timezone 
+ 
+Language 
+ 
+Email 
+ 
+Date Format 
+ 
+Time Format 
+Actions 
+Edit 
+ 
+Save 
+ 
+Upload Avatar 
+ 
+Delete Avatar 
+ 
+20.4 Appearance 
+Supports 
+Light 
+ 
+
+--- PAGE 84 ---
+Dark 
+ 
+System Theme 
+ 
+Accent Color 
+ 
+Sidebar Width 
+ 
+Compact Mode 
+ 
+Animations 
+ 
+20.5 Workspace 
+Configuration 
+Default Landing Page 
+ 
+Default Project View 
+ 
+Autosave Interval 
+ 
+Start Week On 
+ 
+Default Folder 
+ 
+Project Templates 
+ 
+20.6 Notifications 
+Settings 
+Enable Notifications 
+ 
+Toast Duration 
+ 
+Weekly Reminder 
+ 
+Deadline Reminder 
+ 
+Daily Summary 
+ 
+Mute Modules 
+ 
+20.7 Keyboard 
+Supports 
+Shortcut List 
+ 
+Reset 
+ 
+Customize (Future) 
+Examples 
+Ctrl + K 
+ 
+Ctrl + S 
+ 
+Ctrl + Shift + N 
+ 
+Ctrl + / 
+ 
+Esc 
+ 
+20.8 Storage 
+Displays 
+Storage Used 
+ 
+Remaining 
+ 
+Largest Files 
+ 
+Cleanup Suggestions 
+Actions 
+Open Asset Vault 
+ 
+Cleanup 
+ 
+Export Storage Report 
+ 
+20.9 Import 
+
+--- PAGE 85 ---
+Supports 
+JSON 
+ 
+Markdown 
+ 
+CSV 
+ 
+ZIP 
+ 
+20.10 Export 
+Supports 
+Workspace 
+ 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Everything 
+Formats 
+JSON 
+ 
+ZIP 
+ 
+Markdown 
+ 
+20.11 AI Settings 
+AI remains optional. 
+Fields 
+Enable AI 
+ 
+Provider 
+ 
+Model 
+ 
+Temperature 
+ 
+Context Length 
+ 
+System Prompt 
+Provider examples 
+OpenAI 
+ 
+Anthropic 
+ 
+Google 
+ 
+OpenRouter 
+ 
+Ollama (Local) 
+AI disabled by default. 
+ 
+20.12 Workspace Backup 
+Supports 
+Manual Backup 
+ 
+Restore 
+ 
+Download Backup 
+ 
+Backup History 
+ 
+20.13 Danger Zone 
+Contains 
+Delete Workspace 
+ 
+Delete All Projects 
+ 
+Delete Account 
+ 
+Reset Settings 
+
+--- PAGE 86 ---
+Every destructive action requires 
+Confirmation 
+ 
+Password 
+ 
+Final Warning 
+ 
+20.14 Search 
+Search all settings. 
+ 
+20.15 Empty State 
+Not applicable. 
+ 
+20.16 Loading 
+Skeleton settings. 
+ 
+20.17 Error 
+Unable to load settings. 
+ 
+Retry 
+ 
+20.18 Database 
+Current 
+profiles 
+ 
+user_settings 
+Revision Required 
+workspace_preferences 
+ 
+backup_history 
+ 
+user_shortcuts 
+ 
+20.19 Completion Criteria 
+Settings complete when 
+✓ Profile 
+✓ Theme 
+✓ Workspace 
+✓ Notifications 
+✓ Storage 
+✓ Import 
+✓ Export 
+✓ Backup 
+✓ AI Settings 
+✓ Danger Zone 
+✓ Search 
+✓ Supabase 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+
+--- PAGE 87 ---
+ 
+Chapter 21 — Authentication & User Management (Complete Functional 
+Specification) 
+ 
+21.1 Purpose 
+Authentication secures Day Zero OS while keeping onboarding friction minimal. 
+Every user owns a single workspace by default in Version 1.0. 
+The authentication system must be secure, fast, and extensible for future collaboration features. 
+ 
+21.2 Objectives 
+The Authentication module should: 
+●​
+Secure user data. 
+●​
+Provide seamless login/logout. 
+●​
+Manage user sessions. 
+●​
+Recover accounts. 
+●​
+Support future multi-user workspaces. 
+●​
+Integrate natively with Supabase Auth. 
+ 
+21.3 Authentication Flow 
+Launch App 
+      │ 
+      ▼ 
+Already Logged In? 
+      │ 
+ ┌────┴────┐ 
+ │         │ 
+Yes       No 
+ │         │ 
+ ▼         ▼ 
+Mission   Login 
+Control 
+ 
+21.4 Login Screen 
+Fields 
+Email 
+ 
+Password 
+Buttons 
+Login 
+ 
+Continue with Google 
+ 
+Continue with GitHub 
+ 
+Forgot Password 
+ 
+Create Account 
+Validation 
+●​
+Valid email 
+●​
+Password required 
+●​
+Loading indicator 
+●​
+Prevent multiple submissions 
+ 
+21.5 Registration 
+Fields 
+Full Name 
+ 
+Username (optional) 
+ 
+Email 
+ 
+Password 
+ 
+
+--- PAGE 88 ---
+Confirm Password 
+Validation 
+●​
+Email uniqueness 
+●​
+Password strength 
+●​
+Password confirmation 
+●​
+Terms acceptance 
+ 
+21.6 Password Requirements 
+Minimum 
+8 Characters 
+ 
+1 Uppercase 
+ 
+1 Lowercase 
+ 
+1 Number 
+Recommended 
+1 Symbol 
+Password strength meter displayed. 
+ 
+21.7 Forgot Password 
+Flow 
+Email 
+ 
+↓ 
+ 
+Send Reset Link 
+ 
+↓ 
+ 
+Email Verification 
+ 
+↓ 
+ 
+Create New Password 
+ 
+↓ 
+ 
+Login 
+ 
+21.8 Session Management 
+Supports 
+Remember Me 
+ 
+Auto Login 
+ 
+Logout 
+ 
+Session Refresh 
+ 
+Idle Timeout (Future) 
+ 
+Multiple Devices 
+ 
+21.9 User Profile 
+Fields 
+Avatar 
+ 
+Name 
+ 
+Username 
+ 
+Email 
+ 
+Bio 
+ 
+Timezone 
+ 
+Language 
+ 
+Joined Date 
+ 
+
+--- PAGE 89 ---
+21.10 Workspace Ownership 
+Every authenticated user automatically receives 
+Workspace 
+ 
+↓ 
+ 
+Default Project Folder 
+ 
+↓ 
+ 
+Default Settings 
+Future 
+Multiple Workspaces 
+ 
+Organization 
+ 
+Teams 
+ 
+21.11 Avatar 
+Supports 
+Upload 
+ 
+Crop 
+ 
+Replace 
+ 
+Delete 
+ 
+21.12 Account Security 
+Supports 
+Password Change 
+ 
+Email Change 
+ 
+Logout All Devices 
+ 
+Delete Account 
+Future 
+2FA 
+ 
+Passkeys 
+ 
+Biometric Login 
+ 
+21.13 User Preferences 
+Automatically loaded 
+Theme 
+ 
+Language 
+ 
+Notifications 
+ 
+Workspace 
+ 
+Keyboard 
+ 
+AI 
+ 
+21.14 Error Messages 
+Examples 
+Invalid Email 
+ 
+Wrong Password 
+ 
+Network Error 
+ 
+Email Already Exists 
+ 
+Too Many Attempts 
+Never expose backend errors. 
+ 
+
+--- PAGE 90 ---
+21.15 Loading 
+Buttons disabled. 
+Spinner displayed. 
+ 
+21.16 Empty State 
+Not applicable. 
+ 
+21.17 Database 
+Current 
+auth.users 
+ 
+profiles 
+ 
+user_settings 
+ 
+workspaces 
+Revision Required 
+user_sessions 
+ 
+user_devices 
+ 
+login_history 
+ 
+21.18 Completion Criteria 
+Authentication complete when 
+✓ Login 
+✓ Register 
+✓ Forgot Password 
+✓ Profile 
+✓ Avatar 
+✓ Session 
+✓ Logout 
+✓ Preferences 
+✓ Supabase Auth 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+END OF CHAPTER 21 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 22 — AI Assistant Framework (Complete Functional Specification) 
+ 
+22.1 Purpose 
+The AI Assistant is an optional productivity accelerator, not the core of Day Zero OS. 
+The application must remain fully functional with AI disabled. 
+
+--- PAGE 91 ---
+AI should assist users by organizing, generating, summarizing, and suggesting—not by taking control of the product. 
+ 
+22.2 Core Principles 
+●​
+AI is disabled by default. 
+●​
+Users must explicitly enable AI. 
+●​
+No API keys are required unless AI is enabled. 
+●​
+Every AI feature has a manual alternative. 
+●​
+AI suggestions never overwrite user data automatically. 
+ 
+22.3 Supported Providers 
+Version 1.0 
+OpenAI 
+ 
+Anthropic 
+ 
+Google Gemini 
+ 
+OpenRouter 
+ 
+Ollama (Local Models) 
+Future 
+Azure OpenAI 
+ 
+AWS Bedrock 
+ 
+Groq 
+ 
+DeepSeek 
+ 
+Custom API 
+ 
+22.4 AI Settings 
+Fields 
+Enable AI 
+ 
+Provider 
+ 
+Model 
+ 
+Temperature 
+ 
+Max Tokens 
+ 
+Context Length 
+ 
+System Prompt 
+ 
+22.5 API Keys 
+API keys should never be stored in plain text. 
+Preferred storage: 
+●​
+Server-side secure storage (future) 
+●​
+User-specific encrypted settings (acceptable for MVP) 
+●​
+Never exposed in logs or UI 
+ 
+22.6 AI Capabilities 
+AI may assist with: 
+Summarize Notes 
+ 
+Generate Tasks 
+ 
+Rewrite Content 
+ 
+Improve Scripts 
+ 
+Brainstorm Ideas 
+ 
+Organize Knowledge 
+ 
+Generate Milestones 
+ 
+Suggest Architecture Decisions 
+ 
+
+--- PAGE 92 ---
+Create Weekly Summaries 
+ 
+Generate Meeting Notes 
+ 
+Analyze Project Progress 
+ 
+22.7 AI Chat 
+Dedicated assistant panel. 
+Supports 
+Conversation History 
+ 
+Context Selection 
+ 
+Copy 
+ 
+Regenerate 
+ 
+Delete Conversation 
+ 
+Rename Conversation 
+ 
+22.8 Context Injection 
+The user chooses what AI can access. 
+Available context: 
+Current Project 
+ 
+Knowledge Notes 
+ 
+Assets 
+ 
+Content 
+ 
+Architecture Decisions 
+ 
+Development Notes 
+ 
+Weekly Debriefs 
+Nothing is shared without explicit selection. 
+ 
+22.9 Prompt Library 
+Integrated with the Knowledge Module. 
+Supports 
+Templates 
+ 
+Favorites 
+ 
+Variables 
+ 
+Categories 
+ 
+Version History 
+ 
+22.10 AI Actions 
+Examples 
+Summarize this note 
+ 
+Generate project roadmap 
+ 
+Suggest milestones 
+ 
+Rewrite script 
+ 
+Find duplicate knowledge 
+ 
+Generate YouTube title ideas 
+ 
+Review architecture decision 
+ 
+22.11 AI Usage Dashboard 
+Displays 
+Requests 
+ 
+
+--- PAGE 93 ---
+Tokens Used 
+ 
+Estimated Cost 
+ 
+Provider 
+ 
+Model 
+ 
+Last Used 
+ 
+22.12 Safety 
+AI cannot: 
+●​
+Delete data automatically. 
+●​
+Modify records without confirmation. 
+●​
+Send external requests without user action. 
+●​
+Access hidden context. 
+ 
+22.13 Fallback Behavior 
+If AI is disabled: 
+●​
+Hide AI-specific controls. 
+●​
+Manual workflows remain fully available. 
+●​
+No errors or broken UI. 
+ 
+22.14 Error Handling 
+Examples 
+Invalid API Key 
+ 
+Provider Offline 
+ 
+Rate Limit 
+ 
+Model Unavailable 
+ 
+Network Error 
+Offer retry and provider switch. 
+ 
+22.15 Database 
+Current 
+user_settings 
+ 
+ai_sessions 
+Revision Required 
+ai_providers 
+ 
+ai_conversations 
+ 
+ai_messages 
+ 
+ai_usage_logs 
+ 
+prompt_templates 
+ 
+22.16 Completion Criteria 
+AI Framework complete when 
+✓ Optional by default 
+✓ Provider management 
+✓ Chat interface 
+✓ Prompt library integration 
+✓ Context injection 
+✓ Usage dashboard 
+✓ Error handling 
+
+--- PAGE 94 ---
+✓ Secure API key handling 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+Chapter 23 — File Upload, Storage & Media Management (Complete 
+Functional Specification) 
+ 
+23.1 Purpose 
+The File Storage System is responsible for securely storing, organizing, retrieving, versioning, and managing every file uploaded into Day Zero OS. 
+Storage should feel like a built-in operating system, not merely an upload component. 
+ 
+23.2 Objectives 
+The storage system should: 
+●​
+Upload files reliably. 
+●​
+Organize files by project. 
+●​
+Support previewing. 
+●​
+Maintain version history. 
+●​
+Detect duplicates. 
+●​
+Secure files. 
+●​
+Support future cloud synchronization. 
+ 
+23.3 Supported Storage Providers 
+Version 1 
+Supabase Storage 
+Future 
+AWS S3 
+ 
+Cloudflare R2 
+ 
+Google Cloud Storage 
+ 
+Azure Blob 
+ 
+Local Storage Provider 
+Storage providers should be abstracted behind a service layer. 
+ 
+23.4 Supported File Types 
+Images 
+PNG 
+ 
+JPG 
+ 
+JPEG 
+ 
+WEBP 
+ 
+SVG 
+ 
+GIF 
+Videos 
+MP4 
+ 
+MOV 
+ 
+AVI 
+ 
+MKV 
+ 
+WEBM 
+Documents 
+
+--- PAGE 95 ---
+PDF 
+ 
+DOCX 
+ 
+XLSX 
+ 
+PPTX 
+ 
+TXT 
+ 
+CSV 
+ 
+MD 
+Archives 
+ZIP 
+ 
+RAR 
+ 
+7Z 
+Design 
+FIG 
+ 
+PSD 
+ 
+AI 
+ 
+XD 
+Code 
+JSON 
+ 
+JS 
+ 
+TS 
+ 
+PY 
+ 
+JAVA 
+ 
+CPP 
+ 
+HTML 
+ 
+CSS 
+ 
+23.5 Upload Methods 
+Support 
+Click Upload 
+ 
+Drag & Drop 
+ 
+Paste Image 
+ 
+Paste Screenshot 
+ 
+Import URL 
+ 
+Bulk Upload 
+ 
+23.6 Upload Lifecycle 
+Select File 
+ 
+↓ 
+ 
+Validate 
+ 
+↓ 
+ 
+Virus Check (Future) 
+ 
+↓ 
+ 
+Duplicate Check 
+ 
+↓ 
+ 
+Upload 
+ 
+↓ 
+ 
+Generate Metadata 
+ 
+↓ 
+ 
+Store 
+ 
+↓ 
+ 
+Log Activity 
+ 
+↓ 
+ 
+Notify User 
+ 
+
+--- PAGE 96 ---
+23.7 Upload Validation 
+Validate 
+Maximum Size 
+ 
+Allowed Type 
+ 
+Corrupted File 
+ 
+Filename 
+ 
+Duplicate Hash 
+ 
+23.8 File Metadata 
+Every uploaded file stores 
+File Name 
+ 
+Original Name 
+ 
+Extension 
+ 
+Size 
+ 
+Mime Type 
+ 
+Hash 
+ 
+Storage Path 
+ 
+Public URL 
+ 
+Preview URL 
+ 
+Owner 
+ 
+Project 
+ 
+Uploaded By 
+ 
+Created Date 
+ 
+Updated Date 
+ 
+Version 
+ 
+23.9 Preview Engine 
+Support inline preview for 
+Images 
+ 
+Videos 
+ 
+Audio 
+ 
+Markdown 
+ 
+Text 
+ 
+PDF 
+ 
+JSON 
+ 
+SVG 
+Never require download. 
+ 
+23.10 File Versioning 
+Supports 
+Replace File 
+ 
+Keep Previous Version 
+ 
+Restore Version 
+ 
+Compare Versions 
+ 
+Download Old Version 
+ 
+23.11 Duplicate Detection 
+Detect 
+Same File 
+
+--- PAGE 97 ---
+ 
+Same Hash 
+ 
+Similar Filename 
+ 
+Same Metadata 
+Suggest merge. 
+ 
+23.12 Download 
+Supports 
+Single Download 
+ 
+Multiple Download 
+ 
+ZIP Download 
+ 
+Copy Public Link 
+ 
+23.13 Security 
+Storage Rules 
+Private by default 
+ 
+Project scoped 
+ 
+Workspace scoped 
+ 
+Public only when user explicitly enables 
+ 
+23.14 Image Processing 
+Automatically generate 
+Thumbnail 
+ 
+Preview 
+ 
+Metadata 
+ 
+Dimensions 
+Future 
+AI Caption 
+ 
+OCR 
+ 
+Object Detection 
+ 
+23.15 Video Processing 
+Future Ready 
+Thumbnail 
+ 
+Duration 
+ 
+Resolution 
+ 
+Codec 
+ 
+Compression 
+ 
+23.16 File Lifecycle 
+Uploaded 
+ 
+↓ 
+ 
+Active 
+ 
+↓ 
+ 
+Archived 
+ 
+↓ 
+ 
+Deleted 
+ 
+↓ 
+ 
+Recovered (30 days) 
+ 
+
+--- PAGE 98 ---
+↓ 
+ 
+Permanent Delete 
+ 
+23.17 Activity 
+Automatically logs 
+Upload 
+ 
+Rename 
+ 
+Replace 
+ 
+Delete 
+ 
+Restore 
+ 
+Download 
+ 
+Share 
+ 
+23.18 Empty State 
+No Files Uploaded 
+ 
+Upload your first file. 
+ 
+[Upload] 
+ 
+23.19 Error States 
+Upload Failed 
+ 
+Unsupported File 
+ 
+Storage Full 
+ 
+Network Error 
+ 
+Duplicate File 
+ 
+23.20 Database 
+Current 
+assets 
+ 
+asset_versions 
+Revision Required 
+storage_objects 
+ 
+storage_usage 
+ 
+upload_queue 
+ 
+download_history 
+ 
+23.21 Completion Criteria 
+Storage complete when 
+✓ Upload 
+✓ Preview 
+✓ Versioning 
+✓ Duplicate Detection 
+✓ Metadata 
+✓ Download 
+✓ Security 
+✓ Activity 
+✓ Supabase Storage 
+✓ Build 
+✓ Lint 
+
+--- PAGE 99 ---
+✓ Typecheck 
+ 
+END OF CHAPTER 23 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 24 — Database Architecture, Data Model & Backend Behaviour 
+(Complete Functional Specification) 
+ 
+24.1 Purpose 
+This chapter defines how the backend should behave. 
+The frontend must never access the database directly. 
+All database operations should pass through a structured service layer. 
+ 
+24.2 Architecture 
+React UI 
+ 
+↓ 
+ 
+Feature Hooks 
+ 
+↓ 
+ 
+Service Layer 
+ 
+↓ 
+ 
+Repository Layer 
+ 
+↓ 
+ 
+Supabase Client 
+ 
+↓ 
+ 
+Supabase Database 
+No component should contain raw SQL or direct Supabase queries. 
+ 
+24.3 Backend Responsibilities 
+The backend/service layer must handle: 
+●​
+CRUD operations 
+●​
+Validation 
+●​
+Authorization 
+●​
+Activity logging 
+●​
+Error mapping 
+●​
+File uploads 
+●​
+Search indexing 
+●​
+Notifications 
+●​
+AI requests (optional) 
+ 
+24.4 Database Principles 
+●​
+Every table has a UUID primary key. 
+●​
+Every record belongs to a workspace. 
+●​
+Every project belongs to one workspace. 
+●​
+Child records reference parent records. 
+●​
+Use soft delete where recovery is valuable (e.g., projects, assets); use hard delete only when appropriate (e.g., temporary queues) or after a retention period. 
+●​
+Every table includes created_at and updated_at. 
+ 
+24.5 Relationships 
+
+--- PAGE 100 ---
+Workspace 
+ 
+↓ 
+ 
+Projects 
+ 
+├── Milestones 
+ 
+├── Tasks 
+ 
+├── Knowledge 
+ 
+├── Assets 
+ 
+├── Content 
+ 
+├── Architecture 
+ 
+├── Bugs 
+ 
+├── Activity 
+ 
+├── Development 
+ 
+└── Weekly Reviews 
+ 
+24.6 Repository Pattern 
+Each feature owns its repository. 
+Example 
+projects.repository.ts 
+ 
+knowledge.repository.ts 
+ 
+assets.repository.ts 
+ 
+content.repository.ts 
+Repositories only communicate with Supabase. 
+ 
+24.7 Service Pattern 
+Business logic belongs here. 
+Example 
+projects.service.ts 
+ 
+knowledge.service.ts 
+ 
+assets.service.ts 
+Responsibilities 
+Validation 
+ 
+Formatting 
+ 
+Business Rules 
+ 
+Notifications 
+ 
+Activity Logging 
+ 
+24.8 Frontend Rules 
+UI Components 
+No SQL 
+ 
+No Supabase Calls 
+ 
+No Business Logic 
+ 
+Presentation Only 
+ 
+24.9 Validation 
+Validate 
+Before Save 
+ 
+Before Update 
+ 
+Before Delete 
+ 
+Before Upload 
+ 
+
+--- PAGE 101 ---
+Before Publish 
+Client-side validation improves UX; server-side validation is authoritative. 
+ 
+24.10 Activity Logging 
+Every service automatically records 
+Create 
+ 
+Update 
+ 
+Delete 
+ 
+Archive 
+ 
+Restore 
+ 
+Publish 
+ 
+Upload 
+The UI never manually creates activity logs. 
+ 
+24.11 Error Handling 
+Convert backend errors into friendly messages. 
+Never expose SQL errors to users. 
+Example 
+23505 
+ 
+↓ 
+ 
+"A record with this value already exists." 
+ 
+24.12 Transactions 
+Use transactions (or equivalent atomic operations) for related updates. 
+Example 
+Create Project 
+ 
+↓ 
+ 
+Create Default Settings 
+ 
+↓ 
+ 
+Create Default Folder 
+ 
+↓ 
+ 
+Create Activity 
+ 
+↓ 
+ 
+Commit 
+If one step fails, 
+Everything rolls back where supported. 
+ 
+24.13 Row Level Security 
+Every table must enforce: 
+Users access only their own workspace data. 
+ 
+Users cannot access other workspaces. 
+ 
+Storage follows the same policy. 
+ 
+24.14 API Standards 
+Every service returns 
+Success 
+ 
+
+--- PAGE 102 ---
+Data 
+ 
+Error 
+ 
+Metadata 
+Example 
+{ 
+ success: true, 
+ data: {}, 
+ error: null, 
+ meta: {} 
+} 
+ 
+24.15 Caching 
+Use lightweight client caching where appropriate. 
+Invalidate cache after mutations. 
+Avoid unnecessary requests. 
+ 
+24.16 Offline Strategy (Future) 
+Future support 
+Offline Editing 
+ 
+Queued Uploads 
+ 
+Background Sync 
+ 
+24.17 Logging 
+Log 
+Errors 
+ 
+Warnings 
+ 
+Performance 
+ 
+Authentication 
+ 
+Uploads 
+Exclude sensitive user data and secrets from logs. 
+ 
+24.18 Database Migration Strategy 
+●​
+Never modify old migrations after they've been applied. 
+●​
+Add new migration files for schema changes. 
+●​
+Keep migrations idempotent where possible. 
+●​
+Maintain a schema changelog. 
+ 
+24.19 Completion Criteria 
+Backend complete when 
+✓ Repository pattern 
+✓ Service pattern 
+✓ Validation 
+✓ Transactions 
+✓ RLS 
+✓ Activity logging 
+✓ Error mapping 
+✓ Storage 
+✓ Search 
+✓ Notifications 
+
+--- PAGE 103 ---
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+Chapter 25 — Security, Permissions & Privacy (Complete Functional 
+Specification) 
+ 
+25.1 Purpose 
+Security is a foundational requirement of Day Zero OS. 
+Every feature must be designed with the assumption that user data is private, valuable, and should only be accessible to authorized users. 
+Security should not be an afterthought—it must be embedded into every module. 
+ 
+25.2 Security Principles 
+Day Zero OS follows these principles: 
+●​
+Secure by default. 
+●​
+Least privilege access. 
+●​
+Privacy-first design. 
+●​
+Zero trust between workspaces. 
+●​
+Explicit user consent for sensitive actions. 
+●​
+Encrypt sensitive information where appropriate. 
+ 
+25.3 Workspace Isolation 
+Every record belongs to a workspace. 
+Workspace 
+     │ 
+     ▼ 
+Projects 
+     │ 
+     ▼ 
+Everything Else 
+A user can never access another user's workspace. 
+ 
+25.4 Authentication Rules 
+Protected Routes 
+Mission Control 
+ 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Settings 
+Only Login, Register, Forgot Password, and Reset Password are public. 
+ 
+25.5 Authorization 
+Every operation checks 
+Authenticated? 
+ 
+↓ 
+ 
+Workspace Owner? 
+ 
+↓ 
+ 
+Permission Granted? 
+ 
+↓ 
+ 
+
+--- PAGE 104 ---
+Execute 
+ 
+25.6 Roles (Future Ready) 
+Although Version 1 only has one user per workspace, the architecture should support: 
+Owner 
+ 
+Administrator 
+ 
+Editor 
+ 
+Contributor 
+ 
+Viewer 
+Permissions should be role-based to allow future collaboration. 
+ 
+25.7 Permissions Matrix 
+Action 
+Owner 
+Admin 
+Editor 
+Viewer 
+View Projects 
+✅ 
+✅ 
+✅ 
+✅ 
+Create Projects 
+✅ 
+✅ 
+✅ 
+❌ 
+Edit Projects 
+✅ 
+✅ 
+✅ 
+❌ 
+Delete Projects 
+✅ 
+✅ 
+❌ 
+❌ 
+Manage Settings 
+✅ 
+❌ 
+❌ 
+❌ 
+Manage AI 
+✅ 
+✅ 
+❌ 
+❌ 
+Export Workspace 
+✅ 
+✅ 
+❌ 
+❌ 
+ 
+25.8 Sensitive Operations 
+The following actions require confirmation: 
+Delete Project 
+ 
+Delete Workspace 
+ 
+Delete Account 
+ 
+Reset Settings 
+ 
+Bulk Delete 
+ 
+Restore Backup 
+ 
+Permanent Delete 
+ 
+25.9 Password Security 
+Passwords are handled exclusively by Supabase Auth. 
+The application must never: 
+●​
+Store passwords. 
+●​
+Log passwords. 
+●​
+Display passwords. 
+ 
+25.10 API Keys 
+AI API keys: 
+●​
+Never displayed after saving. 
+●​
+Never logged. 
+●​
+Never stored in plain text. 
+●​
+Only used when AI is enabled. 
+ 
+
+--- PAGE 105 ---
+25.11 Privacy Rules 
+User content must never be sent to AI unless the user explicitly selects the context. 
+Examples: 
+Current Project 
+ 
+Knowledge Notes 
+ 
+Content Script 
+ 
+Development Notes 
+No automatic sharing. 
+ 
+25.12 File Security 
+Storage Rules 
+Private by Default 
+ 
+Workspace Scoped 
+ 
+Project Scoped 
+ 
+Temporary Signed URLs for Downloads 
+Public sharing requires explicit user action. 
+ 
+25.13 Audit Logging 
+Sensitive operations are always logged. 
+Examples 
+Login 
+ 
+Logout 
+ 
+Password Change 
+ 
+Delete Project 
+ 
+Delete Workspace 
+ 
+Restore Backup 
+ 
+Export Data 
+ 
+25.14 Session Security 
+Supports 
+Logout 
+ 
+Logout All Devices 
+ 
+Session Expiry 
+ 
+Refresh Token Rotation 
+ 
+Device Tracking 
+ 
+25.15 Row Level Security 
+Every table requires RLS. 
+Rules 
+workspace_id = current user's workspace 
+No exceptions. 
+ 
+25.16 Error Messages 
+Security-related errors should be generic. 
+Example 
+
+--- PAGE 106 ---
+Instead of 
+Email Exists 
+Return 
+Unable to complete the request. 
+when appropriate to avoid information leakage. 
+ 
+25.17 Database 
+Revision Required 
+permissions 
+ 
+roles 
+ 
+audit_logs 
+ 
+25.18 Completion Criteria 
+Security complete when 
+✓ Authentication secured 
+✓ Authorization implemented 
+✓ RLS enabled 
+✓ File permissions 
+✓ Secure AI 
+✓ Audit logs 
+✓ Protected routes 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+ 
+END OF CHAPTER 25 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 26 — Forms, Validation & User Input Standards (Complete 
+Functional Specification) 
+ 
+26.1 Purpose 
+Every form in Day Zero OS should behave consistently. 
+Users should immediately understand: 
+●​
+What is required. 
+●​
+What is optional. 
+●​
+What went wrong. 
+●​
+What happens after submission. 
+ 
+26.2 Design Principles 
+Forms should be: 
+●​
+Fast 
+●​
+Predictable 
+●​
+Accessible 
+●​
+Keyboard-friendly 
+
+--- PAGE 107 ---
+●​
+Mobile responsive 
+●​
+Autosaving where appropriate 
+ 
+26.3 Standard Form Layout 
+Title 
+ 
+Description 
+ 
+────────────────── 
+ 
+Input Fields 
+ 
+────────────────── 
+ 
+Validation 
+ 
+────────────────── 
+ 
+Actions 
+ 
+Cancel 
+ 
+Save 
+ 
+26.4 Input Components 
+Supported inputs 
+Text 
+ 
+Textarea 
+ 
+Markdown 
+ 
+Rich Text (Future) 
+ 
+Email 
+ 
+Password 
+ 
+Number 
+ 
+Date 
+ 
+Time 
+ 
+Color 
+ 
+File Upload 
+ 
+Tags 
+ 
+Dropdown 
+ 
+Multi Select 
+ 
+Checkbox 
+ 
+Radio 
+ 
+Toggle 
+ 
+Slider 
+ 
+Search 
+ 
+26.5 Required Field Indicators 
+Required fields display 
+Project Name * 
+Optional fields do not require labels. 
+ 
+26.6 Validation 
+Validation occurs: 
+On Blur 
+ 
+On Submit 
+ 
+Realtime (where appropriate) 
+ 
+26.7 Validation Messages 
+
+--- PAGE 108 ---
+Examples 
+Project name is required. 
+ 
+Email is invalid. 
+ 
+Password is too short. 
+ 
+Maximum file size exceeded. 
+ 
+Unsupported file type. 
+Messages should be human-friendly. 
+ 
+26.8 Autosave 
+Enabled for 
+Markdown 
+ 
+Descriptions 
+ 
+Development Notes 
+ 
+Knowledge Notes 
+ 
+Scripts 
+ 
+Weekly Debriefs 
+Autosave interval 
+5 seconds 
+Show 
+Saving... 
+ 
+Saved 
+ 
+Last Saved 2 min ago 
+ 
+26.9 Confirmation Dialogs 
+Required for 
+Delete 
+ 
+Archive 
+ 
+Restore 
+ 
+Reset 
+ 
+Publish 
+ 
+Export 
+Example 
+Delete Project? 
+ 
+This action cannot be undone. 
+ 
+Cancel 
+ 
+Delete 
+ 
+26.10 Undo 
+Whenever possible 
+Support 
+Undo Delete 
+ 
+Undo Archive 
+ 
+Undo Move 
+ 
+Undo Rename 
+ 
+26.11 File Upload Validation 
+Validate 
+File Type 
+ 
+Size 
+
+--- PAGE 109 ---
+ 
+Corruption 
+ 
+Duplicate 
+ 
+Virus Scan (Future) 
+ 
+26.12 Keyboard Navigation 
+Supports 
+Tab 
+ 
+Shift+Tab 
+ 
+Enter 
+ 
+Esc 
+ 
+Ctrl+S 
+ 
+Ctrl+Enter 
+ 
+26.13 Error Display 
+Errors appear 
+●​
+Below the field. 
+●​
+Summary at top for long forms. 
+●​
+No modal popups for simple validation. 
+ 
+26.14 Success Feedback 
+Examples 
+Project Saved 
+ 
+Milestone Created 
+ 
+Knowledge Updated 
+ 
+Asset Uploaded 
+Display using toast notifications. 
+ 
+26.15 Loading State 
+Buttons become 
+Disabled 
+ 
+Spinner 
+ 
+Loading Text 
+Prevent duplicate submissions. 
+ 
+26.16 Empty Forms 
+Provide placeholders. 
+Example 
+Enter project description... 
+ 
+26.17 Draft Support 
+Long forms automatically save drafts. 
+Examples 
+Scripts 
+ 
+Knowledge Notes 
+ 
+Development Notes 
+ 
+
+--- PAGE 110 ---
+26.18 Accessibility 
+Every form supports 
+●​
+Labels 
+●​
+Keyboard navigation 
+●​
+Screen readers 
+●​
+Focus indicators 
+●​
+Error announcements 
+ 
+26.19 Completion Criteria 
+Forms complete when 
+✓ Validation 
+✓ Autosave 
+✓ Undo 
+✓ Confirmation 
+✓ Accessibility 
+✓ Keyboard 
+✓ Success 
+✓ Errors 
+✓ Build 
+✓ Lint 
+✓ Typecheck 
+Chapter 27 — Tables, Lists, Views & Data Presentation Standards (Complete 
+Functional Specification) 
+ 
+27.1 Purpose 
+Every module in Day Zero OS displays information. 
+This chapter standardizes how information is presented throughout the application. 
+A user should never have to relearn how a table or list behaves. 
+Consistency is more important than creativity. 
+ 
+27.2 Design Principles 
+Every data view should be: 
+●​
+Fast 
+●​
+Readable 
+●​
+Consistent 
+●​
+Searchable 
+●​
+Filterable 
+●​
+Responsive 
+●​
+Keyboard Navigable 
+ 
+27.3 Supported View Types 
+Every module may support one or more of: 
+Table 
+ 
+Grid 
+ 
+List 
+ 
+Board (Kanban) 
+ 
+Timeline 
+ 
+Calendar 
+ 
+Gallery 
+
+--- PAGE 111 ---
+ 
+Tree 
+ 
+Compact 
+ 
+27.4 Standard Table 
+Every table supports 
+Search 
+ 
+Sorting 
+ 
+Filtering 
+ 
+Pagination 
+ 
+Column Resize 
+ 
+Column Visibility 
+ 
+Bulk Selection 
+ 
+Bulk Actions 
+ 
+Export 
+ 
+27.5 Standard Columns 
+Example 
+Checkbox 
+ 
+Icon 
+ 
+Title 
+ 
+Status 
+ 
+Priority 
+ 
+Tags 
+ 
+Created 
+ 
+Updated 
+ 
+Actions 
+ 
+27.6 Row Actions 
+Every row supports 
+Open 
+ 
+Edit 
+ 
+Duplicate 
+ 
+Archive 
+ 
+Delete 
+ 
+Copy Link 
+Never hide actions behind multiple clicks. 
+ 
+27.7 Bulk Actions 
+Supports 
+Delete 
+ 
+Archive 
+ 
+Move 
+ 
+Export 
+ 
+Tag 
+ 
+Favorite 
+ 
+Restore 
+ 
+27.8 Sorting 
+
+--- PAGE 112 ---
+Every sortable column supports 
+Ascending 
+ 
+Descending 
+Default sorting 
+Recently Updated 
+ 
+27.9 Filters 
+Global filters 
+Status 
+ 
+Priority 
+ 
+Project 
+ 
+Tags 
+ 
+Created Date 
+ 
+Updated Date 
+ 
+Favorites 
+ 
+Archived 
+Multiple filters may be active simultaneously. 
+ 
+27.10 Search 
+Instant search. 
+Support 
+Title 
+ 
+Description 
+ 
+Tags 
+ 
+Metadata 
+ 
+27.11 Pagination 
+Default 
+25 Items 
+Options 
+25 
+ 
+50 
+ 
+100 
+ 
+All (Future) 
+ 
+27.12 Empty States 
+Every table must display 
+No Results Found 
+ 
+Try changing your filters. 
+ 
+[Clear Filters] 
+ 
+27.13 Loading 
+Skeleton rows. 
+Never empty tables. 
+ 
+27.14 Error 
+
+--- PAGE 113 ---
+Unable to load data. 
+ 
+Retry 
+ 
+27.15 Grid View 
+Grid cards contain 
+Cover 
+ 
+Title 
+ 
+Subtitle 
+ 
+Tags 
+ 
+Status 
+ 
+Quick Actions 
+ 
+27.16 List View 
+Compact 
+Optimized for speed. 
+ 
+27.17 Board View 
+Supports 
+Drag 
+ 
+Drop 
+ 
+Reorder 
+ 
+Move Between Columns 
+ 
+27.18 Calendar View 
+Supports 
+Daily 
+ 
+Weekly 
+ 
+Monthly 
+ 
+Agenda 
+ 
+27.19 Timeline View 
+Displays 
+Milestones 
+ 
+Deadlines 
+ 
+Publishing 
+ 
+Releases 
+ 
+27.20 Gallery View 
+Used for 
+Images 
+ 
+Videos 
+ 
+Design Files 
+ 
+27.21 Tree View 
+Used for 
+Knowledge 
+
+--- PAGE 114 ---
+ 
+Folders 
+ 
+Nested Notes 
+ 
+27.22 Responsive Behaviour 
+Desktop 
+Tablet 
+Mobile 
+should automatically adapt view types. 
+ 
+27.23 Keyboard Support 
+Arrow Keys 
+ 
+Enter 
+ 
+Delete 
+ 
+Ctrl+A 
+ 
+Ctrl+C 
+ 
+Esc 
+ 
+27.24 Completion Criteria 
+Tables & Views complete when 
+✓ Search 
+✓ Sort 
+✓ Filter 
+✓ Pagination 
+✓ Bulk Actions 
+✓ Responsive 
+✓ Loading 
+✓ Empty 
+✓ Error 
+✓ Keyboard 
+ 
+END OF CHAPTER 27 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 28 — Global Components & Design System (Complete Functional 
+Specification) 
+ 
+28.1 Purpose 
+The Design System defines every reusable UI component used across Day Zero OS. 
+No page should create custom components if an equivalent global component exists. 
+ 
+28.2 Principles 
+
+--- PAGE 115 ---
+Every component should be 
+●​
+Reusable 
+●​
+Accessible 
+●​
+Theme-aware 
+●​
+Responsive 
+●​
+Consistent 
+●​
+Typed 
+●​
+Tested 
+ 
+28.3 Buttons 
+Types 
+Primary 
+ 
+Secondary 
+ 
+Outline 
+ 
+Ghost 
+ 
+Danger 
+ 
+Success 
+ 
+Warning 
+ 
+Icon Button 
+ 
+Floating Action Button 
+States 
+Default 
+ 
+Hover 
+ 
+Pressed 
+ 
+Disabled 
+ 
+Loading 
+ 
+28.4 Inputs 
+Global input components 
+Text 
+ 
+Textarea 
+ 
+Markdown 
+ 
+Search 
+ 
+Number 
+ 
+Password 
+ 
+Email 
+ 
+Date 
+ 
+Time 
+ 
+Color 
+ 
+Tags 
+ 
+Multi Select 
+ 
+Dropdown 
+ 
+Checkbox 
+ 
+Toggle 
+ 
+Slider 
+ 
+28.5 Cards 
+Reusable cards 
+Project Card 
+ 
+Knowledge Card 
+ 
+Asset Card 
+ 
+Content Card 
+ 
+Decision Card 
+ 
+Notification Card 
+ 
+
+--- PAGE 116 ---
+Metric Card 
+ 
+Stat Card 
+ 
+28.6 Badges 
+Types 
+Status 
+ 
+Priority 
+ 
+Tags 
+ 
+Technology 
+ 
+Category 
+ 
+28.7 Status Colors 
+Completed 
+ 
+Green 
+ 
+In Progress 
+ 
+Blue 
+ 
+Pending 
+ 
+Yellow 
+ 
+Blocked 
+ 
+Orange 
+ 
+Critical 
+ 
+Red 
+ 
+Archived 
+ 
+Gray 
+ 
+28.8 Progress Components 
+Supports 
+Progress Bar 
+ 
+Circular Progress 
+ 
+Percentage 
+ 
+Step Progress 
+ 
+28.9 Dialogs 
+Reusable dialogs 
+Confirmation 
+ 
+Delete 
+ 
+Archive 
+ 
+Export 
+ 
+Import 
+ 
+Rename 
+ 
+Move 
+ 
+Share (Future) 
+ 
+28.10 Modals 
+Supports 
+Small 
+ 
+Medium 
+ 
+Large 
+ 
+Fullscreen 
+ 
+
+--- PAGE 117 ---
+28.11 Navigation Components 
+Sidebar 
+ 
+Breadcrumb 
+ 
+Tabs 
+ 
+Pagination 
+ 
+Top Bar 
+ 
+Command Palette 
+ 
+Context Menu 
+ 
+28.12 Feedback Components 
+Toast 
+ 
+Snackbar 
+ 
+Alert 
+ 
+Banner 
+ 
+Tooltip 
+ 
+Popover 
+ 
+28.13 Empty States 
+Every module uses standardized empty states. 
+Structure 
+Illustration 
+ 
+Title 
+ 
+Description 
+ 
+Primary Action 
+ 
+28.14 Loading Components 
+Supports 
+Skeleton 
+ 
+Spinner 
+ 
+Progress Bar 
+ 
+Uploading Indicator 
+ 
+Saving Indicator 
+ 
+28.15 Icons 
+Single icon library. 
+Use 
+Lucide React 
+No mixed icon libraries. 
+ 
+28.16 Typography 
+Heading hierarchy 
+H1 
+ 
+H2 
+ 
+H3 
+ 
+H4 
+ 
+Body 
+ 
+Caption 
+ 
+Label 
+ 
+
+--- PAGE 118 ---
+Code 
+Typography must remain consistent. 
+ 
+28.17 Theme Support 
+Themes 
+Light 
+ 
+Dark 
+ 
+System 
+Every component supports all themes. 
+ 
+28.18 Animations 
+Use subtle animations only. 
+Allowed 
+Fade 
+ 
+Scale 
+ 
+Slide 
+ 
+Progress 
+ 
+Skeleton 
+Avoid excessive motion. 
+ 
+28.19 Accessibility 
+Every component supports 
+●​
+Keyboard 
+●​
+Focus ring 
+●​
+ARIA labels 
+●​
+Screen readers 
+●​
+High contrast 
+ 
+28.20 Design Tokens 
+Centralized tokens for 
+Colors 
+ 
+Spacing 
+ 
+Radius 
+ 
+Typography 
+ 
+Elevation 
+ 
+Animation 
+ 
+Breakpoints 
+No hardcoded values inside components. 
+ 
+28.21 Component Folder Structure 
+components/ 
+ 
+ui/ 
+ 
+layout/ 
+ 
+feedback/ 
+ 
+forms/ 
+ 
+navigation/ 
+ 
+charts/ 
+ 
+dialogs/ 
+
+--- PAGE 119 ---
+ 
+tables/ 
+ 
+28.22 Completion Criteria 
+Design System complete when 
+✓ Buttons 
+✓ Inputs 
+✓ Cards 
+✓ Dialogs 
+✓ Navigation 
+✓ Feedback 
+✓ Loading 
+✓ Empty States 
+✓ Themes 
+✓ Accessibility 
+✓ Design Tokens 
+Chapter 29 — Keyboard Shortcuts, Productivity & Power User Features 
+(Complete Functional Specification) 
+ 
+29.1 Purpose 
+Day Zero OS is designed for builders who spend hours inside the application. 
+The product should minimize mouse usage and maximize keyboard efficiency. 
+Every frequent action should have a shortcut. 
+Power users should be able to operate the application almost entirely from the keyboard. 
+ 
+29.2 Objectives 
+The productivity system should: 
+●​
+Reduce clicks 
+●​
+Improve navigation speed 
+●​
+Support keyboard-first workflows 
+●​
+Enable quick creation 
+●​
+Speed up repetitive tasks 
+ 
+29.3 Global Shortcuts 
+Shortcut 
+Action 
+Ctrl/Cmd + K 
+Open Command Palette 
+Ctrl/Cmd + S 
+Save Current Changes 
+Ctrl/Cmd + N 
+Create New Item 
+Ctrl/Cmd + Shift + P 
+New Project 
+Ctrl/Cmd + Shift + M 
+New Milestone 
+Ctrl/Cmd + Shift + A 
+Upload Asset 
+Ctrl/Cmd + Shift + C 
+New Content 
+Ctrl/Cmd + Shift + D 
+New Decision 
+Ctrl/Cmd + / 
+Focus Search 
+
+--- PAGE 120 ---
+Esc 
+Close Dialog 
+Tab 
+Next Field 
+Shift + Tab 
+Previous Field 
+ 
+29.4 Navigation Shortcuts 
+G + M → Mission Control 
+ 
+G + P → Projects 
+ 
+G + K → Knowledge 
+ 
+G + A → Assets 
+ 
+G + C → Content 
+ 
+G + S → Settings 
+ 
+G + W → Weekly Debrief 
+Inspired by GitHub navigation. 
+ 
+29.5 Workspace Shortcuts 
+Inside Project Workspace 
+1 → Overview 
+ 
+2 → Planning 
+ 
+3 → Development 
+ 
+4 → Knowledge 
+ 
+5 → Assets 
+ 
+6 → Content 
+ 
+7 → Architecture 
+ 
+8 → Activity 
+ 
+9 → Settings 
+ 
+29.6 Editing Shortcuts 
+Supports 
+Ctrl + B 
+ 
+Bold 
+ 
+Ctrl + I 
+ 
+Italic 
+ 
+Ctrl + Shift + 7 
+ 
+Checklist 
+ 
+Ctrl + Shift + 8 
+ 
+Bullet List 
+ 
+Ctrl + Shift + C 
+ 
+Code Block 
+ 
+Ctrl + Z 
+ 
+Undo 
+ 
+Ctrl + Shift + Z 
+ 
+Redo 
+ 
+29.7 Multi Selection 
+Supports 
+Ctrl + Click 
+ 
+Shift + Click 
+ 
+Ctrl + A 
+For 
+
+--- PAGE 121 ---
+●​
+Projects 
+●​
+Assets 
+●​
+Knowledge 
+●​
+Content 
+●​
+Notifications 
+ 
+29.8 Drag & Drop 
+Supports 
+Kanban 
+ 
+Timeline 
+ 
+Folders 
+ 
+Tags 
+ 
+Assets 
+ 
+Milestones 
+ 
+Content Pipeline 
+ 
+29.9 Clipboard 
+Supports 
+Copy 
+ 
+Paste 
+ 
+Duplicate 
+ 
+Copy Link 
+ 
+Copy Markdown 
+ 
+Copy JSON 
+ 
+29.10 Quick Create 
+Available everywhere. 
+Shortcut 
+Ctrl + Shift + Space 
+Displays 
+New Project 
+ 
+New Note 
+ 
+New Asset 
+ 
+New Content 
+ 
+New Decision 
+ 
+New Milestone 
+ 
+New Weekly Debrief 
+ 
+29.11 Recent Items 
+Quick access 
+Ctrl + E 
+Displays 
+●​
+Recent Projects 
+●​
+Recent Notes 
+●​
+Recent Assets 
+●​
+Recent Content 
+ 
+29.12 Favorites 
+Quick access 
+Ctrl + F 
+Displays 
+
+--- PAGE 122 ---
+Pinned resources. 
+ 
+29.13 Productivity Features 
+Support 
+●​
+Autosave 
+●​
+Auto Focus 
+●​
+Auto Expand 
+●​
+Inline Editing 
+●​
+Drag & Drop 
+●​
+Keyboard Navigation 
+●​
+Multi Selection 
+ 
+29.14 Completion Criteria 
+Productivity system complete when 
+✓ Global shortcuts 
+✓ Workspace shortcuts 
+✓ Command palette 
+✓ Drag & Drop 
+✓ Multi-select 
+✓ Clipboard 
+✓ Keyboard navigation 
+ 
+END OF CHAPTER 29 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 30 — Loading States, Empty States, Error Handling & User Feedback 
+Standards (Complete Functional Specification) 
+ 
+30.1 Purpose 
+A professional application is defined not only by what happens when everything works, but by how it behaves when: 
+●​
+Data is loading 
+●​
+Nothing exists yet 
+●​
+Errors occur 
+●​
+Actions succeed 
+●​
+Network fails 
+Every screen in Day Zero OS must gracefully handle all states. 
+ 
+30.2 Universal UI States 
+Every page supports 
+Loading 
+ 
+Empty 
+ 
+Success 
+ 
+Warning 
+ 
+Error 
+No exceptions. 
+ 
+
+--- PAGE 123 ---
+30.3 Loading States 
+Never display blank pages. 
+Use 
+●​
+Skeleton cards 
+●​
+Skeleton tables 
+●​
+Skeleton charts 
+●​
+Loading spinners 
+●​
+Upload indicators 
+●​
+Saving indicators 
+ 
+30.4 Skeleton Rules 
+Display skeletons matching the final layout. 
+Examples 
+Project Cards 
+ 
+Knowledge Cards 
+ 
+Tables 
+ 
+Timeline 
+ 
+Statistics 
+ 
+Charts 
+Avoid generic spinners for large layouts. 
+ 
+30.5 Empty States 
+Every module must explain: 
+●​
+Why it is empty. 
+●​
+What the user should do next. 
+●​
+Provide a primary action. 
+Example 
+No Projects Yet 
+ 
+Create your first project. 
+ 
+[New Project] 
+ 
+30.6 Error Handling 
+Errors should be: 
+●​
+Human-readable 
+●​
+Actionable 
+●​
+Non-technical 
+Example 
+Instead of 
+HTTP 500 
+Show 
+Something went wrong while loading your projects. 
+ 
+[Retry] 
+ 
+30.7 Network Errors 
+Handle 
+●​
+Offline 
+●​
+Timeout 
+●​
+Slow Connection 
+●​
+Server Unavailable 
+Provide retry options. 
+ 
+
+--- PAGE 124 ---
+30.8 Success Feedback 
+Examples 
+Project Created 
+ 
+Saved Successfully 
+ 
+Asset Uploaded 
+ 
+Content Published 
+ 
+Settings Updated 
+Use toast notifications. 
+ 
+30.9 Warning Messages 
+Examples 
+Unsaved Changes 
+ 
+Storage Almost Full 
+ 
+Deadline Approaching 
+ 
+AI Disabled 
+ 
+30.10 Confirmation Dialogs 
+Required for 
+●​
+Delete 
+●​
+Archive 
+●​
+Reset 
+●​
+Publish 
+●​
+Restore 
+●​
+Import 
+Example 
+Delete Project? 
+ 
+This action cannot be undone. 
+ 
+Cancel 
+ 
+Delete 
+ 
+30.11 Undo 
+Where practical 
+Support 
+Undo Delete 
+ 
+Undo Archive 
+ 
+Undo Rename 
+ 
+Undo Move 
+Time window 
+10 seconds 
+ 
+30.12 Autosave Indicators 
+Display 
+Saving... 
+ 
+Saved 
+ 
+Saved 30 seconds ago 
+Never leave users wondering if data is saved. 
+ 
+30.13 Retry Strategy 
+Every failed action should offer 
+
+--- PAGE 125 ---
+Retry 
+ 
+Cancel 
+Avoid forcing page refreshes. 
+ 
+30.14 Offline Indicators (Future) 
+Display 
+Offline Mode 
+ 
+Changes will sync when connected. 
+ 
+30.15 Accessibility 
+Announcements for 
+●​
+Success 
+●​
+Errors 
+●​
+Warnings 
+●​
+Loading completion 
+Support screen readers. 
+ 
+30.16 Logging 
+Every unexpected error should be logged internally. 
+User-facing messages must remain simple. 
+ 
+30.17 Completion Criteria 
+Feedback system complete when 
+✓ Skeletons 
+✓ Empty states 
+✓ Success toasts 
+✓ Error messages 
+✓ Retry flows 
+✓ Undo 
+✓ Confirmation dialogs 
+✓ Accessibility 
+Chapter 31 — Responsive Design & Cross-Platform Experience (Complete 
+Functional Specification) 
+ 
+31.1 Purpose 
+Day Zero OS is designed as a desktop-first productivity operating system, while remaining fully functional on tablets and mobile devices. 
+Desktop provides the complete experience. 
+Tablet offers nearly all capabilities with layout adaptations. 
+Mobile focuses on review, quick capture, and lightweight management rather than intensive editing. 
+ 
+31.2 Supported Platforms 
+Version 1.0 
+Desktop Web 
+
+--- PAGE 126 ---
+ 
+Laptop 
+ 
+Tablet 
+ 
+Mobile Browser 
+Future 
+Desktop Application (Tauri) 
+ 
+Android 
+ 
+iOS 
+ 
+PWA 
+ 
+Offline Desktop 
+ 
+31.3 Responsive Breakpoints 
+Mobile 
+0–639 px 
+ 
+Tablet 
+640–1023 px 
+ 
+Desktop 
+1024–1439 px 
+ 
+Large Desktop 
+1440+ px 
+ 
+31.4 Desktop Experience 
+Desktop provides 
+●​
+Full Sidebar 
+●​
+Multi-column layouts 
+●​
+Markdown editor 
+●​
+Drag & Drop 
+●​
+Split View 
+●​
+Command Palette 
+●​
+Keyboard shortcuts 
+●​
+Multi-select 
+●​
+Bulk operations 
+Desktop is the reference implementation. 
+ 
+31.5 Tablet Experience 
+Tablet should support 
+●​
+Collapsible Sidebar 
+●​
+Adaptive grids 
+●​
+Full CRUD 
+●​
+Touch gestures 
+●​
+Optimized dialogs 
+●​
+Responsive tables 
+ 
+31.6 Mobile Experience 
+Mobile prioritizes 
+Mission Control 
+ 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Notifications 
+ 
+Weekly Review 
+Heavy editing is supported but optimized for simplicity. 
+ 
+31.7 Navigation 
+Desktop 
+
+--- PAGE 127 ---
+Persistent Sidebar 
+Tablet 
+Collapsible Sidebar 
+Mobile 
+Bottom Navigation 
+ 
+Hamburger Menu 
+ 
+31.8 Responsive Tables 
+Desktop 
+Full table 
+Tablet 
+Horizontal scrolling 
+Mobile 
+Cards instead of tables where appropriate 
+ 
+31.9 Responsive Cards 
+Cards automatically resize. 
+Maintain readable spacing. 
+Never truncate important information. 
+ 
+31.10 Responsive Dialogs 
+Desktop 
+Centered Modal 
+Tablet 
+Large Modal 
+Mobile 
+Fullscreen Sheet 
+ 
+31.11 Images 
+Automatically optimize 
+Thumbnail 
+ 
+Medium 
+ 
+Original 
+Serve appropriate size based on screen. 
+ 
+31.12 Typography 
+Automatically scale 
+Headings 
+ 
+Body 
+ 
+Buttons 
+ 
+Labels 
+Maintain readability. 
+ 
+
+--- PAGE 128 ---
+31.13 Touch Support 
+Support 
+Tap 
+ 
+Long Press 
+ 
+Swipe 
+ 
+Drag 
+ 
+Pinch (Images) 
+ 
+31.14 Orientation 
+Support 
+Portrait 
+ 
+Landscape 
+No functionality should depend on orientation. 
+ 
+31.15 Accessibility 
+Support 
+●​
+High contrast 
+●​
+Larger text 
+●​
+Screen readers 
+●​
+Keyboard navigation (where available) 
+●​
+Focus indicators 
+ 
+31.16 Offline Indicators 
+Future support 
+Offline 
+ 
+Sync Pending 
+ 
+Last Synced 
+ 
+31.17 Responsive Testing 
+Test on 
+Chrome 
+ 
+Edge 
+ 
+Firefox 
+ 
+Safari 
+ 
+Android Chrome 
+ 
+iOS Safari 
+ 
+31.18 Completion Criteria 
+Responsive design complete when 
+✓ Desktop optimized 
+✓ Tablet optimized 
+✓ Mobile usable 
+✓ Touch support 
+✓ Responsive tables 
+✓ Responsive dialogs 
+✓ Responsive navigation 
+✓ Accessibility 
+ 
+
+--- PAGE 129 ---
+END OF CHAPTER 31 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 32 — Performance, Optimization & Scalability (Complete Functional 
+Specification) 
+ 
+32.1 Purpose 
+Performance is a feature. 
+Day Zero OS should remain responsive as projects, knowledge, assets, and content grow over time. 
+Performance considerations should be built into the architecture from the beginning. 
+ 
+32.2 Performance Goals 
+Target metrics 
+Initial Load 
+<2.5 seconds 
+ 
+Route Navigation 
+<200 ms 
+ 
+Search 
+<200 ms 
+ 
+Project Open 
+<500 ms 
+ 
+Command Palette 
+<100 ms 
+ 
+Autosave 
+<300 ms 
+ 
+32.3 Bundle Optimization 
+Implement 
+●​
+Code splitting 
+●​
+Route-based lazy loading 
+●​
+Dynamic imports 
+●​
+Tree shaking 
+●​
+Asset optimization 
+ 
+32.4 Data Fetching 
+Guidelines 
+●​
+Fetch only required data. 
+●​
+Paginate large datasets. 
+●​
+Avoid duplicate requests. 
+●​
+Cache frequently used data. 
+●​
+Prefetch likely next screens where appropriate. 
+ 
+32.5 Caching Strategy 
+Cache 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Settings 
+ 
+Recent Activity 
+ 
+User Profile 
+
+--- PAGE 130 ---
+Invalidate after updates. 
+ 
+32.6 Lazy Loading 
+Lazy load 
+Project Workspace 
+ 
+Knowledge Editor 
+ 
+Asset Preview 
+ 
+Analytics 
+ 
+Charts 
+ 
+Settings 
+ 
+32.7 Images 
+Optimize 
+●​
+Responsive sizes 
+●​
+Compression 
+●​
+Lazy loading 
+●​
+Progressive loading 
+●​
+Thumbnail generation 
+ 
+32.8 Database Optimization 
+Use 
+●​
+Indexes 
+●​
+Efficient joins 
+●​
+Pagination 
+●​
+Full-text search 
+●​
+Query limits 
+Avoid unnecessary full-table scans. 
+ 
+32.9 Search Performance 
+Global Search should 
+●​
+Use indexed fields 
+●​
+Debounce input 
+●​
+Limit results 
+●​
+Return progressively 
+ 
+32.10 Memory Management 
+Avoid 
+●​
+Memory leaks 
+●​
+Unused listeners 
+●​
+Orphan timers 
+●​
+Duplicate subscriptions 
+Clean up resources on unmount. 
+ 
+32.11 Network Optimization 
+Reduce 
+●​
+Duplicate API calls 
+●​
+Large payloads 
+●​
+Unnecessary polling 
+Use optimistic updates where appropriate. 
+ 
+32.12 Scalability Targets 
+
+--- PAGE 131 ---
+The application should comfortably support 
+10,000+ Knowledge Notes 
+ 
+5,000+ Assets 
+ 
+2,000+ Content Items 
+ 
+500+ Projects 
+ 
+100,000+ Activity Records 
+without requiring architectural changes. 
+ 
+32.13 Background Processing 
+Future 
+Thumbnail Generation 
+ 
+AI Processing 
+ 
+Search Indexing 
+ 
+Backups 
+ 
+Analytics Aggregation 
+These should not block the UI. 
+ 
+32.14 Monitoring 
+Track 
+Page Load 
+ 
+API Duration 
+ 
+Search Time 
+ 
+Upload Duration 
+ 
+Error Rate 
+ 
+32.15 Performance Budget 
+Avoid 
+●​
+Oversized bundles 
+●​
+Large images 
+●​
+Excessive dependencies 
+●​
+Unnecessary re-renders 
+ 
+32.16 Testing 
+Measure 
+●​
+Lighthouse 
+●​
+Core Web Vitals 
+●​
+React Profiler 
+●​
+Bundle Size 
+ 
+32.17 Completion Criteria 
+Performance complete when 
+✓ Lazy loading 
+✓ Caching 
+✓ Code splitting 
+✓ Optimized images 
+✓ Indexed search 
+✓ Scalable database 
+✓ Performance monitoring 
+
+--- PAGE 132 ---
+✓ Performance budget maintained 
+Chapter 33 — Testing, Quality Assurance & Release Readiness (Complete 
+Functional Specification) 
+ 
+33.1 Purpose 
+Testing is not a phase performed after development. 
+It is a continuous quality process throughout the lifecycle of Day Zero OS. 
+Every feature must be verified before it is considered complete. 
+No feature may bypass the quality gate. 
+ 
+33.2 Quality Principles 
+Every completed feature must satisfy 
+●​
+Functional correctness 
+●​
+UI consistency 
+●​
+Database consistency 
+●​
+Performance 
+●​
+Accessibility 
+●​
+Security 
+●​
+Error handling 
+●​
+Responsive behavior 
+ 
+33.3 Testing Pyramid 
+               E2E Tests 
+          Integration Tests 
+            Component Tests 
+              Unit Tests 
+ 
+33.4 Unit Testing 
+Test 
+Utility Functions 
+ 
+Validation 
+ 
+Calculations 
+ 
+Hooks 
+ 
+Services 
+ 
+Repositories 
+Framework 
+Vitest 
+ 
+33.5 Component Testing 
+Every reusable component must verify 
+Rendering 
+ 
+Props 
+ 
+Interactions 
+ 
+Disabled States 
+ 
+Loading States 
+ 
+Accessibility 
+Examples 
+Button 
+ 
+Dialog 
+ 
+Table 
+ 
+
+--- PAGE 133 ---
+Card 
+ 
+Input 
+ 
+Toast 
+ 
+Sidebar 
+ 
+33.6 Integration Testing 
+Verify interaction between 
+Frontend 
+ 
+↓ 
+ 
+Services 
+ 
+↓ 
+ 
+Supabase 
+ 
+↓ 
+ 
+Storage 
+Examples 
+●​
+Create Project 
+●​
+Upload Asset 
+●​
+Publish Content 
+●​
+Create Milestone 
+●​
+Save Knowledge 
+ 
+33.7 End-to-End Testing 
+Critical user journeys 
+Register 
+ 
+↓ 
+ 
+Login 
+ 
+↓ 
+ 
+Create Project 
+ 
+↓ 
+ 
+Create Milestone 
+ 
+↓ 
+ 
+Upload Asset 
+ 
+↓ 
+ 
+Create Knowledge 
+ 
+↓ 
+ 
+Publish Content 
+ 
+↓ 
+ 
+Weekly Debrief 
+ 
+↓ 
+ 
+Logout 
+Recommended Framework 
+Playwright 
+ 
+33.8 Regression Testing 
+Before every release 
+Verify 
+Authentication 
+ 
+Projects 
+ 
+Workspace 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Search 
+
+--- PAGE 134 ---
+ 
+Settings 
+ 
+33.9 Manual QA Checklist 
+Verify 
+✓ Navigation 
+✓ CRUD 
+✓ Loading 
+✓ Empty States 
+✓ Error States 
+✓ Search 
+✓ Filters 
+✓ Shortcuts 
+✓ Responsive 
+✓ Accessibility 
+ 
+33.10 Accessibility Testing 
+Verify 
+Keyboard Navigation 
+ 
+Screen Reader 
+ 
+Focus Order 
+ 
+Color Contrast 
+ 
+ARIA Labels 
+ 
+Tab Order 
+Target 
+WCAG 2.1 AA 
+ 
+33.11 Browser Testing 
+Desktop 
+Chrome 
+ 
+Edge 
+ 
+Firefox 
+ 
+Safari 
+Mobile 
+Android Chrome 
+ 
+iOS Safari 
+ 
+33.12 Performance Testing 
+Verify 
+Bundle Size 
+ 
+Page Load 
+ 
+Search 
+ 
+Project Load 
+ 
+Upload 
+ 
+Autosave 
+ 
+33.13 Security Testing 
+
+--- PAGE 135 ---
+Verify 
+Authentication 
+ 
+RLS 
+ 
+Unauthorized Access 
+ 
+Storage Access 
+ 
+SQL Injection Protection 
+ 
+XSS Protection 
+ 
+33.14 Error Recovery 
+Every failure should verify 
+Retry 
+ 
+Recovery 
+ 
+Rollback 
+ 
+User Feedback 
+ 
+Logging 
+ 
+33.15 Build Quality Gates 
+Before merging 
+All must pass 
+npm run lint 
+ 
+npm run typecheck 
+ 
+npm run build 
+ 
+Unit Tests 
+ 
+Integration Tests 
+No exceptions. 
+ 
+33.16 Release Candidate Checklist 
+Every release candidate verifies 
+Database Migration 
+ 
+Storage 
+ 
+Authentication 
+ 
+Routing 
+ 
+Performance 
+ 
+Accessibility 
+ 
+Responsive 
+ 
+Search 
+ 
+Notifications 
+ 
+33.17 Bug Severity 
+Critical 
+ 
+High 
+ 
+Medium 
+ 
+Low 
+ 
+Enhancement 
+ 
+33.18 Definition of Done 
+A feature is complete only if 
+✓ Functionality complete 
+✓ CRUD complete 
+
+--- PAGE 136 ---
+✓ Tests pass 
+✓ Build passes 
+✓ Lint passes 
+✓ Typecheck passes 
+✓ Activity logging works 
+✓ Responsive 
+✓ Accessible 
+✓ No console errors 
+ 
+33.19 Completion Criteria 
+Testing system complete when 
+✓ Unit 
+✓ Component 
+✓ Integration 
+✓ E2E 
+✓ QA 
+✓ Accessibility 
+✓ Performance 
+✓ Security 
+✓ Build Quality Gates 
+ 
+END OF CHAPTER 33 
+ 
+PRODUCT COMPLETION SPECIFICATION (PCS) 
+Chapter 34 — Version 1.0 MVP Acceptance Criteria & Launch Checklist 
+ 
+34.1 Purpose 
+This chapter defines the official criteria for declaring Day Zero OS Version 1.0 MVP complete. 
+The application is not considered finished until every requirement in this chapter is satisfied. 
+ 
+34.2 Product Modules 
+All modules must be complete. 
+Authentication 
+ 
+Mission Control 
+ 
+Projects 
+ 
+Project Workspace 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Architecture 
+ 
+Activity 
+ 
+Weekly Debrief 
+ 
+Search 
+ 
+
+--- PAGE 137 ---
+Notifications 
+ 
+Settings 
+ 
+34.3 CRUD Checklist 
+Every entity supports 
+Create 
+ 
+Read 
+ 
+Update 
+ 
+Delete 
+Where applicable 
+Archive 
+ 
+Restore 
+ 
+Duplicate 
+ 
+Export 
+ 
+34.4 Database 
+Requirements 
+✓ All migrations applied 
+✓ RLS enabled 
+✓ Foreign keys validated 
+✓ Indexes created 
+✓ Storage configured 
+✓ Triggers working 
+✓ Activity logging enabled 
+ 
+34.5 UI 
+Every screen supports 
+Loading 
+ 
+Empty 
+ 
+Success 
+ 
+Warning 
+ 
+Error 
+No placeholders. 
+No "Coming Soon". 
+No mock data. 
+ 
+34.6 Navigation 
+Every page 
+✓ Reachable 
+✓ Breadcrumbs 
+✓ Back navigation 
+✓ Command Palette support 
+✓ Keyboard shortcuts 
+ 
+34.7 Search 
+
+--- PAGE 138 ---
+Global Search 
+✓ Works 
+✓ Fast 
+✓ Cross-module 
+✓ Indexed 
+ 
+34.8 Storage 
+Verify 
+✓ Upload 
+✓ Download 
+✓ Preview 
+✓ Delete 
+✓ Versioning 
+✓ Security 
+ 
+34.9 Security 
+Verify 
+✓ Login 
+✓ Logout 
+✓ Password Reset 
+✓ RLS 
+✓ Protected Routes 
+✓ Secure Storage 
+ 
+34.10 Performance 
+Target 
+Initial Load 
+ 
+<2.5 seconds 
+ 
+Navigation 
+ 
+<200ms 
+ 
+Search 
+ 
+<200ms 
+ 
+34.11 Accessibility 
+Verify 
+✓ Keyboard 
+✓ Focus 
+✓ Labels 
+✓ Contrast 
+✓ Screen Readers 
+ 
+34.12 Responsive 
+Verify 
+Desktop 
+ 
+
+--- PAGE 139 ---
+Tablet 
+ 
+Mobile 
+ 
+34.13 Build Pipeline 
+Must pass 
+Lint 
+ 
+Typecheck 
+ 
+Build 
+ 
+Tests 
+ 
+34.14 Production Deployment 
+Deploy only after 
+✓ Database migrated 
+✓ Environment variables configured 
+✓ Storage buckets created 
+✓ Authentication verified 
+✓ Build optimized 
+✓ Production URLs configured 
+ 
+34.15 Documentation 
+Project includes 
+README 
+ 
+PRD 
+ 
+PCS 
+ 
+Database Schema 
+ 
+Architecture Diagram 
+ 
+Setup Guide 
+ 
+Deployment Guide 
+ 
+Contribution Guide 
+ 
+34.16 Success Metrics 
+Version 1.0 is successful if a user can: 
+●​
+Register an account. 
+●​
+Create a project. 
+●​
+Plan milestones. 
+●​
+Manage development. 
+●​
+Store knowledge. 
+●​
+Upload assets. 
+●​
+Produce content. 
+●​
+Record architecture decisions. 
+●​
+Review weekly progress. 
+●​
+Search everything. 
+●​
+Configure settings. 
+●​
+Use the application daily without external tools. 
+ 
+34.17 MVP Completion Definition 
+Version 1.0 MVP is complete when 
+✅ No placeholder screens 
+✅ No broken navigation 
+✅ No mock data 
+✅ All CRUD implemented 
+✅ Full Supabase integration 
+
+--- PAGE 140 ---
+✅ Stable performance 
+✅ Testing completed 
+✅ Documentation completed 
+ 
+34.18 Final Acceptance Gate 
+The application should satisfy the following statement: 
+"A solo builder can manage an entire software product, content creation workflow, research, documentation, digital assets, and weekly execution inside Day Zero OS without requiring external 
+productivity software for the core workflow." 
+If the answer is Yes, Version 1.0 MVP is accepted. 
+Chapter 35 — Future Roadmap (v1.1 → v3.0+) 
+ 
+35.1 Purpose 
+This chapter defines the long-term vision of Day Zero OS beyond Version 1.0. 
+The MVP establishes the foundation for a personal productivity operating system. Future releases expand it into a collaborative, extensible, AI-assisted platform capable of supporting individuals, startups, and engineering 
+teams. 
+The roadmap is aspirational and may evolve based on user feedback, technical feasibility, and product priorities. 
+ 
+35.2 Version 1.1 — Productivity Expansion 
+Focus 
+Improve the daily experience. 
+Features 
+Project Templates 
+ 
+Workspace Templates 
+ 
+Advanced Notifications 
+ 
+Calendar View 
+ 
+Timeline View 
+ 
+Reusable Checklists 
+ 
+Project Cloning 
+ 
+Import Wizard 
+ 
+Advanced Filters 
+ 
+Saved Views 
+ 
+Pinned Dashboards 
+ 
+Recently Viewed 
+ 
+Workspace Statistics 
+ 
+35.3 Version 1.2 — AI Expansion 
+Focus 
+Make AI a productivity assistant. 
+Features 
+AI Chat 
+ 
+Context Injection 
+ 
+Prompt Variables 
+ 
+Meeting Summaries 
+ 
+Knowledge Summaries 
+ 
+Automatic Task Suggestions 
+ 
+Automatic Milestone Suggestions 
+ 
+Script Improvement 
+ 
+Architecture Review 
+
+--- PAGE 141 ---
+ 
+Content Brainstorming 
+Future capabilities should remain optional and require explicit user consent before accessing project context. 
+ 
+35.4 Version 2.0 — Team Collaboration 
+Focus 
+Transform Day Zero OS from a solo workspace into a collaborative platform. 
+Features 
+Organizations 
+ 
+Teams 
+ 
+Invitations 
+ 
+Members 
+ 
+Roles 
+ 
+Permissions 
+ 
+Shared Projects 
+ 
+Comments 
+ 
+Mentions 
+ 
+Presence 
+ 
+Activity Feed 
+ 
+Approvals 
+ 
+35.5 Collaboration 
+Support 
+Multiple Editors 
+ 
+Comment Threads 
+ 
+Inline Comments 
+ 
+Mentions 
+ 
+Notifications 
+ 
+Assignment 
+ 
+Approvals 
+ 
+35.6 Version 2.1 — Git Integration 
+Integrations 
+GitHub 
+ 
+GitLab 
+ 
+Bitbucket 
+Capabilities 
+Repositories 
+ 
+Branches 
+ 
+Commits 
+ 
+Issues 
+ 
+PR Links 
+ 
+Release Tracking 
+ 
+35.7 Version 2.2 — Calendar Integration 
+Support 
+Google Calendar 
+ 
+Microsoft Outlook 
+ 
+Apple Calendar 
+Sync 
+
+--- PAGE 142 ---
+Deadlines 
+ 
+Content Schedule 
+ 
+Meetings 
+ 
+Milestones 
+ 
+35.8 Version 2.3 — Cloud Integrations 
+Support 
+Google Drive 
+ 
+Dropbox 
+ 
+OneDrive 
+ 
+Box 
+ 
+Cloudflare R2 
+ 
+35.9 Version 2.4 — Communication 
+Integrations 
+Slack 
+ 
+Discord 
+ 
+Microsoft Teams 
+ 
+Email 
+Notifications 
+Project Updates 
+ 
+Content Published 
+ 
+Weekly Reviews 
+ 
+AI Reports 
+ 
+35.10 Version 2.5 — Design Integrations 
+Support 
+Figma 
+ 
+Adobe 
+ 
+Canva 
+ 
+Miro 
+Automatically link design assets to projects. 
+ 
+35.11 Version 2.6 — Automation 
+Visual automation builder. 
+Example 
+Milestone Completed 
+ 
+↓ 
+ 
+Notify Slack 
+ 
+↓ 
+ 
+Generate Weekly Summary 
+ 
+↓ 
+ 
+Create Content Task 
+No-code workflow automation. 
+ 
+35.12 Version 2.7 — Plugin System 
+Plugin Marketplace. 
+
+--- PAGE 143 ---
+Support 
+Custom Widgets 
+ 
+Custom Dashboards 
+ 
+Commands 
+ 
+Panels 
+ 
+Storage Providers 
+ 
+AI Providers 
+ 
+35.13 Version 2.8 — Desktop Application 
+Technology 
+Tauri 
+Features 
+Native Window 
+ 
+Native File Access 
+ 
+Offline Support 
+ 
+Notifications 
+ 
+System Tray 
+ 
+35.14 Version 2.9 — Mobile Apps 
+Platforms 
+Android 
+ 
+iOS 
+Focus 
+Review 
+ 
+Capture 
+ 
+Notifications 
+ 
+Quick Edit 
+ 
+Upload 
+ 
+35.15 Version 3.0 — Intelligent Workspace 
+Introduce AI-powered workspace intelligence. 
+Examples 
+Duplicate Knowledge Detection 
+ 
+Smart Search 
+ 
+Automatic Organization 
+ 
+Project Health Analysis 
+ 
+Risk Detection 
+ 
+Productivity Trends 
+ 
+Suggested Next Actions 
+AI remains assistive and user-controlled. 
+ 
+35.16 Multi-Agent System (Future) 
+Potential specialized agents 
+Project Manager 
+ 
+Research Assistant 
+ 
+Content Assistant 
+ 
+Architecture Advisor 
+ 
+Development Assistant 
+ 
+Documentation Assistant 
+ 
+
+--- PAGE 144 ---
+Review Assistant 
+Agents collaborate through user-approved workflows. 
+ 
+35.17 Analytics Platform 
+Future dashboards 
+Productivity 
+ 
+Knowledge Growth 
+ 
+Content Performance 
+ 
+Development Velocity 
+ 
+Weekly Trends 
+ 
+Goal Achievement 
+ 
+35.18 Marketplace 
+Community ecosystem 
+Templates 
+ 
+Project Packs 
+ 
+Prompt Packs 
+ 
+Design Systems 
+ 
+Plugins 
+ 
+Widgets 
+ 
+35.19 API 
+Public API 
+Supports 
+Projects 
+ 
+Knowledge 
+ 
+Assets 
+ 
+Content 
+ 
+Notifications 
+ 
+Search 
+Future SDKs 
+JavaScript 
+ 
+Python 
+ 
+REST 
+ 
+Webhooks 
+ 
+35.20 Enterprise Features (Future) 
+SSO 
+ 
+SCIM 
+ 
+Audit Logs 
+ 
+Organizations 
+ 
+Advanced Permissions 
+ 
+Compliance 
+ 
+Backups 
+ 
+Retention Policies 
+ 
+35.21 Long-Term Vision 
+Day Zero OS aims to become a unified operating system for modern builders by combining: 
+●​
+Project Management 
+
+--- PAGE 145 ---
+●​
+Knowledge Management 
+●​
+Content Production 
+●​
+Documentation 
+●​
+Digital Asset Management 
+●​
+Architecture Records 
+●​
+Productivity Tracking 
+●​
+Optional AI Assistance 
+into a single, cohesive platform. 
+The objective is to reduce the need to switch between multiple productivity tools for core workflows while remaining extensible through integrations where appropriate. 
+ 
+35.22 Roadmap Summary 
+Version 
+Primary Focus 
+v1.0 
+Solo Builder MVP 
+v1.1 
+Productivity Enhancements 
+v1.2 
+AI Productivity 
+v2.0 
+Team Collaboration 
+v2.1 
+Git Integrations 
+v2.2 
+Calendar Integrations 
+v2.3 
+Cloud Storage 
+v2.4 
+Communication Platforms 
+v2.5 
+Design Tool Integrations 
+v2.6 
+Automation Builder 
+v2.7 
+Plugin Marketplace 
+v2.8 
+Desktop Application 
+v2.9 
+Mobile Applications 
+v3.0 
+Intelligent Workspace 
+ 
+35.23 Final Product Acceptance Statement 
+Day Zero OS Version 1.0 is considered complete when it satisfies the Product Requirements Document (PRD), the Technical Design Specification (TDS), and this Product Completion Specification (PCS), delivering a stable, 
+production-ready application for individual builders. 
+Subsequent roadmap items represent planned evolution rather than MVP requirements. 
+ 
