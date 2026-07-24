@@ -139,7 +139,7 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
   }
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: '32px 36px' }}>
+    <div className="h-full overflow-y-auto p-4 sm:p-6 lg:p-9">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.03em' }}>Projects</h1>
@@ -185,70 +185,76 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-        <div style={{ position: 'relative', width: '260px' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5 w-full">
+        <div className="relative w-full sm:w-[260px] flex-shrink-0">
           <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)' }} />
           <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search projects..." style={{ width: '100%', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '7px 12px 7px 30px', color: 'var(--foreground)', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }} />
         </div>
-        <div style={{ display: 'flex', gap: '4px', background: 'var(--secondary)', borderRadius: '7px', padding: '3px' }}>
-          {(['all', 'active', 'in-progress', 'completed', 'overdue', 'archived'] as const).map(status => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              style={{
-                padding: '5px 12px',
-                borderRadius: '5px',
-                border: 'none',
-                background: filter === status ? 'var(--card)' : 'transparent',
-                color: filter === status ? 'var(--foreground)' : 'var(--muted-foreground)',
-                fontSize: '12px',
-                fontWeight: filter === status ? 500 : 400,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'all 0.12s',
-                textTransform: 'capitalize',
-              }}
-            >
-              {status === 'all' ? 'All' : status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full sm:w-auto">
+          <div className="flex gap-1 bg-secondary rounded-lg p-[3px] flex-shrink-0">
+            {(['all', 'active', 'in-progress', 'completed', 'overdue', 'archived'] as const).map(status => (
+              <button
+                key={status}
+                onClick={() => setFilter(status)}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '5px',
+                  border: 'none',
+                  background: filter === status ? 'var(--card)' : 'transparent',
+                  color: filter === status ? 'var(--foreground)' : 'var(--muted-foreground)',
+                  fontSize: '12px',
+                  fontWeight: filter === status ? 500 : 400,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.12s',
+                  textTransform: 'capitalize',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {status === 'all' ? 'All' : status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div style={{ flex: 1 }} />
+        <div className="hidden sm:block flex-grow" />
 
-        <button onClick={() => setShowArchived(value => !value)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: showArchived ? 'var(--card)' : 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '6px 10px', color: 'var(--secondary-foreground)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
-          <Archive size={12} /> Archived
-        </button>
+        <div className="flex items-center gap-2 mt-1 sm:mt-0 justify-between sm:justify-end w-full sm:w-auto">
+          <button onClick={() => setShowArchived(value => !value)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: showArchived ? 'var(--card)' : 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '6px 10px', color: 'var(--secondary-foreground)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            <Archive size={12} /> Archived
+          </button>
 
-        <div style={{ display: 'flex', gap: '4px', background: 'var(--secondary)', borderRadius: '7px', padding: '3px' }}>
-          {[
-            ['table', <List size={13} />],
-            ['board', <LayoutGrid size={13} />],
-            ['timeline', <GitBranch size={13} />],
-          ].map(([mode, icon]) => (
-            <button
-              key={mode as string}
-              onClick={() => setView(mode as ViewMode)}
-              title={(mode as string).charAt(0).toUpperCase() + (mode as string).slice(1)}
-              style={{
-                padding: '5px 10px',
-                borderRadius: '5px',
-                border: 'none',
-                background: view === mode ? 'var(--card)' : 'transparent',
-                color: view === mode ? 'var(--foreground)' : 'var(--muted-foreground)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              {icon}
-            </button>
-          ))}
+          <div style={{ display: 'flex', gap: '4px', background: 'var(--secondary)', borderRadius: '7px', padding: '3px' }}>
+            {[
+              ['table', <List size={13} />],
+              ['board', <LayoutGrid size={13} />],
+              ['timeline', <GitBranch size={13} />],
+            ].map(([mode, icon]) => (
+              <button
+                key={mode as string}
+                onClick={() => setView(mode as ViewMode)}
+                title={(mode as string).charAt(0).toUpperCase() + (mode as string).slice(1)}
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: '5px',
+                  border: 'none',
+                  background: view === mode ? 'var(--card)' : 'transparent',
+                  color: view === mode ? 'var(--foreground)' : 'var(--muted-foreground)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                }}
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {view === 'table' && (
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
+        <div className="w-full overflow-x-auto border border-border rounded-lg bg-card scrollbar-thin">
+          <div style={{ minWidth: '768px', overflow: 'hidden' }}>
           <div
             style={{
               display: 'grid',
@@ -327,11 +333,12 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
               )
             })
           )}
+          </div>
         </div>
       )}
 
       {view === 'board' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {(['active', 'in-progress', 'completed', 'overdue'] as Status[]).map(statusKey => {
             const status = statusConfig[statusKey]
             const items = projects.filter(project => project.status === statusKey)
@@ -388,7 +395,7 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
               const offset = Math.min(index * 8, 45)
               return (
                 <div key={project.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '14px' }}>
-                  <div style={{ width: '140px', fontSize: '12px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>{project.name}</div>
+                  <div className="w-20 sm:w-36 text-xs font-medium overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">{project.name}</div>
                   <div style={{ flex: 1, background: 'var(--secondary)', borderRadius: '4px', height: '28px', position: 'relative', overflow: 'hidden' }}>
                     <div style={{ position: 'absolute', left: `${offset}%`, width: `${Math.min(project.progress, 100 - offset)}%`, height: '100%', background: status.color, borderRadius: '4px' }} />
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: `${offset + 4}%`, fontSize: '11px', fontWeight: 500, color: '#fff', mixBlendMode: 'screen' }}>

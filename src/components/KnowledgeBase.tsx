@@ -151,7 +151,7 @@ export default function KnowledgeBase() {
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-      <div style={{ padding: '32px 36px 0', flexShrink: 0 }}>
+      <div className="px-4 sm:px-6 lg:px-9 pt-6 sm:pt-9 flex-shrink-0">
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px' }}>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.03em' }}>Knowledge Base</h1>
@@ -176,16 +176,16 @@ export default function KnowledgeBase() {
             value={search}
             onChange={event => setSearch(event.target.value)}
             placeholder="Search notes, frameworks, references..."
-            style={{ width: '100%', maxWidth: '420px', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '7px', padding: '9px 14px 9px 36px', color: 'var(--foreground)', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }}
+            className="w-full sm:max-w-[420px] bg-secondary border border-border rounded-lg py-2 px-3 pl-9 text-foreground text-xs outline-none font-sans"
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '2px', borderBottom: '1px solid var(--border)' }}>
+        <div className="flex gap-0 border-b border-border overflow-x-auto whitespace-nowrap scrollbar-none w-full">
           {(Object.keys(categoryConfig) as KBTab[]).map(category => (
             <button
               key={category}
               onClick={() => setTab(category)}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', border: 'none', borderBottom: tab === category ? '2px solid var(--foreground)' : '2px solid transparent', background: 'transparent', color: tab === category ? 'var(--foreground)' : 'var(--muted-foreground)', fontSize: '13px', fontWeight: tab === category ? 500 : 400, cursor: 'pointer', marginBottom: '-1px', fontFamily: 'inherit' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', border: 'none', borderBottom: tab === category ? '2px solid var(--foreground)' : '2px solid transparent', background: 'transparent', color: tab === category ? 'var(--foreground)' : 'var(--muted-foreground)', fontSize: '13px', fontWeight: tab === category ? 500 : 400, cursor: 'pointer', marginBottom: '-1px', fontFamily: 'inherit', flexShrink: 0 }}
             >
               {categoryConfig[category].icon}
               {categoryConfig[category].label}
@@ -197,7 +197,7 @@ export default function KnowledgeBase() {
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 36px 32px' }}>
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-9 py-4 sm:py-6">
         {filtered.length === 0 ? (
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '48px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '14px' }}>
             No knowledge entries found.
@@ -219,7 +219,7 @@ export default function KnowledgeBase() {
                 <button onClick={() => handleToggleStar(item)} style={{ background: 'none', border: 'none', color: item.starred ? 'var(--status-orange)' : 'var(--muted-foreground)', cursor: 'pointer', padding: '4px' }}>
                   <Star size={13} fill={item.starred ? 'var(--status-orange)' : 'none'} />
                 </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--muted-foreground)' }}>
+                <div className="hidden sm:flex items-center gap-1 text-muted-foreground">
                   <Clock size={11} />
                   <span style={{ fontSize: '11px', fontFamily: 'monospace' }}>{new Date(item.createdAt).toLocaleDateString()}</span>
                 </div>

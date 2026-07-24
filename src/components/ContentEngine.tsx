@@ -157,7 +157,7 @@ export default function ContentEngine() {
   const totalViews = published.reduce((sum, item) => sum + Number(item.analytics.views ?? 0), 0)
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: '32px 36px' }}>
+    <div className="h-full overflow-y-auto p-4 sm:p-6 lg:p-9">
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.03em' }}>Content Engine</h1>
@@ -221,7 +221,7 @@ export default function ContentEngine() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Total Views', value: totalViews.toLocaleString(), icon: <BarChart2 size={14} />, color: 'var(--status-blue)' },
           { label: 'Published', value: String(published.length), icon: <CheckCircle2 size={14} />, color: 'var(--status-green)' },
@@ -238,7 +238,7 @@ export default function ContentEngine() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: '4px', background: 'var(--secondary)', borderRadius: '7px', padding: '3px', width: 'fit-content', marginBottom: '20px' }}>
+      <div className="flex gap-1 bg-secondary rounded-lg p-[3px] w-fit overflow-x-auto whitespace-nowrap scrollbar-none mb-5">
         {(['ideas', 'production', 'published', 'analytics'] as ContentTab[]).map(id => (
           <button key={id} onClick={() => setTab(id)} style={{ padding: '6px 14px', borderRadius: '5px', border: 'none', background: tab === id ? 'var(--card)' : 'transparent', color: tab === id ? 'var(--foreground)' : 'var(--muted-foreground)', fontSize: '13px', fontWeight: tab === id ? 500 : 400, cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize' }}>
             {id}
@@ -252,7 +252,8 @@ export default function ContentEngine() {
           <div style={{ color: 'var(--muted-foreground)', fontSize: '13px' }}>Manual analytics are stored per content item for MVP.</div>
         </div>
       ) : (
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
+        <div className="w-full overflow-x-auto border border-border rounded-lg bg-card scrollbar-thin">
+          <div style={{ minWidth: '600px', overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 80px 80px', padding: '10px 20px', borderBottom: '1px solid var(--border)', fontSize: '11px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             <div>Title</div>
             <div>Project</div>
@@ -307,6 +308,7 @@ export default function ContentEngine() {
               )
             })
           )}
+          </div>
         </div>
       )}
       {FormDialog}

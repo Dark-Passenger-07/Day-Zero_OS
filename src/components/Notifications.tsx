@@ -41,8 +41,8 @@ export default function Notifications() {
   if (loading) return <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><LoadingState label="Loading notifications" /></div>
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: '32px 36px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+    <div className="h-full overflow-y-auto p-4 sm:p-6 lg:p-9">
+      <div className="flex flex-row justify-between items-start mb-6">
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.03em' }}>Notifications</h1>
           <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: 0 }}>{items.filter(item => !item.readAt).length} unread</p>
@@ -51,12 +51,12 @@ export default function Notifications() {
       </div>
       {error && <Notice color="var(--status-red)" text={error} />}
       {message && <Notice color="var(--status-green)" text={message} />}
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
-        <div style={{ position: 'relative', width: '320px' }}>
+      <div className="flex flex-row gap-2 mb-4 w-full">
+        <div className="relative flex-1 sm:max-w-[320px]">
           <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)' }} />
           <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search notifications..." style={{ width: '100%', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '7px 12px 7px 30px', color: 'var(--foreground)', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }} />
         </div>
-        <button onClick={() => setUnreadOnly(value => !value)} style={{ ...buttonStyle, background: unreadOnly ? 'var(--card)' : 'var(--secondary)' }}>Unread</button>
+        <button onClick={() => setUnreadOnly(value => !value)} style={{ ...buttonStyle, background: unreadOnly ? 'var(--card)' : 'var(--secondary)', flexShrink: 0 }}>Unread</button>
       </div>
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
         {items.length === 0 ? (

@@ -168,7 +168,7 @@ export default function AssetVault() {
 
   return (
     <div style={{ height: '100%', display: 'flex', overflow: 'hidden' }}>
-      <div style={{ width: '200px', borderRight: '1px solid var(--border)', padding: '24px 16px', flexShrink: 0, overflowY: 'auto' }}>
+      <div className="hidden lg:block w-[200px] border-r border-border p-5 flex-shrink-0 overflow-y-auto">
         <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px', padding: '0 4px' }}>Categories</div>
         {categories.map(item => (
           <button key={item.id} onClick={() => setCategory(item.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '7px 10px', borderRadius: '6px', border: 'none', background: category === item.id ? 'var(--secondary)' : 'transparent', color: category === item.id ? 'var(--foreground)' : 'var(--muted-foreground)', fontSize: '13px', fontWeight: category === item.id ? 500 : 400, cursor: 'pointer', fontFamily: 'inherit', marginBottom: '2px', textAlign: 'left' }}>
@@ -180,8 +180,35 @@ export default function AssetVault() {
       </div>
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <div style={{ padding: '24px 28px 16px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div className="px-4 sm:px-8 py-5 border-b border-border flex-shrink-0">
+          {/* Categories Tab Bar (Mobile/Tablet Only) */}
+          <div className="lg:hidden flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none pb-3 mb-3 border-b border-border">
+            {categories.map(item => (
+              <button 
+                key={item.id} 
+                onClick={() => setCategory(item.id)} 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  padding: '6px 12px', 
+                  borderRadius: '6px', 
+                  border: 'none', 
+                  background: category === item.id ? 'var(--secondary)' : 'transparent', 
+                  color: category === item.id ? 'var(--foreground)' : 'var(--muted-foreground)', 
+                  fontSize: '12px', 
+                  cursor: 'pointer', 
+                  fontFamily: 'inherit',
+                  flexShrink: 0
+                }}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-row items-center justify-between mb-4 gap-4">
             <div>
               <h1 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 2px', letterSpacing: '-0.03em' }}>Asset Vault</h1>
               <p style={{ color: 'var(--muted-foreground)', fontSize: '12px', margin: 0 }}>{filtered.length} assets</p>
@@ -199,7 +226,7 @@ export default function AssetVault() {
 
           {error && <div style={{ border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.08)', color: 'var(--status-red)', borderRadius: '8px', padding: '10px 12px', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
 
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div className="flex gap-3 items-center w-full">
             <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
               <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)' }} />
               <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search assets..." style={{ width: '100%', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '7px 12px 7px 30px', color: 'var(--foreground)', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }} />
@@ -217,7 +244,7 @@ export default function AssetVault() {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 28px' }}>
+        <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-5">
           {filtered.length === 0 ? (
             <div style={{ border: '1px dashed var(--border)', borderRadius: '10px', padding: '48px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '14px' }}>No assets found.</div>
           ) : viewMode === 'grid' ? (
@@ -247,11 +274,11 @@ export default function AssetVault() {
       </div>
       {selected && (
         <div onMouseDown={() => setSelected(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 45, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-          <div onMouseDown={event => event.stopPropagation()} style={{ width: 'min(860px, 100%)', maxHeight: '86vh', overflow: 'hidden', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', display: 'grid', gridTemplateColumns: '1fr 260px' }}>
-            <div style={{ minHeight: '420px', background: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'auto' }}>
+          <div onMouseDown={event => event.stopPropagation()} className="w-full max-w-[860px] max-h-[86vh] overflow-y-auto md:overflow-hidden bg-card border border-border rounded-lg grid grid-cols-1 md:grid-cols-[1fr_260px]">
+            <div className="min-h-[280px] md:min-h-[420px] bg-secondary flex items-center justify-center overflow-auto">
               <AssetPreview asset={selected} />
             </div>
-            <div style={{ padding: '20px', borderLeft: '1px solid var(--border)' }}>
+            <div className="p-5 border-t md:border-t-0 md:border-l border-border">
               <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px', wordBreak: 'break-word' }}>{selected.name}</div>
               <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginBottom: '16px' }}>{selected.assetType} · {new Date(selected.uploadedAt).toLocaleString()}</div>
               <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginBottom: '16px' }}>Versions: {selected.versions || 1}</div>

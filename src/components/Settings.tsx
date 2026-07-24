@@ -91,8 +91,8 @@ export default function Settings() {
   }
 
   return (
-    <div style={{ height: '100%', display: 'flex', overflow: 'hidden' }}>
-      <div style={{ width: '200px', borderRight: '1px solid var(--border)', padding: '24px 12px', flexShrink: 0 }}>
+    <div className="h-full w-full flex overflow-hidden">
+      <div className="hidden lg:block w-[200px] border-r border-border p-5 flex-shrink-0">
         <div style={{ fontSize: '16px', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: '20px', padding: '0 8px' }}>Settings</div>
         {tabs.map(tab => (
           <button
@@ -106,7 +106,35 @@ export default function Settings() {
         ))}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px' }}>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Horizontal tabs selector for settings (Mobile/Tablet Only) */}
+        <div className="lg:hidden flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none p-4 border-b border-border flex-shrink-0 bg-card">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: 'none',
+                background: activeTab === tab.id ? 'var(--secondary)' : 'transparent',
+                color: activeTab === tab.id ? 'var(--foreground)' : 'var(--muted-foreground)',
+                fontSize: '12px',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                flexShrink: 0
+              }}
+            >
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-9">
         {activeTab === 'general' && (
           <Section title="General" description="Workspace and profile settings">
             <SettingRow label="Display Name" description="Shown across your workspace">
@@ -204,6 +232,7 @@ export default function Settings() {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   )
@@ -223,12 +252,12 @@ function Section({ title, description, children }: { title: string; description:
 
 function SettingRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid var(--border)' }}>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-b border-border">
       <div>
         <div style={{ fontSize: '13px', fontWeight: 500 }}>{label}</div>
         {description && <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '2px' }}>{description}</div>}
       </div>
-      <div style={{ flexShrink: 0, marginLeft: '24px' }}>{children}</div>
+      <div className="flex-shrink-0 sm:ml-6 w-full sm:w-auto flex justify-start sm:justify-end">{children}</div>
     </div>
   )
 }
@@ -239,7 +268,7 @@ function TextInput({ value, onChange, placeholder }: { value: string; onChange: 
       value={value}
       onChange={event => onChange(event.target.value)}
       placeholder={placeholder}
-      style={{ background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '7px 12px', color: 'var(--foreground)', fontSize: '13px', outline: 'none', fontFamily: 'inherit', width: '220px' }}
+      className="bg-secondary border border-border rounded-lg py-2 px-3 text-foreground text-xs outline-none w-full sm:w-[220px]"
     />
   )
 }

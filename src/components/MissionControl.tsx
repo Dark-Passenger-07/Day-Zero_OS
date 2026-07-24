@@ -64,7 +64,7 @@ export default function MissionControl({ onNavigate }: Props) {
   const deadlinesCount = data?.deadlinesCount ?? 0
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: '32px 36px', background: 'var(--background)' }}>
+    <div className="h-full overflow-y-auto bg-background p-4 sm:p-6 lg:p-9">
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
         <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: '0 0 4px', fontFamily: 'monospace' }}>
@@ -106,7 +106,7 @@ export default function MissionControl({ onNavigate }: Props) {
       )}
 
       {/* Grid: top row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         {/* Current Project */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
           <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
@@ -232,7 +232,7 @@ export default function MissionControl({ onNavigate }: Props) {
       </div>
 
       {/* Grid: bottom row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Upcoming Deadlines */}
         <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
           <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
@@ -319,9 +319,9 @@ export default function MissionControl({ onNavigate }: Props) {
       </div>
 
       {/* Recent Activity + Recent Files row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Activity */}
-        <div style={{ gridColumn: 'span 2', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
+        <div className="lg:col-span-2" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
           <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
             Recent Activity
           </div>

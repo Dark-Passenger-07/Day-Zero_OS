@@ -161,8 +161,8 @@ export default function WeeklyDebrief() {
   }
 
   return (
-    <div style={{ height: '100%', overflowY: 'auto', padding: '32px 36px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
+    <div className="h-full overflow-y-auto p-4 sm:p-6 lg:p-9">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-7 gap-4">
         <div>
           <h1 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.03em' }}>Weekly Debrief</h1>
           <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: 0 }}>Review, reflect, and plan</p>
@@ -195,7 +195,7 @@ export default function WeeklyDebrief() {
         <div style={{ border: '1px dashed var(--border)', borderRadius: '10px', padding: '48px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '14px' }}>Create your first weekly debrief to start tracking wins, challenges, lessons, and next-week priorities.</div>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
             {[
               { label: 'Total Entries', value: String(totalEntries), detail: 'reflection notes', color: 'var(--status-blue)' },
               { label: 'Wins', value: String(current.wins.length), detail: 'captured this week', color: 'var(--status-green)' },
@@ -210,7 +210,7 @@ export default function WeeklyDebrief() {
             ))}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             {thisWeekData.map(section => (
               <div key={section.label} style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
                 <button onClick={() => setExpandedSection(expandedSection === section.label ? null : section.label)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 20px', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer', color: 'inherit', fontFamily: 'inherit' }}>
