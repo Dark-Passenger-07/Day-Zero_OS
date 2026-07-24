@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ArrowRight, Zap } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
+import logoImg from '@/logo.png'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -103,19 +104,16 @@ export default function Login() {
               marginBottom: '8px',
             }}
           >
-            <div
+            <img
+              src={logoImg}
+              alt="Day Zero OS"
               style={{
                 width: '32px',
                 height: '32px',
-                background: 'var(--foreground)',
+                objectFit: 'contain',
                 borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
               }}
-            >
-              <Zap size={16} color="var(--background)" />
-            </div>
+            />
             <span style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em' }}>
               Day Zero OS
             </span>

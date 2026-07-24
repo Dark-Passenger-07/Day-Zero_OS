@@ -1,7 +1,8 @@
 import {
-  Zap, Command, FolderOpen, Rss, BookOpen, Archive,
+  Command, FolderOpen, Rss, BookOpen, Archive,
   CalendarCheck, Settings, ChevronLeft, ChevronRight, Search, LogOut, Bell
 } from 'lucide-react'
+import logoImg from '@/logo.png'
 import type { Screen } from '@/types/navigation'
 import { useAuth } from '@/app/providers/AuthProvider'
 
@@ -64,19 +65,18 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
         gap: '10px',
         justifyContent: collapsed ? 'center' : 'flex-start',
       }}>
-        <div style={{
-          width: '28px',
-          height: '28px',
-          minWidth: '28px',
-          background: 'var(--foreground)',
-          borderRadius: '7px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <Zap size={14} color="var(--background)" />
-        </div>
+        <img
+          src={logoImg}
+          alt="Day Zero OS"
+          style={{
+            width: '28px',
+            height: '28px',
+            minWidth: '28px',
+            flexShrink: 0,
+            objectFit: 'contain',
+            borderRadius: '7px',
+          }}
+        />
         {!collapsed && (
           <div>
             <div style={{ fontSize: '13px', fontWeight: 600, lineHeight: 1.2 }}>Day Zero OS</div>

@@ -1,5 +1,9 @@
 {
+  "title": "Day Zero OS",
   "description": "Effortlessly convert markdown content into various formats, streamlining documentation and content creation for writers and developers.",
+  "icons": {
+    "icon": "/src/logo.png"
+  },
   "robots": {
     "index": false
   },
