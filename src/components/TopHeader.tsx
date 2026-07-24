@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Search, LogOut, User, Bell } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { Screen } from '@/types/navigation'
+import logoImg from '@/logo.png'
 
 interface TopHeaderProps {
   current: Screen
@@ -34,6 +35,16 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
     <header className="lg:hidden flex items-center justify-between px-4 h-14 bg-card/85 backdrop-blur-md border-b border-border z-40 sticky top-0 w-full select-none">
       {/* Title */}
       <div className="flex items-center gap-2">
+        <img
+          src={logoImg}
+          alt="Day Zero OS"
+          style={{
+            width: '20px',
+            height: '20px',
+            objectFit: 'contain',
+            borderRadius: '4px',
+          }}
+        />
         <h1 className="text-base font-semibold tracking-tight text-foreground">
           Day Zero OS
         </h1>
