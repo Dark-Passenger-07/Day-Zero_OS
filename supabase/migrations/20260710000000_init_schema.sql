@@ -47,7 +47,7 @@ CREATE TABLE public.workspaces (
 
 CREATE TABLE public.user_settings (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  theme TEXT NOT NULL DEFAULT 'dark' CHECK (theme IN ('dark', 'light', 'system')),
+  theme TEXT NOT NULL DEFAULT 'light' CHECK (theme IN ('dark', 'light', 'system')),
   accent_color TEXT NOT NULL DEFAULT '#3b82f6',
   sidebar_layout TEXT NOT NULL DEFAULT 'standard',
   default_project_view TEXT NOT NULL DEFAULT 'board',

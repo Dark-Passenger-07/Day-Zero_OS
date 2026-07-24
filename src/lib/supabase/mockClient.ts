@@ -20,7 +20,7 @@ const DEFAULT_PROFILE = {
 
 const DEFAULT_SETTINGS = {
   user_id: 'mock-user-id',
-  theme: 'dark',
+  theme: 'light',
   accent_color: 'blue',
   sidebar_layout: 'default',
   default_project_view: 'table',

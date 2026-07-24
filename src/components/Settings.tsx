@@ -22,7 +22,7 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
   const [displayName, setDisplayName] = useState('')
   const [workspaceName, setWorkspaceName] = useState('')
-  const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('light')
   const [deadlineNotifications, setDeadlineNotifications] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(false)
   const [aiEnabled, setAiEnabled] = useState(false)
@@ -33,7 +33,7 @@ export default function Settings() {
   useEffect(() => {
     setDisplayName(profile?.full_name ?? '')
     setWorkspaceName(profile?.workspace_name ?? 'My Workspace')
-    setTheme((userSettings?.theme as 'dark' | 'light' | 'system') ?? 'dark')
+    setTheme((userSettings?.theme as 'dark' | 'light' | 'system') ?? 'light')
     setDeadlineNotifications(Boolean(userSettings?.notifications?.push ?? true))
     setEmailNotifications(Boolean(userSettings?.notifications?.email ?? false))
     setAiEnabled(Boolean(userSettings?.ai_enabled ?? false))
