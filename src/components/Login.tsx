@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ArrowRight, Zap } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import { isDemoModeEnabled, setDemoModeEnabled } from '@/lib/supabase/mockClient'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -9,7 +8,6 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const [demoMode, setDemoMode] = useState(isDemoModeEnabled())
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -143,58 +141,7 @@ export default function Login() {
             {isSignUp ? 'Start building in Day Zero OS' : 'Sign in to your workspace'}
           </p>
 
-          <div
-            onClick={() => {
-              const nextVal = !demoMode
-              setDemoMode(nextVal)
-              setDemoModeEnabled(nextVal)
-            }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: demoMode ? 'rgba(59, 130, 246, 0.08)' : 'var(--secondary)',
-              border: `1px solid ${demoMode ? 'rgba(59, 130, 246, 0.2)' : 'var(--border)'}`,
-              borderRadius: '8px',
-              padding: '10px 14px',
-              cursor: 'pointer',
-              marginBottom: '20px',
-              fontSize: '13px',
-              fontWeight: 500,
-              userSelect: 'none',
-              transition: 'all 0.2s',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Zap size={14} color={demoMode ? '#3b82f6' : 'var(--muted-foreground)'} />
-              <span style={{ color: demoMode ? '#60a5fa' : 'var(--muted-foreground)' }}>
-                {demoMode ? 'Demo Mode Active' : 'Connect to Live Database'}
-              </span>
-            </div>
-            <div
-              style={{
-                width: '32px',
-                height: '18px',
-                background: demoMode ? '#3b82f6' : '#27272a',
-                borderRadius: '9px',
-                position: 'relative',
-                transition: 'background-color 0.2s',
-              }}
-            >
-              <div
-                style={{
-                  width: '14px',
-                  height: '14px',
-                  background: '#fff',
-                  borderRadius: '50%',
-                  position: 'absolute',
-                  top: '2px',
-                  left: demoMode ? '16px' : '2px',
-                  transition: 'left 0.2s',
-                }}
-              />
-            </div>
-          </div>
+
 
           {errorMsg && (
             <div

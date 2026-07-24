@@ -1,18 +1,12 @@
 import type { Session, User } from '@supabase/supabase-js'
 
 // Simple check to see if we are in demo mode
-const DEMO_MODE_KEY = 'day_zero_os_demo_mode'
 export function isDemoModeEnabled(): boolean {
-  const localVal = localStorage.getItem(DEMO_MODE_KEY)
-  if (localVal !== null) {
-    return localVal === 'true'
-  }
-  // Default to false to use the real database by default
   return false
 }
 
-export function setDemoModeEnabled(enabled: boolean) {
-  localStorage.setItem(DEMO_MODE_KEY, String(enabled))
+export function setDemoModeEnabled(_enabled: boolean) {
+  // Disable demo mode updates in production
 }
 
 const DEFAULT_PROFILE = {
