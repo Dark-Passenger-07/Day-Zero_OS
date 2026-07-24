@@ -108,10 +108,10 @@ export default function Login() {
               src={logoImg}
               alt="Day Zero OS"
               style={{
-                width: '32px',
-                height: '32px',
+                width: '44px',
+                height: '44px',
                 objectFit: 'contain',
-                borderRadius: '8px',
+                borderRadius: '10px',
               }}
             />
             <span style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em' }}>

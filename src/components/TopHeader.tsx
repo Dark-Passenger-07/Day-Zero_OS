@@ -39,10 +39,10 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
           src={logoImg}
           alt="Day Zero OS"
           style={{
-            width: '20px',
-            height: '20px',
+            width: '26px',
+            height: '26px',
             objectFit: 'contain',
-            borderRadius: '4px',
+            borderRadius: '5px',
           }}
         />
         <h1 className="text-base font-semibold tracking-tight text-foreground">

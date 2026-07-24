@@ -69,12 +69,12 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
           src={logoImg}
           alt="Day Zero OS"
           style={{
-            width: '28px',
-            height: '28px',
-            minWidth: '28px',
+            width: '36px',
+            height: '36px',
+            minWidth: '36px',
             flexShrink: 0,
             objectFit: 'contain',
-            borderRadius: '7px',
+            borderRadius: '8px',
           }}
         />
         {!collapsed && (
