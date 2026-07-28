@@ -19,7 +19,15 @@ const Settings = lazy(() => import('@/components/Settings'))
 
 function RouteLoader() {
   return (
-    <div style={{ height: '100%', minHeight: '320px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div
+      style={{
+        height: '100%',
+        minHeight: '320px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       <LoadingState />
     </div>
   )
@@ -30,7 +38,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: '#09090b',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <LoadingState />
       </div>
     )
@@ -48,7 +64,15 @@ function LoginRoute() {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', background: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: '#09090b',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <LoadingState />
       </div>
     )
@@ -76,7 +100,12 @@ function MissionControlRoute() {
 function ProjectsRoute() {
   const navigate = useNavigate()
 
-  return <Projects onNavigate={useRouteNavigation()} onOpenProject={projectId => navigate(`/projects/${projectId}`)} />
+  return (
+    <Projects
+      onNavigate={useRouteNavigation()}
+      onOpenProject={(projectId) => navigate(`/projects/${projectId}`)}
+    />
+  )
 }
 
 function ProjectWorkspaceRoute() {

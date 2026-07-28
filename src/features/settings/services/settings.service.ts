@@ -9,8 +9,16 @@ export async function exportWorkspaceData(): Promise<Record<string, unknown>> {
     supabase.from('content_items').select('*'),
     supabase.from('weekly_debriefs').select('*'),
   ])
-  for (const response of [projects, knowledge, assets, content, debriefs]) if (response.error) throw response.error
-  return { exportedAt: new Date().toISOString(), projects: projects.data, knowledge: knowledge.data, assets: assets.data, content: content.data, weeklyDebriefs: debriefs.data }
+  for (const response of [projects, knowledge, assets, content, debriefs])
+    if (response.error) throw response.error
+  return {
+    exportedAt: new Date().toISOString(),
+    projects: projects.data,
+    knowledge: knowledge.data,
+    assets: assets.data,
+    content: content.data,
+    weeklyDebriefs: debriefs.data,
+  }
 }
 
 export async function storageUsage(): Promise<{ assets: number; documents: number }> {
@@ -19,18 +27,25 @@ export async function storageUsage(): Promise<{ assets: number; documents: numbe
   if (error) throw error
   return {
     assets: data?.length ?? 0,
-    documents: data?.filter(item => String(item.metadata?.type ?? '').includes('document')).length ?? 0,
+    documents: data?.filter((item) => String(item.metadata?.type ?? '').includes('document')).length ?? 0,
   }
 }
 
-export async function importKnowledgeEntries(entries: Array<{ title?: unknown; body?: unknown; category?: unknown; tags?: unknown }>, ownerId: string): Promise<number> {
+export async function importKnowledgeEntries(
+  entries: Array<{ title?: unknown; body?: unknown; category?: unknown; tags?: unknown }>,
+  ownerId: string,
+): Promise<number> {
   const valid = entries
-    .filter(entry => typeof entry.title === 'string' && entry.title.trim())
-    .map(entry => ({
+    .filter((entry) => typeof entry.title === 'string' && entry.title.trim())
+    .map((entry) => ({
       owner_id: ownerId,
       title: String(entry.title).trim(),
       body: typeof entry.body === 'string' ? entry.body : null,
-      category: ['research', 'lesson', 'framework', 'reference', 'personal-note'].includes(String(entry.category)) ? entry.category : 'research',
+      category: ['research', 'lesson', 'framework', 'reference', 'personal-note'].includes(
+        String(entry.category),
+      )
+        ? entry.category
+        : 'research',
       tags: Array.isArray(entry.tags) ? entry.tags.map(String) : [],
     }))
 

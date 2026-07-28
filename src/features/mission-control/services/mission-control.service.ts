@@ -45,7 +45,6 @@ export type DashboardData = {
   } | null
 }
 
-
 type ActivityRow = {
   action: string
   created_at: string
@@ -92,12 +91,12 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     .limit(3)
 
   const allDeadlines = [
-    ...(upcomingMilestones || []).map(m => ({
+    ...(upcomingMilestones || []).map((m) => ({
       name: `[Milestone] ${m.title}`,
       project: getProjectName(m.project) || 'General',
       due: m.due_date as string,
     })),
-    ...(upcomingTasks || []).map(t => ({
+    ...(upcomingTasks || []).map((t) => ({
       name: `[Task] ${t.title}`,
       project: getProjectName(t.project) || 'General',
       due: t.due_date as string,
@@ -106,7 +105,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
 
   allDeadlines.sort((a, b) => new Date(a.due).getTime() - new Date(b.due).getTime())
 
-  const upcomingDeadlines: UpcomingDeadline[] = allDeadlines.slice(0, 3).map(item => {
+  const upcomingDeadlines: UpcomingDeadline[] = allDeadlines.slice(0, 3).map((item) => {
     const dueDate = new Date(item.due)
     const diffDays = Math.ceil((dueDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
     const dateStr = dueDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
@@ -125,7 +124,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     .order('created_at', { ascending: false })
     .limit(5)
 
-  const recentActivities: RecentActivity[] = ((logs || []) as unknown as ActivityRow[]).map(l => {
+  const recentActivities: RecentActivity[] = ((logs || []) as unknown as ActivityRow[]).map((l) => {
     const createdDate = new Date(l.created_at)
     const diffHours = Math.round((Date.now() - createdDate.getTime()) / (1000 * 60 * 60))
     let timeStr = 'Just now'
@@ -150,7 +149,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     .order('created_at', { ascending: false })
     .limit(5)
 
-  const recentKnowledge: RecentNote[] = ((knowledge || []) as KnowledgeRow[]).map(k => ({
+  const recentKnowledge: RecentNote[] = ((knowledge || []) as KnowledgeRow[]).map((k) => ({
     title: k.title,
     tag: k.tags && k.tags.length > 0 ? k.tags[0] : 'General',
   }))
@@ -233,7 +232,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
 
   return {
     activeProjectsCount,
-    deadlinesCount: upcomingDeadlines.filter(d => d.urgent).length,
+    deadlinesCount: upcomingDeadlines.filter((d) => d.urgent).length,
     upcomingDeadlines,
     recentActivities,
     recentKnowledge,

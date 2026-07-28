@@ -15,7 +15,7 @@ type TabsProps<T extends string> = {
 export function Tabs<T extends string>({ items, active, onChange }: TabsProps<T>) {
   return (
     <div style={{ display: 'flex', gap: '2px', borderBottom: '1px solid var(--border)' }}>
-      {items.map(item => (
+      {items.map((item) => (
         <button
           key={item.id}
           onClick={() => onChange(item.id)}

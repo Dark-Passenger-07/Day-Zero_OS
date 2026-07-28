@@ -1,8 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
-import { User, Palette, Bell, Cpu, Moon, Sun, Monitor, Check, Database, Download, Upload, AlertTriangle } from 'lucide-react'
+import {
+  User,
+  Palette,
+  Bell,
+  Cpu,
+  Moon,
+  Sun,
+  Monitor,
+  Check,
+  Database,
+  Download,
+  Upload,
+  AlertTriangle,
+} from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { Toggle } from '@/components/ui/Toggle'
-import { exportWorkspaceData, importKnowledgeEntries, storageUsage } from '@/features/settings/services/settings.service'
+import {
+  exportWorkspaceData,
+  importKnowledgeEntries,
+  storageUsage,
+} from '@/features/settings/services/settings.service'
 
 type SettingsTab = 'general' | 'appearance' | 'notifications' | 'storage' | 'import-export' | 'ai' | 'danger'
 
@@ -40,7 +57,9 @@ export default function Settings() {
   }, [profile, userSettings])
 
   useEffect(() => {
-    storageUsage().then(setStorageSummary).catch(() => setStorageSummary(null))
+    storageUsage()
+      .then(setStorageSummary)
+      .catch(() => setStorageSummary(null))
   }, [])
 
   const save = async () => {
@@ -80,7 +99,9 @@ export default function Settings() {
   const importData = async (file: File | undefined) => {
     if (!file || !user) return
     try {
-      const parsed = JSON.parse(await file.text()) as { knowledge?: Array<{ title?: unknown; body?: unknown; category?: unknown; tags?: unknown }> }
+      const parsed = JSON.parse(await file.text()) as {
+        knowledge?: Array<{ title?: unknown; body?: unknown; category?: unknown; tags?: unknown }>
+      }
       const count = await importKnowledgeEntries(parsed.knowledge ?? [], user.id)
       setMessage(`Imported ${count} knowledge entries.`)
     } catch (err) {
@@ -93,12 +114,38 @@ export default function Settings() {
   return (
     <div className="h-full w-full flex overflow-hidden">
       <div className="hidden lg:block w-[200px] border-r border-border p-5 flex-shrink-0">
-        <div style={{ fontSize: '16px', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: '20px', padding: '0 8px' }}>Settings</div>
-        {tabs.map(tab => (
+        <div
+          style={{
+            fontSize: '16px',
+            fontWeight: 600,
+            letterSpacing: '-0.02em',
+            marginBottom: '20px',
+            padding: '0 8px',
+          }}
+        >
+          Settings
+        </div>
+        {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', borderRadius: '6px', border: 'none', background: activeTab === tab.id ? 'var(--secondary)' : 'transparent', color: activeTab === tab.id ? 'var(--foreground)' : 'var(--muted-foreground)', fontSize: '13px', fontWeight: activeTab === tab.id ? 500 : 400, cursor: 'pointer', fontFamily: 'inherit', marginBottom: '2px', textAlign: 'left' }}
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 10px',
+              borderRadius: '6px',
+              border: 'none',
+              background: activeTab === tab.id ? 'var(--secondary)' : 'transparent',
+              color: activeTab === tab.id ? 'var(--foreground)' : 'var(--muted-foreground)',
+              fontSize: '13px',
+              fontWeight: activeTab === tab.id ? 500 : 400,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              marginBottom: '2px',
+              textAlign: 'left',
+            }}
           >
             {tab.icon}
             {tab.label}
@@ -109,7 +156,7 @@ export default function Settings() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Horizontal tabs selector for settings (Mobile/Tablet Only) */}
         <div className="lg:hidden flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none p-4 border-b border-border flex-shrink-0 bg-card">
-          {tabs.map(tab => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
@@ -125,7 +172,7 @@ export default function Settings() {
                 fontSize: '12px',
                 cursor: 'pointer',
                 fontFamily: 'inherit',
-                flexShrink: 0
+                flexShrink: 0,
               }}
             >
               {tab.icon}
@@ -135,138 +182,273 @@ export default function Settings() {
         </div>
 
         <div className="flex-grow overflow-y-auto p-4 sm:p-6 lg:p-9">
-        {activeTab === 'general' && (
-          <Section title="General" description="Workspace and profile settings">
-            <SettingRow label="Display Name" description="Shown across your workspace">
-              <TextInput value={displayName} onChange={setDisplayName} placeholder="Builder" />
-            </SettingRow>
-            <SettingRow label="Workspace Name">
-              <TextInput value={workspaceName} onChange={setWorkspaceName} placeholder="My Workspace" />
-            </SettingRow>
-          </Section>
-        )}
+          {activeTab === 'general' && (
+            <Section title="General" description="Workspace and profile settings">
+              <SettingRow label="Display Name" description="Shown across your workspace">
+                <TextInput value={displayName} onChange={setDisplayName} placeholder="Builder" />
+              </SettingRow>
+              <SettingRow label="Workspace Name">
+                <TextInput value={workspaceName} onChange={setWorkspaceName} placeholder="My Workspace" />
+              </SettingRow>
+            </Section>
+          )}
 
-        {activeTab === 'appearance' && (
-          <Section title="Appearance" description="Customize the look and feel">
-            <div style={{ display: 'flex', gap: '12px' }}>
-              {[
-                ['dark', 'Dark', <Moon size={16} />],
-                ['light', 'Light', <Sun size={16} />],
-                ['system', 'System', <Monitor size={16} />],
-              ].map(([value, label, icon]) => (
-                <button
-                  key={value as string}
-                  onClick={() => setTheme(value as 'dark' | 'light' | 'system')}
-                  style={{ flex: 1, padding: '16px', background: theme === value ? 'var(--secondary)' : 'var(--muted)', border: `1px solid ${theme === value ? 'var(--ring)' : 'var(--border)'}`, borderRadius: '8px', cursor: 'pointer', color: 'var(--foreground)', fontFamily: 'inherit', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}
-                >
-                  {icon}
-                  <span style={{ fontSize: '12px', fontWeight: 500 }}>{label}</span>
-                  {theme === value && <Check size={12} color="var(--status-green)" />}
+          {activeTab === 'appearance' && (
+            <Section title="Appearance" description="Customize the look and feel">
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {[
+                  ['dark', 'Dark', <Moon size={16} />],
+                  ['light', 'Light', <Sun size={16} />],
+                  ['system', 'System', <Monitor size={16} />],
+                ].map(([value, label, icon]) => (
+                  <button
+                    key={value as string}
+                    onClick={() => setTheme(value as 'dark' | 'light' | 'system')}
+                    style={{
+                      flex: 1,
+                      padding: '16px',
+                      background: theme === value ? 'var(--secondary)' : 'var(--muted)',
+                      border: `1px solid ${theme === value ? 'var(--ring)' : 'var(--border)'}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      color: 'var(--foreground)',
+                      fontFamily: 'inherit',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    {icon}
+                    <span style={{ fontSize: '12px', fontWeight: 500 }}>{label}</span>
+                    {theme === value && <Check size={12} color="var(--status-green)" />}
+                  </button>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {activeTab === 'notifications' && (
+            <Section title="Notifications" description="Control what and when you're notified">
+              <SettingRow label="Deadline reminders" description="In-app reminders for project deadlines">
+                <Toggle
+                  on={deadlineNotifications}
+                  onChange={setDeadlineNotifications}
+                  label="Deadline reminders"
+                />
+              </SettingRow>
+              <SettingRow label="Email notifications" description="Receive important updates by email">
+                <Toggle
+                  on={emailNotifications}
+                  onChange={setEmailNotifications}
+                  label="Email notifications"
+                />
+              </SettingRow>
+            </Section>
+          )}
+
+          {activeTab === 'ai' && (
+            <Section title="AI" description="Optional AI features - disabled by default">
+              <SettingRow
+                label="Enable AI features"
+                description="AI remains isolated and never required for core workflows"
+              >
+                <Toggle on={aiEnabled} onChange={setAiEnabled} label="Enable AI" />
+              </SettingRow>
+              <div
+                style={{
+                  padding: '16px 0',
+                  fontSize: '13px',
+                  color: 'var(--muted-foreground)',
+                  lineHeight: 1.6,
+                }}
+              >
+                Provider keys are not stored in this client. AI provider integration belongs behind secure
+                service boundaries.
+              </div>
+            </Section>
+          )}
+
+          {activeTab === 'storage' && (
+            <Section title="Storage" description="Asset and document usage">
+              <SettingRow label="Assets" description="Files and external links stored in the Asset Vault">
+                <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
+                  {storageSummary?.assets ?? '-'} items
+                </span>
+              </SettingRow>
+              <SettingRow label="Documents" description="Document-like files tracked in metadata">
+                <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>
+                  {storageSummary?.documents ?? '-'} items
+                </span>
+              </SettingRow>
+            </Section>
+          )}
+
+          {activeTab === 'import-export' && (
+            <Section title="Import / Export" description="Move workspace data safely">
+              <SettingRow
+                label="Export Workspace"
+                description="Download projects, knowledge, assets, content, and weekly reviews as JSON"
+              >
+                <button onClick={exportData} style={smallButtonStyle}>
+                  <Download size={13} /> Export
                 </button>
-              ))}
+              </SettingRow>
+              <SettingRow
+                label="Import Workspace"
+                description="Import validation will require a reviewed JSON export"
+              >
+                <input
+                  ref={importRef}
+                  type="file"
+                  accept="application/json"
+                  style={{ display: 'none' }}
+                  onChange={(event) => importData(event.target.files?.[0])}
+                />
+                <button onClick={() => importRef.current?.click()} style={smallButtonStyle}>
+                  <Upload size={13} /> Import
+                </button>
+              </SettingRow>
+            </Section>
+          )}
+
+          {activeTab === 'danger' && (
+            <Section title="Danger Zone" description="Destructive account and workspace actions">
+              <SettingRow
+                label="Sign out all sessions"
+                description="Use Supabase dashboard for forced session revocation in MVP"
+              >
+                <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>Protected</span>
+              </SettingRow>
+              <SettingRow
+                label="Delete Workspace"
+                description="Permanent workspace deletion is intentionally manual for MVP safety"
+              >
+                <span style={{ fontSize: '13px', color: 'var(--status-red)' }}>Manual only</span>
+              </SettingRow>
+            </Section>
+          )}
+
+          {message && (
+            <div
+              style={{
+                marginTop: '16px',
+                color: message.includes('Failed') ? 'var(--status-red)' : 'var(--status-green)',
+                fontSize: '13px',
+              }}
+            >
+              {message}
             </div>
-          </Section>
-        )}
-
-        {activeTab === 'notifications' && (
-          <Section title="Notifications" description="Control what and when you're notified">
-            <SettingRow label="Deadline reminders" description="In-app reminders for project deadlines">
-              <Toggle on={deadlineNotifications} onChange={setDeadlineNotifications} label="Deadline reminders" />
-            </SettingRow>
-            <SettingRow label="Email notifications" description="Receive important updates by email">
-              <Toggle on={emailNotifications} onChange={setEmailNotifications} label="Email notifications" />
-            </SettingRow>
-          </Section>
-        )}
-
-        {activeTab === 'ai' && (
-          <Section title="AI" description="Optional AI features - disabled by default">
-            <SettingRow label="Enable AI features" description="AI remains isolated and never required for core workflows">
-              <Toggle on={aiEnabled} onChange={setAiEnabled} label="Enable AI" />
-            </SettingRow>
-            <div style={{ padding: '16px 0', fontSize: '13px', color: 'var(--muted-foreground)', lineHeight: 1.6 }}>
-              Provider keys are not stored in this client. AI provider integration belongs behind secure service boundaries.
+          )}
+          {['general', 'appearance', 'notifications', 'ai'].includes(activeTab) && (
+            <div style={{ marginTop: '32px', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={save}
+                disabled={saving}
+                style={{
+                  background: 'var(--foreground)',
+                  color: 'var(--background)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '9px 20px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {saving ? 'Saving' : 'Save Changes'}
+              </button>
             </div>
-          </Section>
-        )}
-
-        {activeTab === 'storage' && (
-          <Section title="Storage" description="Asset and document usage">
-            <SettingRow label="Assets" description="Files and external links stored in the Asset Vault">
-              <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>{storageSummary?.assets ?? '-'} items</span>
-            </SettingRow>
-            <SettingRow label="Documents" description="Document-like files tracked in metadata">
-              <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>{storageSummary?.documents ?? '-'} items</span>
-            </SettingRow>
-          </Section>
-        )}
-
-        {activeTab === 'import-export' && (
-          <Section title="Import / Export" description="Move workspace data safely">
-            <SettingRow label="Export Workspace" description="Download projects, knowledge, assets, content, and weekly reviews as JSON">
-              <button onClick={exportData} style={smallButtonStyle}><Download size={13} /> Export</button>
-            </SettingRow>
-            <SettingRow label="Import Workspace" description="Import validation will require a reviewed JSON export">
-              <input ref={importRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={event => importData(event.target.files?.[0])} />
-              <button onClick={() => importRef.current?.click()} style={smallButtonStyle}><Upload size={13} /> Import</button>
-            </SettingRow>
-          </Section>
-        )}
-
-        {activeTab === 'danger' && (
-          <Section title="Danger Zone" description="Destructive account and workspace actions">
-            <SettingRow label="Sign out all sessions" description="Use Supabase dashboard for forced session revocation in MVP">
-              <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>Protected</span>
-            </SettingRow>
-            <SettingRow label="Delete Workspace" description="Permanent workspace deletion is intentionally manual for MVP safety">
-              <span style={{ fontSize: '13px', color: 'var(--status-red)' }}>Manual only</span>
-            </SettingRow>
-          </Section>
-        )}
-
-        {message && <div style={{ marginTop: '16px', color: message.includes('Failed') ? 'var(--status-red)' : 'var(--status-green)', fontSize: '13px' }}>{message}</div>}
-        {['general', 'appearance', 'notifications', 'ai'].includes(activeTab) && (
-          <div style={{ marginTop: '32px', display: 'flex', gap: '10px' }}>
-            <button onClick={save} disabled={saving} style={{ background: 'var(--foreground)', color: 'var(--background)', border: 'none', borderRadius: '6px', padding: '9px 20px', fontSize: '13px', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
-              {saving ? 'Saving' : 'Save Changes'}
-            </button>
-          </div>
-        )}
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-const smallButtonStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '7px 12px', color: 'var(--secondary-foreground)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }
+const smallButtonStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '6px',
+  background: 'var(--secondary)',
+  border: '1px solid var(--border)',
+  borderRadius: '6px',
+  padding: '7px 12px',
+  color: 'var(--secondary-foreground)',
+  fontSize: '12px',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+}
 
-function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
+function Section({
+  title,
+  description,
+  children,
+}: {
+  title: string
+  description: string
+  children: React.ReactNode
+}) {
   return (
     <div>
-      <h2 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.02em' }}>{title}</h2>
+      <h2 style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.02em' }}>
+        {title}
+      </h2>
       <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: '0 0 24px' }}>{description}</p>
-      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '0 20px' }}>{children}</div>
+      <div
+        style={{
+          background: 'var(--card)',
+          border: '1px solid var(--border)',
+          borderRadius: '10px',
+          padding: '0 20px',
+        }}
+      >
+        {children}
+      </div>
     </div>
   )
 }
 
-function SettingRow({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {
+function SettingRow({
+  label,
+  description,
+  children,
+}: {
+  label: string
+  description?: string
+  children: React.ReactNode
+}) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-4 border-b border-border">
       <div>
         <div style={{ fontSize: '13px', fontWeight: 500 }}>{label}</div>
-        {description && <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '2px' }}>{description}</div>}
+        {description && (
+          <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '2px' }}>
+            {description}
+          </div>
+        )}
       </div>
-      <div className="flex-shrink-0 sm:ml-6 w-full sm:w-auto flex justify-start sm:justify-end">{children}</div>
+      <div className="flex-shrink-0 sm:ml-6 w-full sm:w-auto flex justify-start sm:justify-end">
+        {children}
+      </div>
     </div>
   )
 }
 
-function TextInput({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
+function TextInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+}) {
   return (
     <input
       value={value}
-      onChange={event => onChange(event.target.value)}
+      onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       className="bg-secondary border border-border rounded-lg py-2 px-3 text-foreground text-xs outline-none w-full sm:w-[220px]"
     />

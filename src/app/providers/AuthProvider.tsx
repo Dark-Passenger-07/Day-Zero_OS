@@ -57,39 +57,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [userSettings?.theme])
 
-  const fetchProfileAndSettings = useCallback(async (userId: string) => {
-    if (!supabase) return
+  const fetchProfileAndSettings = useCallback(
+    async (userId: string) => {
+      if (!supabase) return
 
-    try {
-      // Fetch profile
-      const { data: prof, error: profErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+      try {
+        // Fetch profile
+        const { data: prof, error: profErr } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
 
-      if (profErr && profErr.code !== 'PGRST116') {
-        console.error('Error fetching profile:', profErr)
-      } else if (prof) {
-        setProfile(prof as Profile)
+        if (profErr && profErr.code !== 'PGRST116') {
+          console.error('Error fetching profile:', profErr)
+        } else if (prof) {
+          setProfile(prof as Profile)
+        }
+
+        // Fetch settings
+        const { data: setts, error: settsErr } = await supabase
+          .from('user_settings')
+          .select('*')
+          .eq('user_id', userId)
+          .single()
+
+        if (settsErr && settsErr.code !== 'PGRST116') {
+          console.error('Error fetching settings:', settsErr)
+        } else if (setts) {
+          setUserSettings(setts as UserSettings)
+        }
+      } catch (e) {
+        console.error('Exception in fetchProfileAndSettings:', e)
       }
-
-      // Fetch settings
-      const { data: setts, error: settsErr } = await supabase
-        .from('user_settings')
-        .select('*')
-        .eq('user_id', userId)
-        .single()
-
-      if (settsErr && settsErr.code !== 'PGRST116') {
-        console.error('Error fetching settings:', settsErr)
-      } else if (setts) {
-        setUserSettings(setts as UserSettings)
-      }
-    } catch (e) {
-      console.error('Exception in fetchProfileAndSettings:', e)
-    }
-  }, [supabase])
+    },
+    [supabase],
+  )
 
   const refreshSession = useCallback(async () => {
     if (!supabase) {
@@ -111,7 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (e: any) {
       console.error('Failed to get session:', e)
-      if (e && (String(e.message || e).includes('Failed to fetch') || String(e.message || e).includes('fetch') || String(e.message || e).includes('NetworkError'))) {
+      if (
+        e &&
+        (String(e.message || e).includes('Failed to fetch') ||
+          String(e.message || e).includes('fetch') ||
+          String(e.message || e).includes('NetworkError'))
+      ) {
         console.warn('Network error. Enabling demo mode fallback.')
         setDemoModeEnabled(true)
         window.location.reload()
@@ -147,7 +155,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       refreshSession()
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
         setSession(currentSession)
         setUser(currentSession?.user ?? null)
 
@@ -165,7 +175,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (e: any) {
       console.error('Error in AuthProvider useEffect:', e)
-      if (e && (String(e.message || e).includes('Failed to fetch') || String(e.message || e).includes('fetch') || String(e.message || e).includes('NetworkError'))) {
+      if (
+        e &&
+        (String(e.message || e).includes('Failed to fetch') ||
+          String(e.message || e).includes('fetch') ||
+          String(e.message || e).includes('NetworkError'))
+      ) {
         setDemoModeEnabled(true)
         window.location.reload()
       } else {
@@ -286,7 +301,7 @@ function ConfigGuidanceScreen() {
           opacity: 0.2,
         }}
       />
-      
+
       {/* Glow effect */}
       <div
         style={{
@@ -339,8 +354,20 @@ function ConfigGuidanceScreen() {
         </div>
 
         <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#a1a1aa', marginBottom: '28px' }}>
-          Welcome to <strong style={{ color: '#fff' }}>Day Zero OS</strong>. This project relies entirely on Supabase for data persistence and authentication.
-          Please configure the environment variables in a <code style={{ fontFamily: 'monospace', color: '#3b82f6', background: 'rgba(59, 130, 246, 0.05)', padding: '2px 6px', borderRadius: '4px' }}>.env</code> file at the root of the project directory:
+          Welcome to <strong style={{ color: '#fff' }}>Day Zero OS</strong>. This project relies entirely on
+          Supabase for data persistence and authentication. Please configure the environment variables in a{' '}
+          <code
+            style={{
+              fontFamily: 'monospace',
+              color: '#3b82f6',
+              background: 'rgba(59, 130, 246, 0.05)',
+              padding: '2px 6px',
+              borderRadius: '4px',
+            }}
+          >
+            .env
+          </code>{' '}
+          file at the root of the project directory:
         </div>
 
         {/* Console Box */}
@@ -357,14 +384,27 @@ function ConfigGuidanceScreen() {
             position: 'relative',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#71717a', marginBottom: '10px', fontSize: '11px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: '#71717a',
+              marginBottom: '10px',
+              fontSize: '11px',
+            }}
+          >
             <Terminal size={12} />
             <span>.env</span>
           </div>
           <div style={{ color: '#22c55e' }}>VITE_APP_ENV=development</div>
           <div style={{ color: '#22c55e' }}>VITE_APP_URL=http://localhost:8443</div>
-          <div style={{ color: '#fff', marginTop: '6px' }}>VITE_SUPABASE_URL=<span style={{ color: '#71717a' }}>[your-supabase-project-url]</span></div>
-          <div style={{ color: '#fff' }}>VITE_SUPABASE_ANON_KEY=<span style={{ color: '#71717a' }}>[your-supabase-anon-key]</span></div>
+          <div style={{ color: '#fff', marginTop: '6px' }}>
+            VITE_SUPABASE_URL=<span style={{ color: '#71717a' }}>[your-supabase-project-url]</span>
+          </div>
+          <div style={{ color: '#fff' }}>
+            VITE_SUPABASE_ANON_KEY=<span style={{ color: '#71717a' }}>[your-supabase-anon-key]</span>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -372,16 +412,23 @@ function ConfigGuidanceScreen() {
             <HelpCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
             <span>
               If you don't have a Supabase project yet, create one for free at{' '}
-              <a href="https://supabase.com" target="_blank" rel="noreferrer" style={{ color: '#3b82f6', textDecoration: 'none' }}>
+              <a
+                href="https://supabase.com"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: '#3b82f6', textDecoration: 'none' }}
+              >
                 supabase.com
               </a>{' '}
-              and run the SQL setup from <code style={{ fontFamily: 'monospace' }}>/supabase/migrations</code>.
+              and run the SQL setup from <code style={{ fontFamily: 'monospace' }}>/supabase/migrations</code>
+              .
             </span>
           </div>
           <div style={{ display: 'flex', gap: '10px', fontSize: '13px', color: '#71717a' }}>
             <ArrowRight size={16} style={{ flexShrink: 0, marginTop: '2px', color: '#22c55e' }} />
             <span>
-              Once you add the variables to your <code style={{ fontFamily: 'monospace' }}>.env</code> file, restart the development server or refresh the browser.
+              Once you add the variables to your <code style={{ fontFamily: 'monospace' }}>.env</code> file,
+              restart the development server or refresh the browser.
             </span>
           </div>
         </div>

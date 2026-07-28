@@ -1,9 +1,26 @@
 import { useEffect, useState } from 'react'
-import { Plus, LayoutGrid, List, GitBranch, ExternalLink, Search, Archive, RotateCcw, Copy } from 'lucide-react'
+import {
+  Plus,
+  LayoutGrid,
+  List,
+  GitBranch,
+  ExternalLink,
+  Search,
+  Archive,
+  RotateCcw,
+  Copy,
+} from 'lucide-react'
 import type { Screen } from '@/types/navigation'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
-import { archiveProject, createProject, duplicateProject, listProjects, restoreProject, type ProjectListItem } from '@/features/projects/services/projects.service'
+import {
+  archiveProject,
+  createProject,
+  duplicateProject,
+  listProjects,
+  restoreProject,
+  type ProjectListItem,
+} from '@/features/projects/services/projects.service'
 import { useFormDialog } from '@/components/ui/FormDialog'
 
 type ViewMode = 'table' | 'board' | 'timeline'
@@ -65,11 +82,20 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
     }
   }, [showArchived])
 
-  const filtered = (filter === 'all' ? projects : projects.filter(project => project.status === filter)).filter(project => {
+  const filtered = (
+    filter === 'all' ? projects : projects.filter((project) => project.status === filter)
+  ).filter((project) => {
     const q = query.toLowerCase()
-    return !q || project.name.toLowerCase().includes(q) || project.description.toLowerCase().includes(q) || project.technologies.some(tech => tech.toLowerCase().includes(q))
+    return (
+      !q ||
+      project.name.toLowerCase().includes(q) ||
+      project.description.toLowerCase().includes(q) ||
+      project.technologies.some((tech) => tech.toLowerCase().includes(q))
+    )
   })
-  const activeCount = projects.filter(project => project.status === 'active' || project.status === 'in-progress').length
+  const activeCount = projects.filter(
+    (project) => project.status === 'active' || project.status === 'in-progress',
+  ).length
 
   const openProject = (projectId: string) => {
     if (onOpenProject) {
@@ -95,8 +121,12 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
     setError(null)
 
     try {
-      const created = await createProject({ ownerId: user.id, name: values.name.trim(), description: values.description?.trim() })
-      setProjects(current => [created, ...current])
+      const created = await createProject({
+        ownerId: user.id,
+        name: values.name.trim(),
+        description: values.description?.trim(),
+      })
+      setProjects((current) => [created, ...current])
       openProject(created.id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project.')
@@ -127,7 +157,7 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
   const handleDuplicate = async (project: ProjectListItem) => {
     if (!user) return
     const created = await duplicateProject(user.id, project)
-    setProjects(current => [created, ...current])
+    setProjects((current) => [created, ...current])
   }
 
   if (loading) {
@@ -140,9 +170,18 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
 
   return (
     <div className="h-full overflow-y-auto p-4 sm:p-6 lg:p-9">
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '28px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          marginBottom: '28px',
+        }}
+      >
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.03em' }}>Projects</h1>
+          <h1 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 4px', letterSpacing: '-0.03em' }}>
+            Projects
+          </h1>
           <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: 0 }}>
             {projects.length} projects - {activeCount} active
           </p>
@@ -187,12 +226,36 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5 w-full">
         <div className="relative w-full sm:w-[260px] flex-shrink-0">
-          <Search size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted-foreground)' }} />
-          <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search projects..." style={{ width: '100%', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '7px 12px 7px 30px', color: 'var(--foreground)', fontSize: '13px', outline: 'none', fontFamily: 'inherit' }} />
+          <Search
+            size={13}
+            style={{
+              position: 'absolute',
+              left: '10px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--muted-foreground)',
+            }}
+          />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search projects..."
+            style={{
+              width: '100%',
+              background: 'var(--secondary)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              padding: '7px 12px 7px 30px',
+              color: 'var(--foreground)',
+              fontSize: '13px',
+              outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          />
         </div>
         <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none w-full sm:w-auto">
           <div className="flex gap-1 bg-secondary rounded-lg p-[3px] flex-shrink-0">
-            {(['all', 'active', 'in-progress', 'completed', 'overdue', 'archived'] as const).map(status => (
+            {(['all', 'active', 'in-progress', 'completed', 'overdue', 'archived'] as const).map((status) => (
               <button
                 key={status}
                 onClick={() => setFilter(status)}
@@ -211,7 +274,11 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {status === 'all' ? 'All' : status === 'in-progress' ? 'In Progress' : status.charAt(0).toUpperCase() + status.slice(1)}
+                {status === 'all'
+                  ? 'All'
+                  : status === 'in-progress'
+                    ? 'In Progress'
+                    : status.charAt(0).toUpperCase() + status.slice(1)}
               </button>
             ))}
           </div>
@@ -220,11 +287,34 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
         <div className="hidden sm:block flex-grow" />
 
         <div className="flex items-center gap-2 mt-1 sm:mt-0 justify-between sm:justify-end w-full sm:w-auto">
-          <button onClick={() => setShowArchived(value => !value)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: showArchived ? 'var(--card)' : 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '6px', padding: '6px 10px', color: 'var(--secondary-foreground)', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button
+            onClick={() => setShowArchived((value) => !value)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: showArchived ? 'var(--card)' : 'var(--secondary)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              padding: '6px 10px',
+              color: 'var(--secondary-foreground)',
+              fontSize: '12px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
             <Archive size={12} /> Archived
           </button>
 
-          <div style={{ display: 'flex', gap: '4px', background: 'var(--secondary)', borderRadius: '7px', padding: '3px' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '4px',
+              background: 'var(--secondary)',
+              borderRadius: '7px',
+              padding: '3px',
+            }}
+          >
             {[
               ['table', <List size={13} />],
               ['board', <LayoutGrid size={13} />],
@@ -255,125 +345,246 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
       {view === 'table' && (
         <div className="w-full overflow-x-auto border border-border rounded-lg bg-card scrollbar-thin">
           <div style={{ minWidth: '768px', overflow: 'hidden' }}>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr 100px 80px 120px 80px 40px',
-              padding: '10px 20px',
-              borderBottom: '1px solid var(--border)',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: 'var(--muted-foreground)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-            }}
-          >
-            <div>Project</div>
-            <div>Status</div>
-            <div>Progress</div>
-            <div>Priority</div>
-            <div>Deadline</div>
-            <div>Activity</div>
-            <div />
-          </div>
-
-          {filtered.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '14px' }}>
-              No projects found.
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '2fr 1fr 100px 80px 120px 80px 40px',
+                padding: '10px 20px',
+                borderBottom: '1px solid var(--border)',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: 'var(--muted-foreground)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}
+            >
+              <div>Project</div>
+              <div>Status</div>
+              <div>Progress</div>
+              <div>Priority</div>
+              <div>Deadline</div>
+              <div>Activity</div>
+              <div />
             </div>
-          ) : (
-            filtered.map((project, index) => {
-              const status = statusConfig[project.status]
-              return (
-                <div
-                  key={project.id}
-                  onClick={() => openProject(project.id)}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '2fr 1fr 100px 80px 120px 80px 40px',
-                    padding: '14px 20px',
-                    borderBottom: index < filtered.length - 1 ? '1px solid var(--border)' : 'none',
-                    alignItems: 'center',
-                    cursor: 'pointer',
-                    transition: 'background 0.12s',
-                  }}
-                  onMouseEnter={event => (event.currentTarget.style.background = 'var(--secondary)')}
-                  onMouseLeave={event => (event.currentTarget.style.background = 'transparent')}
-                >
-                  <div>
-                    <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '2px' }}>{project.name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {project.description}
+
+            {filtered.length === 0 ? (
+              <div
+                style={{
+                  padding: '48px',
+                  textAlign: 'center',
+                  color: 'var(--muted-foreground)',
+                  fontSize: '14px',
+                }}
+              >
+                No projects found.
+              </div>
+            ) : (
+              filtered.map((project, index) => {
+                const status = statusConfig[project.status]
+                return (
+                  <div
+                    key={project.id}
+                    onClick={() => openProject(project.id)}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '2fr 1fr 100px 80px 120px 80px 40px',
+                      padding: '14px 20px',
+                      borderBottom: index < filtered.length - 1 ? '1px solid var(--border)' : 'none',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      transition: 'background 0.12s',
+                    }}
+                    onMouseEnter={(event) => (event.currentTarget.style.background = 'var(--secondary)')}
+                    onMouseLeave={(event) => (event.currentTarget.style.background = 'transparent')}
+                  >
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '2px' }}>
+                        {project.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: 'var(--muted-foreground)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {project.description}
+                      </div>
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: 500,
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          background: status.bg,
+                          color: status.color,
+                        }}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+                    <ProgressCell value={project.progress} color={status.color} />
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          color: priorityConfig[project.priority].color,
+                          fontWeight: 500,
+                        }}
+                      >
+                        {priorityConfig[project.priority].label}
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: 'var(--secondary-foreground)',
+                        fontFamily: 'monospace',
+                      }}
+                    >
+                      {project.deadline}
+                    </div>
+                    <div
+                      style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}
+                    >
+                      -
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--muted-foreground)',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          borderRadius: '4px',
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleDuplicate(project)
+                        }}
+                        title="Duplicate"
+                      >
+                        <Copy size={14} />
+                      </button>
+                      <button
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--muted-foreground)',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          borderRadius: '4px',
+                        }}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          if (project.status === 'archived') {
+                            handleRestore(project)
+                          } else {
+                            handleArchive(project)
+                          }
+                        }}
+                        title={project.status === 'archived' ? 'Restore' : 'Archive'}
+                      >
+                        {project.status === 'archived' ? <RotateCcw size={14} /> : <Archive size={14} />}
+                      </button>
                     </div>
                   </div>
-                  <div>
-                    <span style={{ fontSize: '11px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', background: status.bg, color: status.color }}>
-                      {status.label}
-                    </span>
-                  </div>
-                  <ProgressCell value={project.progress} color={status.color} />
-                  <div>
-                    <span style={{ fontSize: '11px', color: priorityConfig[project.priority].color, fontWeight: 500 }}>
-                      {priorityConfig[project.priority].label}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--secondary-foreground)', fontFamily: 'monospace' }}>
-                    {project.deadline}
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>-</div>
-                  <div style={{ display: 'flex', gap: '4px' }}>
-                    <button style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', padding: '4px', borderRadius: '4px' }} onClick={event => { event.stopPropagation(); handleDuplicate(project) }} title="Duplicate">
-                      <Copy size={14} />
-                    </button>
-                    <button style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', padding: '4px', borderRadius: '4px' }} onClick={event => { event.stopPropagation(); if (project.status === 'archived') { handleRestore(project) } else { handleArchive(project) } }} title={project.status === 'archived' ? 'Restore' : 'Archive'}>
-                      {project.status === 'archived' ? <RotateCcw size={14} /> : <Archive size={14} />}
-                    </button>
-                  </div>
-                </div>
-              )
-            })
-          )}
+                )
+              })
+            )}
           </div>
         </div>
       )}
 
       {view === 'board' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(['active', 'in-progress', 'completed', 'overdue'] as Status[]).map(statusKey => {
+          {(['active', 'in-progress', 'completed', 'overdue'] as Status[]).map((statusKey) => {
             const status = statusConfig[statusKey]
-            const items = projects.filter(project => project.status === statusKey)
+            const items = projects.filter((project) => project.status === statusKey)
             return (
               <div key={statusKey}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: status.color }} />
-                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--secondary-foreground)' }}>{status.label}</span>
-                  <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginLeft: 'auto' }}>{items.length}</span>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--secondary-foreground)' }}>
+                    {status.label}
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', marginLeft: 'auto' }}>
+                    {items.length}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {items.length === 0 && (
-                    <div style={{ border: '1px dashed var(--border)', borderRadius: '8px', padding: '20px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '13px' }}>
+                    <div
+                      style={{
+                        border: '1px dashed var(--border)',
+                        borderRadius: '8px',
+                        padding: '20px',
+                        textAlign: 'center',
+                        color: 'var(--muted-foreground)',
+                        fontSize: '13px',
+                      }}
+                    >
                       No projects
                     </div>
                   )}
-                  {items.map(project => (
+                  {items.map((project) => (
                     <div
                       key={project.id}
                       onClick={() => openProject(project.id)}
-                      style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px', cursor: 'pointer', transition: 'border-color 0.12s' }}
-                      onMouseEnter={event => (event.currentTarget.style.borderColor = 'var(--ring)')}
-                      onMouseLeave={event => (event.currentTarget.style.borderColor = 'var(--border)')}
+                      style={{
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px',
+                        padding: '14px',
+                        cursor: 'pointer',
+                        transition: 'border-color 0.12s',
+                      }}
+                      onMouseEnter={(event) => (event.currentTarget.style.borderColor = 'var(--ring)')}
+                      onMouseLeave={(event) => (event.currentTarget.style.borderColor = 'var(--border)')}
                     >
-                      <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '6px' }}>{project.name}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginBottom: '12px', lineHeight: 1.5 }}>{project.description}</div>
+                      <div style={{ fontSize: '13px', fontWeight: 500, marginBottom: '6px' }}>
+                        {project.name}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: '12px',
+                          color: 'var(--muted-foreground)',
+                          marginBottom: '12px',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {project.description}
+                      </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '12px' }}>
-                        {project.technologies.map(tech => (
-                          <span key={tech} style={{ fontSize: '10px', padding: '2px 6px', background: 'var(--secondary)', borderRadius: '3px', color: 'var(--muted-foreground)' }}>
+                        {project.technologies.map((tech) => (
+                          <span
+                            key={tech}
+                            style={{
+                              fontSize: '10px',
+                              padding: '2px 6px',
+                              background: 'var(--secondary)',
+                              borderRadius: '3px',
+                              color: 'var(--muted-foreground)',
+                            }}
+                          >
                             {tech}
                           </span>
                         ))}
                       </div>
                       <div style={{ background: 'var(--secondary)', borderRadius: '3px', height: '3px' }}>
-                        <div style={{ background: status.color, height: '3px', borderRadius: '3px', width: `${project.progress}%` }} />
+                        <div
+                          style={{
+                            background: status.color,
+                            height: '3px',
+                            borderRadius: '3px',
+                            width: `${project.progress}%`,
+                          }}
+                        />
                       </div>
                     </div>
                   ))}
@@ -385,8 +596,17 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
       )}
 
       {view === 'timeline' && (
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '24px' }}>
-          <div style={{ marginBottom: '20px', fontSize: '13px', color: 'var(--muted-foreground)' }}>Project timeline</div>
+        <div
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '24px',
+          }}
+        >
+          <div style={{ marginBottom: '20px', fontSize: '13px', color: 'var(--muted-foreground)' }}>
+            Project timeline
+          </div>
           {projects.length === 0 ? (
             <div style={{ color: 'var(--muted-foreground)', fontSize: '13px' }}>No projects to show.</div>
           ) : (
@@ -394,15 +614,58 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
               const status = statusConfig[project.status]
               const offset = Math.min(index * 8, 45)
               return (
-                <div key={project.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '14px' }}>
-                  <div className="w-20 sm:w-36 text-xs font-medium overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">{project.name}</div>
-                  <div style={{ flex: 1, background: 'var(--secondary)', borderRadius: '4px', height: '28px', position: 'relative', overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', left: `${offset}%`, width: `${Math.min(project.progress, 100 - offset)}%`, height: '100%', background: status.color, borderRadius: '4px' }} />
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', paddingLeft: `${offset + 4}%`, fontSize: '11px', fontWeight: 500, color: '#fff', mixBlendMode: 'screen' }}>
+                <div
+                  key={project.id}
+                  style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '14px' }}
+                >
+                  <div className="w-20 sm:w-36 text-xs font-medium overflow-hidden text-ellipsis whitespace-nowrap flex-shrink-0">
+                    {project.name}
+                  </div>
+                  <div
+                    style={{
+                      flex: 1,
+                      background: 'var(--secondary)',
+                      borderRadius: '4px',
+                      height: '28px',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: `${offset}%`,
+                        width: `${Math.min(project.progress, 100 - offset)}%`,
+                        height: '100%',
+                        background: status.color,
+                        borderRadius: '4px',
+                      }}
+                    />
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        paddingLeft: `${offset + 4}%`,
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        color: '#fff',
+                        mixBlendMode: 'screen',
+                      }}
+                    >
                       {project.deadline}
                     </div>
                   </div>
-                  <div style={{ width: '36px', fontSize: '11px', color: 'var(--muted-foreground)', textAlign: 'right', fontFamily: 'monospace' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      fontSize: '11px',
+                      color: 'var(--muted-foreground)',
+                      textAlign: 'right',
+                      fontFamily: 'monospace',
+                    }}
+                  >
                     {project.progress}%
                   </div>
                 </div>
@@ -414,12 +677,35 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
 
       <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
         <span style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>Technologies:</span>
-        {Array.from(new Set(projects.flatMap(project => project.technologies))).slice(0, 8).map(tech => (
-          <span key={tech} style={{ fontSize: '11px', padding: '2px 8px', background: 'var(--secondary)', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--secondary-foreground)' }}>
-            {tech}
-          </span>
-        ))}
-        <button style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {Array.from(new Set(projects.flatMap((project) => project.technologies)))
+          .slice(0, 8)
+          .map((tech) => (
+            <span
+              key={tech}
+              style={{
+                fontSize: '11px',
+                padding: '2px 8px',
+                background: 'var(--secondary)',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                color: 'var(--secondary-foreground)',
+              }}
+            >
+              {tech}
+            </span>
+          ))}
+        <button
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--muted-foreground)',
+            cursor: 'pointer',
+            fontSize: '11px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+          }}
+        >
           <ExternalLink size={10} /> View all
         </button>
       </div>
@@ -435,7 +721,14 @@ function ProgressCell({ value, color }: { value: number; color: string }) {
         <div style={{ flex: 1, background: 'var(--secondary)', borderRadius: '3px', height: '3px' }}>
           <div style={{ background: color, height: '3px', borderRadius: '3px', width: `${value}%` }} />
         </div>
-        <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace', minWidth: '28px' }}>
+        <span
+          style={{
+            fontSize: '11px',
+            color: 'var(--muted-foreground)',
+            fontFamily: 'monospace',
+            minWidth: '28px',
+          }}
+        >
           {value}%
         </span>
       </div>

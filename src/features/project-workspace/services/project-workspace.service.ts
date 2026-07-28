@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { isDemoModeEnabled } from '@/lib/supabase/mockClient'
 import type { Priority, ProjectStatus } from '@/types/enums'
 
 export type WorkspaceProject = {
@@ -62,7 +63,17 @@ export type WorkspaceAsset = {
 export type WorkspaceContent = {
   id: string
   title: string
-  status: 'idea' | 'research' | 'outline' | 'script' | 'recording' | 'editing' | 'thumbnail' | 'seo' | 'published' | 'analytics'
+  status:
+    | 'idea'
+    | 'research'
+    | 'outline'
+    | 'script'
+    | 'recording'
+    | 'editing'
+    | 'thumbnail'
+    | 'seo'
+    | 'published'
+    | 'analytics'
   platform: string
   publishDate: string | null
   researchNotes: string | null
@@ -154,56 +165,164 @@ type ProjectRow = {
   technologies: string[] | null
 }
 
-type ProjectUpdate = Partial<Pick<WorkspaceProject, 'name' | 'description' | 'status' | 'priority' | 'progress' | 'deadline' | 'technologies'>>
+type ProjectUpdate = Partial<
+  Pick<
+    WorkspaceProject,
+    'name' | 'description' | 'status' | 'priority' | 'progress' | 'deadline' | 'technologies'
+  >
+>
 type WorkspaceRow = Record<string, unknown>
 
 function isSchemaMissing(error: { code?: string; message?: string } | null) {
-  return error?.code === 'PGRST205' || error?.code === '42703' || error?.message?.includes('schema cache') || error?.message?.includes('does not exist')
+  return (
+    error?.code === 'PGRST205' ||
+    error?.code === '42703' ||
+    error?.message?.includes('schema cache') ||
+    error?.message?.includes('does not exist')
+  )
 }
 
 export async function fetchProjectWorkspace(projectId: string): Promise<ProjectWorkspaceData> {
   const supabase = getSupabaseClient()
 
-  const { data: project, error: projectError } = await supabase.from('projects').select('id, name, description, status, priority, progress, deadline, technologies').eq('id', projectId).is('deleted_at', null).single()
-  let { data: milestones, error: milestonesError } = await supabase.from('milestones').select('id, title, description, status, priority, progress, due_date, estimated_hours, completed_date, notes').eq('project_id', projectId).order('sort_order', { ascending: true }) as { data: WorkspaceRow[] | null; error: { code?: string; message?: string } | null }
-  let { data: decisions, error: decisionsError } = await supabase.from('decisions').select('id, problem, decision, reason, alternatives_considered, consequences, impact, reference_links, decided_at').eq('project_id', projectId).order('decided_at', { ascending: false }) as { data: WorkspaceRow[] | null; error: { code?: string; message?: string } | null }
-  const { data: knowledge, error: knowledgeError } = await supabase.from('knowledge_entries').select('id, title, body, category, tags, starred, created_at').eq('project_id', projectId).order('updated_at', { ascending: false })
-  let { data: assets, error: assetsError } = await supabase.from('assets').select('id, file_name, asset_type, file_url, storage_path, tags, description, notes, uploaded_at').eq('project_id', projectId).order('uploaded_at', { ascending: false }) as { data: WorkspaceRow[] | null; error: { code?: string; message?: string } | null }
-  const { data: content, error: contentError } = await supabase.from('content_items').select('id, title, status, platform, publish_date, research_notes, outline, script, analytics').eq('project_id', projectId).order('updated_at', { ascending: false })
-  let { data: tasks, error: tasksError } = await supabase.from('project_tasks').select('id, title, description, status, priority, estimate_hours, due_date, dependencies, labels, notes').eq('project_id', projectId).order('updated_at', { ascending: false }) as { data: WorkspaceRow[] | null; error: { code?: string; message?: string } | null }
-  let { data: bugs, error: bugsError } = await supabase.from('project_bugs').select('id, title, description, status, severity, priority, steps_to_reproduce, expected_behavior, actual_behavior, resolution').eq('project_id', projectId).order('updated_at', { ascending: false }) as { data: WorkspaceRow[] | null; error: { code?: string; message?: string } | null }
-  const { data: debt, error: debtError } = await supabase.from('technical_debt_items').select('id, title, status, impact, proposed_fix').eq('project_id', projectId).order('updated_at', { ascending: false })
-  const { data: repositories, error: repositoriesError } = await supabase.from('project_repositories').select('id, name, url, branch, notes').eq('project_id', projectId).order('updated_at', { ascending: false })
-  let { data: developmentNotes, error: developmentNotesError } = await supabase.from('development_notes').select('id, title, body, tags, autosaved_at').eq('project_id', projectId).order('updated_at', { ascending: false }) as { data: WorkspaceRow[] | null; error: { code?: string; message?: string } | null }
-  const { data: activity, error: activityError } = await supabase.from('activity_log').select('id, action, entity_type, created_at').eq('project_id', projectId).order('created_at', { ascending: false }).limit(80)
+  const { data: project, error: projectError } = await supabase
+    .from('projects')
+    .select('id, name, description, status, priority, progress, deadline, technologies')
+    .eq('id', projectId)
+    .is('deleted_at', null)
+    .single()
+  let { data: milestones, error: milestonesError } = (await supabase
+    .from('milestones')
+    .select(
+      'id, title, description, status, priority, progress, due_date, estimated_hours, completed_date, notes',
+    )
+    .eq('project_id', projectId)
+    .order('sort_order', { ascending: true })) as {
+    data: WorkspaceRow[] | null
+    error: { code?: string; message?: string } | null
+  }
+  let { data: decisions, error: decisionsError } = (await supabase
+    .from('decisions')
+    .select(
+      'id, problem, decision, reason, alternatives_considered, consequences, impact, reference_links, decided_at',
+    )
+    .eq('project_id', projectId)
+    .order('decided_at', { ascending: false })) as {
+    data: WorkspaceRow[] | null
+    error: { code?: string; message?: string } | null
+  }
+  const { data: knowledge, error: knowledgeError } = await supabase
+    .from('knowledge_entries')
+    .select('id, title, body, category, tags, starred, created_at')
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false })
+  let { data: assets, error: assetsError } = (await supabase
+    .from('assets')
+    .select('id, file_name, asset_type, file_url, storage_path, tags, description, notes, uploaded_at')
+    .eq('project_id', projectId)
+    .order('uploaded_at', { ascending: false })) as {
+    data: WorkspaceRow[] | null
+    error: { code?: string; message?: string } | null
+  }
+  const { data: content, error: contentError } = await supabase
+    .from('content_items')
+    .select('id, title, status, platform, publish_date, research_notes, outline, script, analytics')
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false })
+  let { data: tasks, error: tasksError } = (await supabase
+    .from('project_tasks')
+    .select('id, title, description, status, priority, estimate_hours, due_date, dependencies, labels, notes')
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false })) as {
+    data: WorkspaceRow[] | null
+    error: { code?: string; message?: string } | null
+  }
+  let { data: bugs, error: bugsError } = (await supabase
+    .from('project_bugs')
+    .select(
+      'id, title, description, status, severity, priority, steps_to_reproduce, expected_behavior, actual_behavior, resolution',
+    )
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false })) as {
+    data: WorkspaceRow[] | null
+    error: { code?: string; message?: string } | null
+  }
+  const { data: debt, error: debtError } = await supabase
+    .from('technical_debt_items')
+    .select('id, title, status, impact, proposed_fix')
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false })
+  const { data: repositories, error: repositoriesError } = await supabase
+    .from('project_repositories')
+    .select('id, name, url, branch, notes')
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false })
+  let { data: developmentNotes, error: developmentNotesError } = (await supabase
+    .from('development_notes')
+    .select('id, title, body, tags, autosaved_at')
+    .eq('project_id', projectId)
+    .order('updated_at', { ascending: false })) as {
+    data: WorkspaceRow[] | null
+    error: { code?: string; message?: string } | null
+  }
+  const { data: activity, error: activityError } = await supabase
+    .from('activity_log')
+    .select('id, action, entity_type, created_at')
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
+    .limit(80)
 
   if (isSchemaMissing(milestonesError)) {
-    const fallback = await supabase.from('milestones').select('id, title, status, due_date, completed_date, notes').eq('project_id', projectId).order('sort_order', { ascending: true })
+    const fallback = await supabase
+      .from('milestones')
+      .select('id, title, status, due_date, completed_date, notes')
+      .eq('project_id', projectId)
+      .order('sort_order', { ascending: true })
     milestones = fallback.data as WorkspaceRow[] | null
     milestonesError = fallback.error
   }
   if (isSchemaMissing(decisionsError)) {
-    const fallback = await supabase.from('decisions').select('id, decision, reason, alternatives_considered, impact, decided_at').eq('project_id', projectId).order('decided_at', { ascending: false })
+    const fallback = await supabase
+      .from('decisions')
+      .select('id, decision, reason, alternatives_considered, impact, decided_at')
+      .eq('project_id', projectId)
+      .order('decided_at', { ascending: false })
     decisions = fallback.data as WorkspaceRow[] | null
     decisionsError = fallback.error
   }
   if (isSchemaMissing(assetsError)) {
-    const fallback = await supabase.from('assets').select('id, file_name, asset_type, file_url, storage_path, tags, uploaded_at').eq('project_id', projectId).order('uploaded_at', { ascending: false })
+    const fallback = await supabase
+      .from('assets')
+      .select('id, file_name, asset_type, file_url, storage_path, tags, uploaded_at')
+      .eq('project_id', projectId)
+      .order('uploaded_at', { ascending: false })
     assets = fallback.data as WorkspaceRow[] | null
     assetsError = fallback.error
   }
   if (isSchemaMissing(tasksError)) {
-    const fallback = await supabase.from('project_tasks').select('id, title, status, priority, due_date, notes').eq('project_id', projectId).order('updated_at', { ascending: false })
+    const fallback = await supabase
+      .from('project_tasks')
+      .select('id, title, status, priority, due_date, notes')
+      .eq('project_id', projectId)
+      .order('updated_at', { ascending: false })
     tasks = fallback.data as WorkspaceRow[] | null
     tasksError = fallback.error
   }
   if (isSchemaMissing(bugsError)) {
-    const fallback = await supabase.from('project_bugs').select('id, title, status, severity, steps_to_reproduce, resolution').eq('project_id', projectId).order('updated_at', { ascending: false })
+    const fallback = await supabase
+      .from('project_bugs')
+      .select('id, title, status, severity, steps_to_reproduce, resolution')
+      .eq('project_id', projectId)
+      .order('updated_at', { ascending: false })
     bugs = fallback.data as WorkspaceRow[] | null
     bugsError = fallback.error
   }
   if (isSchemaMissing(developmentNotesError)) {
-    const fallback = await supabase.from('development_notes').select('id, title, body').eq('project_id', projectId).order('updated_at', { ascending: false })
+    const fallback = await supabase
+      .from('development_notes')
+      .select('id, title, body')
+      .eq('project_id', projectId)
+      .order('updated_at', { ascending: false })
     developmentNotes = fallback.data as WorkspaceRow[] | null
     developmentNotesError = fallback.error
   }
@@ -234,7 +353,7 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
       deadline: row.deadline,
       technologies: row.technologies ?? [],
     },
-    milestones: ((milestones ?? []) as WorkspaceRow[]).map(item => ({
+    milestones: ((milestones ?? []) as WorkspaceRow[]).map((item) => ({
       id: String(item.id),
       title: String(item.title),
       description: typeof item.description === 'string' ? item.description : null,
@@ -246,7 +365,7 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
       completedDate: typeof item.completed_date === 'string' ? item.completed_date : null,
       notes: typeof item.notes === 'string' ? item.notes : null,
     })),
-    decisions: ((decisions ?? []) as WorkspaceRow[]).map(item => ({
+    decisions: ((decisions ?? []) as WorkspaceRow[]).map((item) => ({
       id: String(item.id),
       problem: typeof item.problem === 'string' ? item.problem : null,
       decision: String(item.decision),
@@ -257,7 +376,7 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
       references: Array.isArray(item.reference_links) ? item.reference_links.map(String) : [],
       decidedAt: String(item.decided_at),
     })),
-    knowledge: (knowledge ?? []).map(item => ({
+    knowledge: (knowledge ?? []).map((item) => ({
       id: item.id,
       title: item.title,
       body: item.body,
@@ -266,7 +385,7 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
       starred: item.starred,
       createdAt: item.created_at,
     })),
-    assets: ((assets ?? []) as WorkspaceRow[]).map(item => ({
+    assets: ((assets ?? []) as WorkspaceRow[]).map((item) => ({
       id: String(item.id),
       name: String(item.file_name),
       assetType: item.asset_type as WorkspaceAsset['assetType'],
@@ -277,7 +396,7 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
       notes: typeof item.notes === 'string' ? item.notes : null,
       uploadedAt: String(item.uploaded_at),
     })),
-    content: (content ?? []).map(item => ({
+    content: (content ?? []).map((item) => ({
       id: item.id,
       title: item.title,
       status: item.status,
@@ -288,7 +407,7 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
       script: item.script,
       analytics: item.analytics ?? {},
     })),
-    tasks: ((tasks ?? []) as WorkspaceRow[]).map(item => ({
+    tasks: ((tasks ?? []) as WorkspaceRow[]).map((item) => ({
       id: String(item.id),
       title: String(item.title),
       description: typeof item.description === 'string' ? item.description : null,
@@ -300,7 +419,7 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
       labels: Array.isArray(item.labels) ? item.labels.map(String) : [],
       notes: typeof item.notes === 'string' ? item.notes : null,
     })),
-    bugs: ((bugs ?? []) as WorkspaceRow[]).map(item => ({
+    bugs: ((bugs ?? []) as WorkspaceRow[]).map((item) => ({
       id: String(item.id),
       title: String(item.title),
       description: typeof item.description === 'string' ? item.description : null,
@@ -312,28 +431,28 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
       actualBehavior: typeof item.actual_behavior === 'string' ? item.actual_behavior : null,
       resolution: typeof item.resolution === 'string' ? item.resolution : null,
     })),
-    debt: (debt ?? []).map(item => ({
+    debt: (debt ?? []).map((item) => ({
       id: item.id,
       title: item.title,
       status: item.status,
       impact: item.impact,
       proposedFix: item.proposed_fix,
     })),
-    repositories: (repositories ?? []).map(item => ({
+    repositories: (repositories ?? []).map((item) => ({
       id: item.id,
       name: item.name,
       url: item.url,
       branch: item.branch,
       notes: item.notes,
     })),
-    developmentNotes: ((developmentNotes ?? []) as WorkspaceRow[]).map(item => ({
+    developmentNotes: ((developmentNotes ?? []) as WorkspaceRow[]).map((item) => ({
       id: String(item.id),
       title: String(item.title),
       body: typeof item.body === 'string' ? item.body : null,
       tags: Array.isArray(item.tags) ? item.tags.map(String) : [],
       autosavedAt: typeof item.autosaved_at === 'string' ? item.autosaved_at : null,
     })),
-    activity: (activity ?? []).map(item => ({
+    activity: (activity ?? []).map((item) => ({
       id: item.id,
       action: item.action,
       entityType: item.entity_type,
@@ -342,13 +461,39 @@ export async function fetchProjectWorkspace(projectId: string): Promise<ProjectW
   }
 }
 
-export async function createTask(projectId: string, input: { title: string; description?: string | null; priority?: Priority; estimate_hours?: number | null; due_date?: string | null; dependencies?: string[]; labels?: string[]; notes?: string | null }) {
+export async function createTask(
+  projectId: string,
+  input: {
+    title: string
+    description?: string | null
+    priority?: Priority
+    estimate_hours?: number | null
+    due_date?: string | null
+    dependencies?: string[]
+    labels?: string[]
+    notes?: string | null
+  },
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('project_tasks').insert({ project_id: projectId, ...input })
   if (error) throw error
 }
 
-export async function updateTask(id: string, updates: Partial<{ title: string; description: string | null; status: WorkspaceTask['status']; priority: Priority; estimate_hours: number | null; due_date: string | null; dependencies: string[]; labels: string[]; notes: string | null; completed_at: string | null }>) {
+export async function updateTask(
+  id: string,
+  updates: Partial<{
+    title: string
+    description: string | null
+    status: WorkspaceTask['status']
+    priority: Priority
+    estimate_hours: number | null
+    due_date: string | null
+    dependencies: string[]
+    labels: string[]
+    notes: string | null
+    completed_at: string | null
+  }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('project_tasks').update(updates).eq('id', id)
   if (error) throw error
@@ -360,13 +505,37 @@ export async function deleteTask(id: string) {
   if (error) throw error
 }
 
-export async function createBug(projectId: string, input: { title: string; description?: string | null; severity?: Priority; priority?: Priority; steps_to_reproduce?: string | null; expected_behavior?: string | null; actual_behavior?: string | null }) {
+export async function createBug(
+  projectId: string,
+  input: {
+    title: string
+    description?: string | null
+    severity?: Priority
+    priority?: Priority
+    steps_to_reproduce?: string | null
+    expected_behavior?: string | null
+    actual_behavior?: string | null
+  },
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('project_bugs').insert({ project_id: projectId, ...input })
   if (error) throw error
 }
 
-export async function updateBug(id: string, updates: Partial<{ title: string; description: string | null; status: WorkspaceBug['status']; severity: Priority; priority: Priority; steps_to_reproduce: string | null; expected_behavior: string | null; actual_behavior: string | null; resolution: string | null }>) {
+export async function updateBug(
+  id: string,
+  updates: Partial<{
+    title: string
+    description: string | null
+    status: WorkspaceBug['status']
+    severity: Priority
+    priority: Priority
+    steps_to_reproduce: string | null
+    expected_behavior: string | null
+    actual_behavior: string | null
+    resolution: string | null
+  }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('project_bugs').update(updates).eq('id', id)
   if (error) throw error
@@ -384,7 +553,15 @@ export async function createDebt(projectId: string, title: string) {
   if (error) throw error
 }
 
-export async function updateDebt(id: string, updates: Partial<{ title: string; status: WorkspaceDebt['status']; impact: string | null; proposed_fix: string | null }>) {
+export async function updateDebt(
+  id: string,
+  updates: Partial<{
+    title: string
+    status: WorkspaceDebt['status']
+    impact: string | null
+    proposed_fix: string | null
+  }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('technical_debt_items').update(updates).eq('id', id)
   if (error) throw error
@@ -402,7 +579,10 @@ export async function createRepository(projectId: string, name: string, url: str
   if (error) throw error
 }
 
-export async function updateRepository(id: string, updates: Partial<{ name: string; url: string; branch: string | null; notes: string | null }>) {
+export async function updateRepository(
+  id: string,
+  updates: Partial<{ name: string; url: string; branch: string | null; notes: string | null }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('project_repositories').update(updates).eq('id', id)
   if (error) throw error
@@ -414,13 +594,23 @@ export async function deleteRepository(id: string) {
   if (error) throw error
 }
 
-export async function createDevelopmentNote(projectId: string, title: string, body: string, tags: string[] = []) {
+export async function createDevelopmentNote(
+  projectId: string,
+  title: string,
+  body: string,
+  tags: string[] = [],
+) {
   const supabase = getSupabaseClient()
-  const { error } = await supabase.from('development_notes').insert({ project_id: projectId, title, body, tags, autosaved_at: new Date().toISOString() })
+  const { error } = await supabase
+    .from('development_notes')
+    .insert({ project_id: projectId, title, body, tags, autosaved_at: new Date().toISOString() })
   if (error) throw error
 }
 
-export async function updateDevelopmentNote(id: string, updates: Partial<{ title: string; body: string | null; tags: string[]; autosaved_at: string }>) {
+export async function updateDevelopmentNote(
+  id: string,
+  updates: Partial<{ title: string; body: string | null; tags: string[]; autosaved_at: string }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('development_notes').update(updates).eq('id', id)
   if (error) throw error
@@ -440,17 +630,73 @@ export async function updateProject(projectId: string, updates: ProjectUpdate) {
 
 export async function deleteProject(projectId: string) {
   const supabase = getSupabaseClient()
-  const { error } = await supabase.from('projects').update({ deleted_at: new Date().toISOString() }).eq('id', projectId)
+
+  if (isDemoModeEnabled()) {
+    // 1. Fetch assets to clean up storage files / asset versions in mock client
+    const { data: assets } = await supabase.from('assets').select('id').eq('project_id', projectId)
+    if (assets && assets.length > 0) {
+      const assetIds = assets.map((a) => a.id)
+      for (const assetId of assetIds) {
+        await supabase.from('asset_versions').delete().eq('asset_id', assetId)
+      }
+    }
+
+    // 2. Delete all child tables (using upgraded mock delete query builder)
+    await supabase.from('milestones').delete().eq('project_id', projectId)
+    await supabase.from('project_tasks').delete().eq('project_id', projectId)
+    await supabase.from('project_bugs').delete().eq('project_id', projectId)
+    await supabase.from('technical_debt_items').delete().eq('project_id', projectId)
+    await supabase.from('project_repositories').delete().eq('project_id', projectId)
+    await supabase.from('development_notes').delete().eq('project_id', projectId)
+    await supabase.from('assets').delete().eq('project_id', projectId)
+    await supabase.from('content_items').delete().eq('project_id', projectId)
+    await supabase.from('architecture_decisions').delete().eq('project_id', projectId)
+    await supabase.from('activity_log').delete().eq('project_id', projectId)
+    await supabase.from('activity_logs').delete().eq('project_id', projectId)
+    await supabase.from('notifications').delete().eq('project_id', projectId)
+    await supabase.from('ai_sessions').delete().eq('project_id', projectId)
+
+    // 3. Set project_id to NULL on knowledge_entries (ON DELETE SET NULL equivalent)
+    await supabase.from('knowledge_entries').update({ project_id: null }).eq('project_id', projectId)
+  }
+
+  const { error } = await supabase
+    .from('projects')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', projectId)
   if (error) throw error
 }
 
-export async function createMilestone(projectId: string, input: { title: string; description?: string | null; due_date?: string | null; priority?: Priority; estimated_hours?: number | null; notes?: string | null }) {
+export async function createMilestone(
+  projectId: string,
+  input: {
+    title: string
+    description?: string | null
+    due_date?: string | null
+    priority?: Priority
+    estimated_hours?: number | null
+    notes?: string | null
+  },
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('milestones').insert({ project_id: projectId, ...input })
   if (error) throw error
 }
 
-export async function updateMilestone(id: string, updates: Partial<{ title: string; description: string | null; status: WorkspaceMilestone['status']; priority: Priority; progress: number; due_date: string | null; estimated_hours: number | null; notes: string | null; completed_date: string | null }>) {
+export async function updateMilestone(
+  id: string,
+  updates: Partial<{
+    title: string
+    description: string | null
+    status: WorkspaceMilestone['status']
+    priority: Priority
+    progress: number
+    due_date: string | null
+    estimated_hours: number | null
+    notes: string | null
+    completed_date: string | null
+  }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('milestones').update(updates).eq('id', id)
   if (error) throw error
@@ -462,7 +708,14 @@ export async function deleteMilestone(id: string) {
   if (error) throw error
 }
 
-export async function createDecision(input: { projectId: string; userId: string; decision: string; reason?: string; alternatives?: string; impact?: string }) {
+export async function createDecision(input: {
+  projectId: string
+  userId: string
+  decision: string
+  reason?: string
+  alternatives?: string
+  impact?: string
+}) {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('decisions')
@@ -487,7 +740,18 @@ export async function createDecision(input: { projectId: string; userId: string;
   })
 }
 
-export async function updateDecision(id: string, updates: Partial<{ problem: string | null; decision: string; reason: string | null; alternatives_considered: string | null; consequences: string | null; impact: string | null; reference_links: string[] }>) {
+export async function updateDecision(
+  id: string,
+  updates: Partial<{
+    problem: string | null
+    decision: string
+    reason: string | null
+    alternatives_considered: string | null
+    consequences: string | null
+    impact: string | null
+    reference_links: string[]
+  }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('decisions').update(updates).eq('id', id)
   if (error) throw error
@@ -501,11 +765,25 @@ export async function deleteDecision(id: string) {
 
 export async function createContent(projectId: string, title: string, platform: string) {
   const supabase = getSupabaseClient()
-  const { error } = await supabase.from('content_items').insert({ project_id: projectId, title, platform, status: 'idea' })
+  const { error } = await supabase
+    .from('content_items')
+    .insert({ project_id: projectId, title, platform, status: 'idea' })
   if (error) throw error
 }
 
-export async function updateContent(id: string, updates: Partial<{ title: string; platform: string; status: WorkspaceContent['status']; research_notes: string | null; outline: string | null; script: string | null; publish_date: string | null; analytics: Record<string, unknown> }>) {
+export async function updateContent(
+  id: string,
+  updates: Partial<{
+    title: string
+    platform: string
+    status: WorkspaceContent['status']
+    research_notes: string | null
+    outline: string | null
+    script: string | null
+    publish_date: string | null
+    analytics: Record<string, unknown>
+  }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('content_items').update(updates).eq('id', id)
   if (error) throw error
@@ -517,7 +795,14 @@ export async function deleteContent(id: string) {
   if (error) throw error
 }
 
-export async function createKnowledgeEntry(input: { projectId: string; ownerId: string; title: string; body?: string; category?: WorkspaceKnowledge['category']; tags?: string[] }) {
+export async function createKnowledgeEntry(input: {
+  projectId: string
+  ownerId: string
+  title: string
+  body?: string
+  category?: WorkspaceKnowledge['category']
+  tags?: string[]
+}) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('knowledge_entries').insert({
     project_id: input.projectId,
@@ -530,7 +815,16 @@ export async function createKnowledgeEntry(input: { projectId: string; ownerId: 
   if (error) throw error
 }
 
-export async function updateKnowledgeEntry(id: string, updates: Partial<{ title: string; body: string | null; category: WorkspaceKnowledge['category']; tags: string[]; starred: boolean }>) {
+export async function updateKnowledgeEntry(
+  id: string,
+  updates: Partial<{
+    title: string
+    body: string | null
+    category: WorkspaceKnowledge['category']
+    tags: string[]
+    starred: boolean
+  }>,
+) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('knowledge_entries').update(updates).eq('id', id)
   if (error) throw error
@@ -542,7 +836,12 @@ export async function deleteKnowledgeEntry(id: string) {
   if (error) throw error
 }
 
-export async function createProjectAssetLink(input: { projectId: string; ownerId: string; name: string; url: string }) {
+export async function createProjectAssetLink(input: {
+  projectId: string
+  ownerId: string
+  name: string
+  url: string
+}) {
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('assets').insert({
     project_id: input.projectId,
@@ -559,11 +858,19 @@ export async function createProjectAssetLink(input: { projectId: string; ownerId
 export async function uploadProjectAsset(input: { projectId: string; ownerId: string; file: File }) {
   const supabase = getSupabaseClient()
   const storagePath = `${input.ownerId}/${input.projectId}/${crypto.randomUUID()}-${input.file.name}`
-  const { error: uploadError } = await supabase.storage.from('project-assets').upload(storagePath, input.file, { cacheControl: '3600', upsert: false })
+  const { error: uploadError } = await supabase.storage
+    .from('project-assets')
+    .upload(storagePath, input.file, { cacheControl: '3600', upsert: false })
   if (uploadError) throw uploadError
 
   const { data } = supabase.storage.from('project-assets').getPublicUrl(storagePath)
-  const assetType = input.file.type.startsWith('image/') ? 'image' : input.file.type.startsWith('video/') ? 'video' : input.file.type === 'application/pdf' ? 'pdf' : 'document'
+  const assetType = input.file.type.startsWith('image/')
+    ? 'image'
+    : input.file.type.startsWith('video/')
+      ? 'video'
+      : input.file.type === 'application/pdf'
+        ? 'pdf'
+        : 'document'
   const { error } = await supabase.from('assets').insert({
     project_id: input.projectId,
     owner_id: input.ownerId,

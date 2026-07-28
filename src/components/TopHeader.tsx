@@ -26,7 +26,12 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
   }, [])
 
   const initials = profile?.full_name
-    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? profile.full_name
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() || 'BU'
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Builder'
@@ -45,9 +50,7 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
             borderRadius: '5px',
           }}
         />
-        <h1 className="text-base font-semibold tracking-tight text-foreground">
-          Day Zero OS
-        </h1>
+        <h1 className="text-base font-semibold tracking-tight text-foreground">Day Zero OS</h1>
       </div>
 
       {/* Actions */}
@@ -66,7 +69,9 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
           onClick={() => onNavigate('notifications')}
           aria-label="Notifications"
           className={`p-2 active:scale-95 transition-all rounded-md hover:bg-secondary ${
-            current === 'notifications' ? 'text-foreground bg-secondary' : 'text-muted-foreground hover:text-foreground'
+            current === 'notifications'
+              ? 'text-foreground bg-secondary'
+              : 'text-muted-foreground hover:text-foreground'
           }`}
         >
           <Bell size={18} />

@@ -20,7 +20,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     const applyTheme = (t: Theme) => {
       root.classList.remove('light', 'dark')
-      
+
       let computed: 'light' | 'dark' = 'dark'
       if (t === 'system') {
         const matches = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -44,11 +44,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [theme])
 
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>
 }
 
 export function useTheme() {

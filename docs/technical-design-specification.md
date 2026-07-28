@@ -720,25 +720,25 @@ DEEPSEEK_API_KEY
 
 ## 17. Component Audit
 
-| Component | Decision | Reason |
-|---|---|---|
-| `App.tsx` | MODIFY | Keep as temporary shell, then replace screen state with routing, providers, protected layouts, and lazy routes. |
-| `Login.tsx` | MODIFY | Visual direction is good. Replace fake timeout auth with Supabase Auth, fix encoding, add validation, OAuth actions, error states, and accessibility. |
-| `Sidebar.tsx` | MODIFY | Keep navigation design and collapsed behavior. Convert to route-aware links, extract nav config, wire search/command palette, remove inline hover mutation. |
-| `MissionControl.tsx` | MODIFY | Strong PRD fit. Split into widgets, replace mock data with queries, add responsive grid and real "what should I work on next" logic. |
-| `Projects.tsx` | MODIFY | Keep table/board/timeline concept. Extract view components, fix priority label bug where medium says High, add CRUD, filters, sorting, pagination. |
-| `ProjectWorkspace.tsx` | MODIFY | Keep core shell. Expand tabs to full PRD project lifecycle, route tabs, extract milestones/tasks/activity/assets/knowledge panels. |
-| `ContentEngine.tsx` | MODIFY | Keep pipeline and views. Link content to project records, add script/outline persistence, templates, analytics model, and stage transitions. |
-| `KnowledgeBase.tsx` | MODIFY | Keep categories and starred section. Add project linking, rich text/body support, tags, sources, search service, and reusable list/card components. |
-| `AssetVault.tsx` | MODIFY | Keep category sidebar, grid/list views, storage summary. Add Supabase Storage upload, signed URLs, previews, metadata editing, and project links. |
-| `WeeklyDebrief.tsx` | MODIFY | Keep reflection model. Align fields with PRD sections, persist weekly records, add project/content links, and future AI summary hooks. |
-| `Settings.tsx` | MODIFY | Keep structure and optional AI stance. Split tabs into components, persist settings, secure AI provider configuration, add account/privacy actions. |
-| `Toggle` in `Settings.tsx` | MODIFY | Promote to shared `components/ui/Toggle.tsx` with label support, keyboard support, and ARIA semantics. |
-| `SettingRow` in `Settings.tsx` | MODIFY | Promote to shared settings primitive. |
-| `SectionTitle` in `Settings.tsx` | MODIFY | Promote to shared typography/section primitive. |
-| `src/index.css` | MODIFY | Keep tokens but move to token file, fix font loading strategy, restore visible focus styles, and avoid hiding all scrollbars globally. |
-| `src/main.tsx` | KEEP | Entry point is fine; later wrap with app providers. |
-| `src/imports/pasted_text/day-zero-os-brief.md` | KEEP | Useful design reference. Fix encoding if it remains in source control. |
+| Component                                      | Decision | Reason                                                                                                                                                      |
+| ---------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `App.tsx`                                      | MODIFY   | Keep as temporary shell, then replace screen state with routing, providers, protected layouts, and lazy routes.                                             |
+| `Login.tsx`                                    | MODIFY   | Visual direction is good. Replace fake timeout auth with Supabase Auth, fix encoding, add validation, OAuth actions, error states, and accessibility.       |
+| `Sidebar.tsx`                                  | MODIFY   | Keep navigation design and collapsed behavior. Convert to route-aware links, extract nav config, wire search/command palette, remove inline hover mutation. |
+| `MissionControl.tsx`                           | MODIFY   | Strong PRD fit. Split into widgets, replace mock data with queries, add responsive grid and real "what should I work on next" logic.                        |
+| `Projects.tsx`                                 | MODIFY   | Keep table/board/timeline concept. Extract view components, fix priority label bug where medium says High, add CRUD, filters, sorting, pagination.          |
+| `ProjectWorkspace.tsx`                         | MODIFY   | Keep core shell. Expand tabs to full PRD project lifecycle, route tabs, extract milestones/tasks/activity/assets/knowledge panels.                          |
+| `ContentEngine.tsx`                            | MODIFY   | Keep pipeline and views. Link content to project records, add script/outline persistence, templates, analytics model, and stage transitions.                |
+| `KnowledgeBase.tsx`                            | MODIFY   | Keep categories and starred section. Add project linking, rich text/body support, tags, sources, search service, and reusable list/card components.         |
+| `AssetVault.tsx`                               | MODIFY   | Keep category sidebar, grid/list views, storage summary. Add Supabase Storage upload, signed URLs, previews, metadata editing, and project links.           |
+| `WeeklyDebrief.tsx`                            | MODIFY   | Keep reflection model. Align fields with PRD sections, persist weekly records, add project/content links, and future AI summary hooks.                      |
+| `Settings.tsx`                                 | MODIFY   | Keep structure and optional AI stance. Split tabs into components, persist settings, secure AI provider configuration, add account/privacy actions.         |
+| `Toggle` in `Settings.tsx`                     | MODIFY   | Promote to shared `components/ui/Toggle.tsx` with label support, keyboard support, and ARIA semantics.                                                      |
+| `SettingRow` in `Settings.tsx`                 | MODIFY   | Promote to shared settings primitive.                                                                                                                       |
+| `SectionTitle` in `Settings.tsx`               | MODIFY   | Promote to shared typography/section primitive.                                                                                                             |
+| `src/index.css`                                | MODIFY   | Keep tokens but move to token file, fix font loading strategy, restore visible focus styles, and avoid hiding all scrollbars globally.                      |
+| `src/main.tsx`                                 | KEEP     | Entry point is fine; later wrap with app providers.                                                                                                         |
+| `src/imports/pasted_text/day-zero-os-brief.md` | KEEP     | Useful design reference. Fix encoding if it remains in source control.                                                                                      |
 
 No generated component should be removed in Sprint 1. The correct path is controlled refactoring.
 

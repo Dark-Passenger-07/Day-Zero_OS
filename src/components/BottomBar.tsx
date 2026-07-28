@@ -1,7 +1,4 @@
-import {
-  Command, FolderOpen, Rss, BookOpen, Archive,
-  CalendarCheck, Settings
-} from 'lucide-react'
+import { Command, FolderOpen, Rss, BookOpen, Archive, CalendarCheck, Settings } from 'lucide-react'
 import type { Screen } from '@/types/navigation'
 
 interface BottomBarProps {
@@ -28,7 +25,7 @@ const navItems: NavItem[] = [
 export default function BottomBar({ current, onNavigate }: BottomBarProps) {
   return (
     <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/90 backdrop-blur-md border-t border-border z-40 flex items-center justify-around px-2 select-none shadow-lg">
-      {navItems.map(item => {
+      {navItems.map((item) => {
         const active = current === item.id || (item.id === 'projects' && current === 'project-workspace')
         return (
           <button

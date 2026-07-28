@@ -34,7 +34,9 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   useEffect(() => {
     if (!open) return
 
-    const matchingCommands = commands.filter(command => command.title.toLowerCase().includes(query.toLowerCase()))
+    const matchingCommands = commands.filter((command) =>
+      command.title.toLowerCase().includes(query.toLowerCase()),
+    )
     if (!query.trim()) {
       setResults(matchingCommands)
       return
@@ -73,44 +75,102 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     >
       <div style={{ maxWidth: '560px', margin: '12vh auto 0', padding: '0 16px' }}>
         <div
-          onMouseDown={event => event.stopPropagation()}
-          style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}
+          onMouseDown={(event) => event.stopPropagation()}
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            overflow: 'hidden',
+          }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '14px 16px', borderBottom: '1px solid var(--border)' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '14px 16px',
+              borderBottom: '1px solid var(--border)',
+            }}
+          >
             <Search size={15} color="var(--muted-foreground)" />
             <input
               autoFocus
               value={query}
-              onChange={event => setQuery(event.target.value)}
-              onKeyDown={event => {
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={(event) => {
                 if (event.key === 'Escape') onClose()
                 if (event.key === 'Enter' && results[0]) choose(results[0])
               }}
               placeholder="Search projects, knowledge, content, assets, commands..."
-              style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', color: 'var(--foreground)', fontSize: '14px', fontFamily: 'inherit' }}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: 'var(--foreground)',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+              }}
             />
-            <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>Esc</span>
+            <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>
+              Esc
+            </span>
           </div>
 
-          {error && <div style={{ padding: '12px 16px', color: 'var(--status-red)', fontSize: '13px' }}>{error}</div>}
+          {error && (
+            <div style={{ padding: '12px 16px', color: 'var(--status-red)', fontSize: '13px' }}>{error}</div>
+          )}
 
           <div style={{ maxHeight: '360px', overflowY: 'auto', padding: '8px' }}>
             {results.length === 0 ? (
-              <div style={{ padding: '32px', textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '13px' }}>
+              <div
+                style={{
+                  padding: '32px',
+                  textAlign: 'center',
+                  color: 'var(--muted-foreground)',
+                  fontSize: '13px',
+                }}
+              >
                 No results.
               </div>
             ) : (
-              results.map(result => (
+              results.map((result) => (
                 <button
                   key={`${result.type}-${result.id}`}
                   onClick={() => choose(result)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '7px', border: 'none', background: 'transparent', color: 'var(--foreground)', cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
-                  onMouseEnter={event => (event.currentTarget.style.background = 'var(--secondary)')}
-                  onMouseLeave={event => (event.currentTarget.style.background = 'transparent')}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    borderRadius: '7px',
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'var(--foreground)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: 'inherit',
+                  }}
+                  onMouseEnter={(event) => (event.currentTarget.style.background = 'var(--secondary)')}
+                  onMouseLeave={(event) => (event.currentTarget.style.background = 'transparent')}
                 >
-                  <span style={{ width: '72px', color: 'var(--muted-foreground)', fontSize: '11px', textTransform: 'uppercase' }}>{result.type}</span>
+                  <span
+                    style={{
+                      width: '72px',
+                      color: 'var(--muted-foreground)',
+                      fontSize: '11px',
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    {result.type}
+                  </span>
                   <span style={{ flex: 1, fontSize: '13px' }}>{result.title}</span>
-                  {result.subtitle && <span style={{ color: 'var(--muted-foreground)', fontSize: '12px' }}>{result.subtitle}</span>}
+                  {result.subtitle && (
+                    <span style={{ color: 'var(--muted-foreground)', fontSize: '12px' }}>
+                      {result.subtitle}
+                    </span>
+                  )}
                 </button>
               ))
             )}

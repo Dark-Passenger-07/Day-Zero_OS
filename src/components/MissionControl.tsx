@@ -13,7 +13,10 @@ import {
 } from 'lucide-react'
 import type { Screen } from '@/types/navigation'
 import { useAuth } from '@/app/providers/AuthProvider'
-import { fetchDashboardData, type DashboardData } from '@/features/mission-control/services/mission-control.service'
+import {
+  fetchDashboardData,
+  type DashboardData,
+} from '@/features/mission-control/services/mission-control.service'
 import { LoadingState } from '@/components/feedback/LoadingState'
 
 const statusDot = (color: string) => (
@@ -53,7 +56,15 @@ export default function MissionControl({ onNavigate }: Props) {
 
   if (loading) {
     return (
-      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background)' }}>
+      <div
+        style={{
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--background)',
+        }}
+      >
         <LoadingState />
       </div>
     )
@@ -67,14 +78,27 @@ export default function MissionControl({ onNavigate }: Props) {
     <div className="h-full overflow-y-auto bg-background p-4 sm:p-6 lg:p-9">
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: '0 0 4px', fontFamily: 'monospace' }}>
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        <p
+          style={{
+            color: 'var(--muted-foreground)',
+            fontSize: '13px',
+            margin: '0 0 4px',
+            fontFamily: 'monospace',
+          }}
+        >
+          {new Date().toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
         </p>
         <h1 style={{ fontSize: '26px', fontWeight: 600, margin: 0, letterSpacing: '-0.03em' }}>
           Good morning, {name}.
         </h1>
         <p style={{ color: 'var(--secondary-foreground)', fontSize: '14px', margin: '6px 0 0' }}>
-          You have {activeCount} active project{activeCount !== 1 ? 's' : ''} and {deadlinesCount} urgent deadline{deadlinesCount !== 1 ? 's' : ''} this week.
+          You have {activeCount} active project{activeCount !== 1 ? 's' : ''} and {deadlinesCount} urgent
+          deadline{deadlinesCount !== 1 ? 's' : ''} this week.
         </p>
       </div>
 
@@ -92,7 +116,15 @@ export default function MissionControl({ onNavigate }: Props) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
             <Flame size={14} color="var(--status-orange)" />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--muted-foreground)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}
+            >
               Today&apos;s Mission
             </span>
           </div>
@@ -108,18 +140,38 @@ export default function MissionControl({ onNavigate }: Props) {
       {/* Grid: top row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
         {/* Current Project */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
+        <div
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--muted-foreground)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '12px',
+            }}
+          >
             Current Project
           </div>
           {activeCount > 0 ? (
             <>
-              <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px', letterSpacing: '-0.02em' }}>
+              <div
+                style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px', letterSpacing: '-0.02em' }}
+              >
                 Active workspace
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
                 {statusDot('var(--status-blue)')}
-                <span style={{ fontSize: '12px', color: 'var(--secondary-foreground)' }}>{activeCount} active projects</span>
+                <span style={{ fontSize: '12px', color: 'var(--secondary-foreground)' }}>
+                  {activeCount} active projects
+                </span>
               </div>
               <button
                 onClick={() => onNavigate('projects')}
@@ -162,20 +214,55 @@ export default function MissionControl({ onNavigate }: Props) {
         </div>
 
         {/* Current Sprint */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
+        <div
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--muted-foreground)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '12px',
+            }}
+          >
             Current Sprint
           </div>
           {data?.currentSprint ? (
             <>
-              <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '6px', letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  marginBottom: '6px',
+                  letterSpacing: '-0.02em',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
                 {data.currentSprint.title}
               </div>
               <div style={{ fontSize: '12px', color: 'var(--secondary-foreground)', marginBottom: '12px' }}>
                 {data.currentSprint.status}
               </div>
-              <div style={{ background: 'var(--secondary)', borderRadius: '3px', height: '4px', width: '100%' }}>
-                <div style={{ background: 'var(--status-green)', height: '4px', borderRadius: '3px', width: `${data.currentSprint.progress}%` }} />
+              <div
+                style={{ background: 'var(--secondary)', borderRadius: '3px', height: '4px', width: '100%' }}
+              >
+                <div
+                  style={{
+                    background: 'var(--status-green)',
+                    height: '4px',
+                    borderRadius: '3px',
+                    width: `${data.currentSprint.progress}%`,
+                  }}
+                />
               </div>
               <div style={{ fontSize: '12px', color: 'var(--muted-foreground)', marginTop: '8px' }}>
                 {data.currentSprint.progress}% complete
@@ -204,23 +291,62 @@ export default function MissionControl({ onNavigate }: Props) {
         </div>
 
         {/* Weekly Progress */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '12px' }}>
+        <div
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--muted-foreground)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '12px',
+            }}
+          >
             Weekly Progress
           </div>
           {data?.weeklyProgress ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {[
-                { label: 'Milestones Done', val: data.weeklyProgress.tasksDone, max: data.weeklyProgress.tasksMax, color: 'var(--status-green)' },
-                { label: 'Notes Written', val: data.weeklyProgress.notesDone, max: data.weeklyProgress.notesMax, color: 'var(--status-purple)' },
-              ].map(item => (
+                {
+                  label: 'Milestones Done',
+                  val: data.weeklyProgress.tasksDone,
+                  max: data.weeklyProgress.tasksMax,
+                  color: 'var(--status-green)',
+                },
+                {
+                  label: 'Notes Written',
+                  val: data.weeklyProgress.notesDone,
+                  max: data.weeklyProgress.notesMax,
+                  color: 'var(--status-purple)',
+                },
+              ].map((item) => (
                 <div key={item.label}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--secondary-foreground)' }}>{item.label}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}>{item.val}/{item.max}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--secondary-foreground)' }}>
+                      {item.label}
+                    </span>
+                    <span
+                      style={{ fontSize: '12px', color: 'var(--muted-foreground)', fontFamily: 'monospace' }}
+                    >
+                      {item.val}/{item.max}
+                    </span>
                   </div>
                   <div style={{ background: 'var(--secondary)', borderRadius: '3px', height: '3px' }}>
-                    <div style={{ background: item.color, height: '3px', borderRadius: '3px', width: `${Math.min((item.val / item.max) * 100, 100)}%` }} />
+                    <div
+                      style={{
+                        background: item.color,
+                        height: '3px',
+                        borderRadius: '3px',
+                        width: `${Math.min((item.val / item.max) * 100, 100)}%`,
+                      }}
+                    />
                   </div>
                 </div>
               ))}
@@ -234,17 +360,47 @@ export default function MissionControl({ onNavigate }: Props) {
       {/* Grid: bottom row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Upcoming Deadlines */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
+        <div
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--muted-foreground)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '16px',
+            }}
+          >
             Upcoming Deadlines
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {data?.upcomingDeadlines && data.upcomingDeadlines.length > 0 ? (
               data.upcomingDeadlines.map((d, idx) => (
                 <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                  <AlertCircle size={13} color={d.urgent ? 'var(--status-red)' : 'var(--muted-foreground)'} style={{ marginTop: '2px', flexShrink: 0 }} />
+                  <AlertCircle
+                    size={13}
+                    color={d.urgent ? 'var(--status-red)' : 'var(--muted-foreground)'}
+                    style={{ marginTop: '2px', flexShrink: 0 }}
+                  />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {d.name}
+                    </div>
                     <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>{d.project}</div>
                   </div>
                   <span
@@ -271,17 +427,41 @@ export default function MissionControl({ onNavigate }: Props) {
         </div>
 
         {/* Quick Actions */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
+        <div
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--muted-foreground)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '16px',
+            }}
+          >
             Quick Actions
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             {[
               { label: 'New Project', icon: <FolderOpen size={14} />, action: () => onNavigate('projects') },
               { label: 'New Note', icon: <FileText size={14} />, action: () => onNavigate('knowledge-base') },
-              { label: 'Log Content', icon: <TrendingUp size={14} />, action: () => onNavigate('content-engine') },
-              { label: 'Weekly Review', icon: <CalendarCheck size={14} />, action: () => onNavigate('weekly-debrief') },
-            ].map(qa => (
+              {
+                label: 'Log Content',
+                icon: <TrendingUp size={14} />,
+                action: () => onNavigate('content-engine'),
+              },
+              {
+                label: 'Weekly Review',
+                icon: <CalendarCheck size={14} />,
+                action: () => onNavigate('weekly-debrief'),
+              },
+            ].map((qa) => (
               <button
                 key={qa.label}
                 onClick={qa.action}
@@ -299,12 +479,12 @@ export default function MissionControl({ onNavigate }: Props) {
                   fontFamily: 'inherit',
                   transition: 'all 0.12s',
                 }}
-                onMouseEnter={e => {
+                onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'var(--muted)'
                   e.currentTarget.style.color = 'var(--foreground)'
                   e.currentTarget.style.borderColor = 'var(--ring)'
                 }}
-                onMouseLeave={e => {
+                onMouseLeave={(e) => {
                   e.currentTarget.style.background = 'var(--secondary)'
                   e.currentTarget.style.color = 'var(--secondary-foreground)'
                   e.currentTarget.style.borderColor = 'var(--border)'
@@ -321,8 +501,25 @@ export default function MissionControl({ onNavigate }: Props) {
       {/* Recent Activity + Recent Files row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Activity */}
-        <div className="lg:col-span-2" style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '16px' }}>
+        <div
+          className="lg:col-span-2"
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '11px',
+              color: 'var(--muted-foreground)',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+              marginBottom: '16px',
+            }}
+          >
             Recent Activity
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
@@ -346,10 +543,28 @@ export default function MissionControl({ onNavigate }: Props) {
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.text}</div>
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {a.text}
+                    </div>
                     <div style={{ fontSize: '12px', color: 'var(--muted-foreground)' }}>{a.project}</div>
                   </div>
-                  <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{a.time}</span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--muted-foreground)',
+                      whiteSpace: 'nowrap',
+                      fontFamily: 'monospace',
+                    }}
+                  >
+                    {a.time}
+                  </span>
                 </div>
               ))
             ) : (
@@ -361,14 +576,46 @@ export default function MissionControl({ onNavigate }: Props) {
         </div>
 
         {/* Recent Knowledge */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '10px', padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--muted-foreground)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            padding: '20px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '11px',
+                color: 'var(--muted-foreground)',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}
+            >
               Recent Knowledge
             </span>
             <button
               onClick={() => onNavigate('knowledge-base')}
-              style={{ background: 'none', border: 'none', color: 'var(--muted-foreground)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', padding: 0 }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--muted-foreground)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '12px',
+                padding: 0,
+              }}
             >
               All <ArrowRight size={11} />
             </button>
@@ -388,12 +635,34 @@ export default function MissionControl({ onNavigate }: Props) {
                     transition: 'background 0.12s',
                   }}
                   onClick={() => onNavigate('knowledge-base')}
-                  onMouseEnter={e => ((e.currentTarget as HTMLElement).style.background = 'var(--secondary)')}
-                  onMouseLeave={e => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
+                  onMouseEnter={(e) =>
+                    ((e.currentTarget as HTMLElement).style.background = 'var(--secondary)')
+                  }
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = 'transparent')}
                 >
                   <Clock size={11} color="var(--muted-foreground)" style={{ flexShrink: 0 }} />
-                  <span style={{ fontSize: '12px', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.title}</span>
-                  <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '3px', background: 'var(--secondary)', color: 'var(--muted-foreground)' }}>{n.tag}</span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      flex: 1,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {n.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      padding: '1px 5px',
+                      borderRadius: '3px',
+                      background: 'var(--secondary)',
+                      color: 'var(--muted-foreground)',
+                    }}
+                  >
+                    {n.tag}
+                  </span>
                 </div>
               ))
             ) : (

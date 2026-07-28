@@ -4,7 +4,8 @@ export type ContentItem = {
   id: string
   title: string
   platform: string
-  status: 'idea' | 'outline' | 'script' | 'recording' | 'editing' | 'thumbnail' | 'seo' | 'published' | 'analytics'
+  status:
+    'idea' | 'outline' | 'script' | 'recording' | 'editing' | 'thumbnail' | 'seo' | 'published' | 'analytics'
   publishDate: string | null
   analytics: Record<string, unknown>
   projectName: string
@@ -34,7 +35,7 @@ export async function listContentItems(): Promise<ContentItem[]> {
 
   if (error) throw error
 
-  return ((data ?? []) as unknown as ContentRow[]).map(item => ({
+  return ((data ?? []) as unknown as ContentRow[]).map((item) => ({
     id: item.id,
     title: item.title,
     platform: item.platform,

@@ -114,9 +114,7 @@ export default function Login() {
                 borderRadius: '10px',
               }}
             />
-            <span style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em' }}>
-              Day Zero OS
-            </span>
+            <span style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em' }}>Day Zero OS</span>
           </div>
           <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', margin: 0 }}>
             The Operating System for Builders
@@ -138,8 +136,6 @@ export default function Login() {
           <p style={{ color: 'var(--muted-foreground)', fontSize: '14px', margin: '0 0 20px' }}>
             {isSignUp ? 'Start building in Day Zero OS' : 'Sign in to your workspace'}
           </p>
-
-
 
           {errorMsg && (
             <div
@@ -175,7 +171,7 @@ export default function Login() {
                 type="email"
                 required
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="alex@dayzeroos.com"
                 style={{
                   width: '100%',
@@ -189,8 +185,8 @@ export default function Login() {
                   transition: 'border-color 0.12s',
                   fontFamily: 'inherit',
                 }}
-                onFocus={e => (e.target.style.borderColor = 'var(--ring)')}
-                onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                onFocus={(e) => (e.target.style.borderColor = 'var(--ring)')}
+                onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
               />
             </div>
 
@@ -219,7 +215,7 @@ export default function Login() {
                 type="password"
                 required
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 style={{
                   width: '100%',
@@ -233,8 +229,8 @@ export default function Login() {
                   transition: 'border-color 0.12s',
                   fontFamily: 'inherit',
                 }}
-                onFocus={e => (e.target.style.borderColor = 'var(--ring)')}
-                onBlur={e => (e.target.style.borderColor = 'var(--border)')}
+                onFocus={(e) => (e.target.style.borderColor = 'var(--ring)')}
+                onBlur={(e) => (e.target.style.borderColor = 'var(--border)')}
               />
             </div>
 
@@ -295,7 +291,14 @@ export default function Login() {
         </div>
 
         {/* Footer */}
-        <p style={{ textAlign: 'center', color: 'var(--muted-foreground)', fontSize: '12px', marginTop: '24px' }}>
+        <p
+          style={{
+            textAlign: 'center',
+            color: 'var(--muted-foreground)',
+            fontSize: '12px',
+            marginTop: '24px',
+          }}
+        >
           Day Zero OS · Built for Builders
         </p>
       </div>

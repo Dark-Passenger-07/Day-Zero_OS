@@ -1,8 +1,5 @@
 export type AppErrorCode =
-  | 'CONFIGURATION_ERROR'
-  | 'AUTH_NOT_IMPLEMENTED'
-  | 'SUPABASE_NOT_CONFIGURED'
-  | 'UNKNOWN_ERROR'
+  'CONFIGURATION_ERROR' | 'AUTH_NOT_IMPLEMENTED' | 'SUPABASE_NOT_CONFIGURED' | 'UNKNOWN_ERROR'
 
 export class AppError extends Error {
   readonly code: AppErrorCode

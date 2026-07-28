@@ -130,13 +130,19 @@ export async function createProject(input: {
 
 export async function archiveProject(id: string): Promise<void> {
   const supabase = getSupabaseClient()
-  const { error } = await supabase.from('projects').update({ status: 'archived', archived_at: new Date().toISOString() }).eq('id', id)
+  const { error } = await supabase
+    .from('projects')
+    .update({ status: 'archived', archived_at: new Date().toISOString() })
+    .eq('id', id)
   if (error) throw error
 }
 
 export async function restoreProject(id: string): Promise<void> {
   const supabase = getSupabaseClient()
-  const { error } = await supabase.from('projects').update({ status: 'active', archived_at: null }).eq('id', id)
+  const { error } = await supabase
+    .from('projects')
+    .update({ status: 'active', archived_at: null })
+    .eq('id', id)
   if (error) throw error
 }
 

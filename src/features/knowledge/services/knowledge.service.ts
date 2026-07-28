@@ -20,7 +20,7 @@ export async function listKnowledge(): Promise<KnowledgeEntry[]> {
 
   if (error) throw error
 
-  return (data ?? []).map(item => ({
+  return (data ?? []).map((item) => ({
     id: item.id,
     title: item.title,
     body: item.body ?? '',

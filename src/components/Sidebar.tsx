@@ -1,11 +1,20 @@
 import {
-  Command, FolderOpen, Rss, BookOpen, Archive,
-  CalendarCheck, Settings, ChevronLeft, ChevronRight, Search, LogOut, Bell
+  Command,
+  FolderOpen,
+  Rss,
+  BookOpen,
+  Archive,
+  CalendarCheck,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  LogOut,
+  Bell,
 } from 'lucide-react'
 import logoImg from '@/logo.png'
 import type { Screen } from '@/types/navigation'
 import { useAuth } from '@/app/providers/AuthProvider'
-
 
 interface NavItem {
   id: Screen
@@ -37,34 +46,42 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
   const w = collapsed ? 56 : 220
 
   const initials = profile?.full_name
-    ? profile.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? profile.full_name
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
     : user?.email?.slice(0, 2).toUpperCase() || 'BU'
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Builder'
 
-
   return (
-    <aside style={{
-      width: `${w}px`,
-      minWidth: `${w}px`,
-      height: '100vh',
-      background: 'var(--card)',
-      borderRight: '1px solid var(--border)',
-      display: 'flex',
-      flexDirection: 'column',
-      transition: 'width 0.2s ease, min-width 0.2s ease',
-      overflow: 'hidden',
-      position: 'relative',
-    }}>
-      {/* Logo */}
-      <div style={{
-        padding: collapsed ? '18px 0' : '18px 16px',
-        borderBottom: '1px solid var(--border)',
+    <aside
+      style={{
+        width: `${w}px`,
+        minWidth: `${w}px`,
+        height: '100vh',
+        background: 'var(--card)',
+        borderRight: '1px solid var(--border)',
         display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        justifyContent: collapsed ? 'center' : 'flex-start',
-      }}>
+        flexDirection: 'column',
+        transition: 'width 0.2s ease, min-width 0.2s ease',
+        overflow: 'hidden',
+        position: 'relative',
+      }}
+    >
+      {/* Logo */}
+      <div
+        style={{
+          padding: collapsed ? '18px 0' : '18px 16px',
+          borderBottom: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          justifyContent: collapsed ? 'center' : 'flex-start',
+        }}
+      >
         <img
           src={logoImg}
           alt="Day Zero OS"
@@ -80,7 +97,9 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
         {!collapsed && (
           <div>
             <div style={{ fontSize: '13px', fontWeight: 600, lineHeight: 1.2 }}>Day Zero OS</div>
-            <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', lineHeight: 1.2 }}>Workspace</div>
+            <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', lineHeight: 1.2 }}>
+              Workspace
+            </div>
           </div>
         )}
       </div>
@@ -108,17 +127,42 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
           >
             <Search size={13} />
             <span style={{ flex: 1, textAlign: 'left' }}>Search…</span>
-            <span style={{ fontSize: '11px', background: 'var(--muted)', padding: '1px 5px', borderRadius: '4px', fontFamily: 'monospace' }}>⌘K</span>
+            <span
+              style={{
+                fontSize: '11px',
+                background: 'var(--muted)',
+                padding: '1px 5px',
+                borderRadius: '4px',
+                fontFamily: 'monospace',
+              }}
+            >
+              ⌘K
+            </span>
           </button>
         </div>
       )}
 
       {collapsed && (
-        <div style={{ padding: '10px 0', display: 'flex', justifyContent: 'center', borderBottom: '1px solid var(--border)' }}>
-          <button onClick={onSearchOpen} style={{
-            background: 'none', border: 'none', color: 'var(--muted-foreground)',
-            cursor: 'pointer', padding: '6px', borderRadius: '6px', display: 'flex',
-          }}>
+        <div
+          style={{
+            padding: '10px 0',
+            display: 'flex',
+            justifyContent: 'center',
+            borderBottom: '1px solid var(--border)',
+          }}
+        >
+          <button
+            onClick={onSearchOpen}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--muted-foreground)',
+              cursor: 'pointer',
+              padding: '6px',
+              borderRadius: '6px',
+              display: 'flex',
+            }}
+          >
             <Search size={15} />
           </button>
         </div>
@@ -126,7 +170,7 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '8px', overflowY: 'auto' }}>
-        {navItems.map(item => {
+        {navItems.map((item) => {
           const active = current === item.id || (item.id === 'projects' && current === 'project-workspace')
           return (
             <button
@@ -152,15 +196,15 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
                 fontFamily: 'inherit',
                 whiteSpace: 'nowrap',
               }}
-              onMouseEnter={e => {
+              onMouseEnter={(e) => {
                 if (!active) {
-                  (e.currentTarget as HTMLElement).style.background = 'var(--muted)'
+                  ;(e.currentTarget as HTMLElement).style.background = 'var(--muted)'
                   ;(e.currentTarget as HTMLElement).style.color = 'var(--foreground)'
                 }
               }}
-              onMouseLeave={e => {
+              onMouseLeave={(e) => {
                 if (!active) {
-                  (e.currentTarget as HTMLElement).style.background = 'transparent'
+                  ;(e.currentTarget as HTMLElement).style.background = 'transparent'
                   ;(e.currentTarget as HTMLElement).style.color = 'var(--muted-foreground)'
                 }
               }}
@@ -202,7 +246,7 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
 
         {/* User */}
         {!collapsed ? (
-          <div 
+          <div
             onClick={() => {
               if (confirm('Are you sure you want to sign out?')) {
                 signOut()
@@ -217,32 +261,44 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
               borderRadius: '6px',
               cursor: 'pointer',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--secondary)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--secondary)')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
           >
-            <div style={{
-              width: '26px',
-              height: '26px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: '#fff',
-              flexShrink: 0,
-            }}>
+            <div
+              style={{
+                width: '26px',
+                height: '26px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#fff',
+                flexShrink: 0,
+              }}
+            >
               {initials}
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: '12px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
+              <div
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 500,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {displayName}
+              </div>
               <div style={{ fontSize: '11px', color: 'var(--muted-foreground)' }}>Builder</div>
             </div>
             <LogOut size={13} style={{ color: 'var(--muted-foreground)' }} />
           </div>
         ) : (
-          <div 
+          <div
             onClick={() => {
               if (confirm('Are you sure you want to sign out?')) {
                 signOut()
@@ -257,23 +313,24 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
               color: 'var(--muted-foreground)',
             }}
           >
-            <div style={{
-              width: '26px',
-              height: '26px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: '#fff',
-            }}>
+            <div
+              style={{
+                width: '26px',
+                height: '26px',
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#fff',
+              }}
+            >
               {initials}
             </div>
           </div>
         )}
-
       </div>
 
       {/* Collapse toggle */}

@@ -16,12 +16,14 @@ export async function listAssets(): Promise<AssetItem[]> {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('assets')
-    .select('id, file_name, asset_type, file_url, storage_path, tags, uploaded_at, metadata, versions:asset_versions(id)')
+    .select(
+      'id, file_name, asset_type, file_url, storage_path, tags, uploaded_at, metadata, versions:asset_versions(id)',
+    )
     .order('uploaded_at', { ascending: false })
 
   if (error) throw error
 
-  return (data ?? []).map(item => ({
+  return (data ?? []).map((item) => ({
     id: item.id,
     name: item.file_name,
     assetType: item.asset_type,
@@ -51,7 +53,9 @@ export async function uploadAssetVersion(ownerId: string, asset: AssetItem, file
   const supabase = getSupabaseClient()
   const nextVersion = asset.versions + 1
   const storagePath = `${ownerId}/versions/${asset.id}/${nextVersion}-${file.name}`
-  const { error: uploadError } = await supabase.storage.from('assets').upload(storagePath, file, { cacheControl: '3600', upsert: false })
+  const { error: uploadError } = await supabase.storage
+    .from('assets')
+    .upload(storagePath, file, { cacheControl: '3600', upsert: false })
   if (uploadError) throw uploadError
   const { data } = supabase.storage.from('assets').getPublicUrl(storagePath)
   const metadata = { size: file.size, type: file.type }
@@ -65,7 +69,10 @@ export async function uploadAssetVersion(ownerId: string, asset: AssetItem, file
     metadata,
   })
   if (versionError) throw versionError
-  const { error } = await supabase.from('assets').update({ file_name: file.name, file_url: data.publicUrl, storage_path: storagePath, metadata }).eq('id', asset.id)
+  const { error } = await supabase
+    .from('assets')
+    .update({ file_name: file.name, file_url: data.publicUrl, storage_path: storagePath, metadata })
+    .eq('id', asset.id)
   if (error) throw error
 }
 

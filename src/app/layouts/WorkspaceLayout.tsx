@@ -21,7 +21,7 @@ export function WorkspaceLayout() {
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
-        setCommandOpen(open => !open)
+        setCommandOpen((open) => !open)
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -37,18 +37,14 @@ export function WorkspaceLayout() {
           collapsed={sidebarCollapsed}
           onNavigate={handleNavigate}
           onSearchOpen={() => setCommandOpen(true)}
-          onToggleCollapse={() => setSidebarCollapsed(c => !c)}
+          onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
         />
       </div>
 
       {/* Main content container */}
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden pb-16 lg:pb-0">
         {/* Top Header (Mobile/Tablet Only) */}
-        <TopHeader
-          current={current}
-          onSearchOpen={() => setCommandOpen(true)}
-          onNavigate={handleNavigate}
-        />
+        <TopHeader current={current} onSearchOpen={() => setCommandOpen(true)} onNavigate={handleNavigate} />
 
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <Outlet />
@@ -56,13 +52,9 @@ export function WorkspaceLayout() {
       </div>
 
       {/* Bottom Tab Bar (Mobile/Tablet Only) */}
-      <BottomBar
-        current={current}
-        onNavigate={handleNavigate}
-      />
+      <BottomBar current={current} onNavigate={handleNavigate} />
 
       <CommandPalette open={commandOpen} onClose={() => setCommandOpen(false)} />
     </div>
   )
 }
-
