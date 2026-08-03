@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   CheckCircle2,
   XCircle,
@@ -51,7 +51,7 @@ export default function WeeklyDebrief() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const { openForm, FormDialog } = useFormDialog()
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!workspaceId) return
     setLoading(true)
     setError(null)
@@ -63,11 +63,11 @@ export default function WeeklyDebrief() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [workspaceId])
 
   useEffect(() => {
     load()
-  }, [workspaceId])
+  }, [load])
 
   const current = debriefs[weekIndex]
   const thisWeekData: DebriefSection[] = [

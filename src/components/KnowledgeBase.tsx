@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Search, Plus, BookOpen, Globe, FileText, Tag, Clock, Star, Pencil, Trash2 } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
@@ -98,7 +98,7 @@ export default function KnowledgeBase() {
     }
   }
 
-  const load = async () => {
+  const load = useCallback(async () => {
     if (!workspaceId) return
     setLoading(true)
     setError(null)
@@ -109,11 +109,11 @@ export default function KnowledgeBase() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [workspaceId])
 
   useEffect(() => {
     load()
-  }, [workspaceId])
+  }, [load])
 
   const handleCreate = async () => {
     if (!user) return

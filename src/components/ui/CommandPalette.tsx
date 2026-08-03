@@ -61,7 +61,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       active = false
       window.clearTimeout(timer)
     }
-  }, [open, query])
+  }, [open, query, workspaceId])
 
   if (!open) return null
 

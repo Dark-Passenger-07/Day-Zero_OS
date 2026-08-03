@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   Plus,
   Search,
@@ -67,7 +67,7 @@ export default function AssetVault() {
   const [selected, setSelected] = useState<AssetItem | null>(null)
   const { openForm, FormDialog } = useFormDialog()
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!workspaceId) return
     setLoading(true)
     setError(null)
@@ -78,11 +78,11 @@ export default function AssetVault() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [workspaceId])
 
   useEffect(() => {
     load()
-  }, [workspaceId])
+  }, [load])
 
   async function handleAddLink() {
     if (!user) return

@@ -78,7 +78,7 @@ export default function Login() {
               navigate(`/invite/${parsed.id}?secret=${parsed.secret}`)
               return
             }
-          } catch (_err) {
+          } catch {
             // ignore invalid JSON
           }
         }

@@ -260,6 +260,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useWorkspace(): WorkspaceContextValue {
   const context = useContext(WorkspaceContext)
   if (!context) {

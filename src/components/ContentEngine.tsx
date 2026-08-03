@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Plus, Play, BarChart2, Lightbulb, CheckCircle2, Edit3, Pencil, Trash2 } from 'lucide-react'
 import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import { LoadingState } from '@/components/feedback/LoadingState'
@@ -138,7 +138,7 @@ export default function ContentEngine() {
     }
   }
 
-  async function load() {
+  const load = useCallback(async () => {
     if (!workspaceId) return
     setLoading(true)
     setError(null)
@@ -158,11 +158,11 @@ export default function ContentEngine() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [workspaceId])
 
   useEffect(() => {
     load()
-  }, [workspaceId])
+  }, [load])
 
   async function handleCreateContent() {
     const values = await openForm({

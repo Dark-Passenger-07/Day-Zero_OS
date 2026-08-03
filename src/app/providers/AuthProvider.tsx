@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (userSettings?.theme) {
       themeContext.setTheme(userSettings.theme as any)
     }
-  }, [userSettings?.theme])
+  }, [userSettings?.theme, themeContext])
 
   const fetchProfileAndSettings = useCallback(
     async (userId: string) => {
@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setDemoModeEnabled(false)
           window.location.reload()
         }
-      } catch (err) {
+      } catch {
         // Database is still unreachable, keep Demo Mode
       }
     }
