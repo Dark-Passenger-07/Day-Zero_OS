@@ -98,7 +98,7 @@ BEGIN
       
       -- Log Activity
       INSERT INTO public.activity_logs (workspace_id, action, entity_type, entity_id, created_at)
-      VALUES (target_ws.id, 'User joined via code (reactivated)', 'member', p_user_id::text, now());
+      VALUES (target_ws.id, 'User joined via code (reactivated)', 'member', p_user_id, now());
       
       RETURN json_build_object('success', true, 'workspace_id', target_ws.id);
     END IF;
@@ -111,9 +111,9 @@ BEGIN
   INSERT INTO public.workspace_members (workspace_id, user_id, role, status, joined_at)
   VALUES (target_ws.id, p_user_id, result_role, 'active', now());
 
-  -- 6. Log Activity
+  -- Log Activity
   INSERT INTO public.activity_logs (workspace_id, action, entity_type, entity_id, created_at)
-  VALUES (target_ws.id, 'User joined via code', 'member', p_user_id::text, now());
+  VALUES (target_ws.id, 'User joined via code', 'member', p_user_id, now());
 
   RETURN json_build_object('success', true, 'workspace_id', target_ws.id);
 END;
