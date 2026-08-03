@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, LogOut, User, Bell, ChevronDown } from 'lucide-react'
+import { Search, LogOut, User, Bell } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { Screen } from '@/types/navigation'
-import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
-import { MobileWorkspaceSwitcher } from '@/features/workspace/components/WorkspaceSwitcher'
-import logoImg from '@/logo.png'
+import { WorkspaceSwitcher } from '@/features/workspace/components/WorkspaceSwitcher'
 
 interface TopHeaderProps {
   current: Screen
@@ -14,9 +12,7 @@ interface TopHeaderProps {
 
 export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHeaderProps) {
   const { user, profile, signOut } = useAuth()
-  const { currentWorkspace } = useWorkspace()
   const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [mobileSwitcherOpen, setMobileSwitcherOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,28 +38,8 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
 
   return (
     <header className="lg:hidden flex items-center justify-between px-4 h-14 bg-card/85 backdrop-blur-md border-b border-border z-40 sticky top-0 w-full select-none">
-      {/* Mobile Workspace Switcher Trigger */}
-      <button
-        onClick={() => setMobileSwitcherOpen(true)}
-        className="flex items-center gap-2 text-left hover:opacity-80 active:scale-95 transition-all outline-none"
-      >
-        <img
-          src={logoImg}
-          alt="Day Zero OS"
-          style={{
-            width: '26px',
-            height: '26px',
-            objectFit: 'contain',
-            borderRadius: '5px',
-          }}
-        />
-        <div className="flex items-center gap-1">
-          <span className="text-sm font-semibold tracking-tight text-foreground truncate max-w-[130px]">
-            {currentWorkspace?.name || 'Day Zero OS'}
-          </span>
-          <ChevronDown size={14} className="text-muted-foreground shrink-0" />
-        </div>
-      </button>
+      {/* Responsive Workspace Switcher (Header Trigger Variant) */}
+      <WorkspaceSwitcher variant="header" />
 
       {/* Actions */}
       <div className="flex items-center gap-3">
@@ -71,7 +47,7 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
         <button
           onClick={onSearchOpen}
           aria-label="Search"
-          className="p-2 text-muted-foreground hover:text-foreground active:scale-95 transition-all rounded-md hover:bg-secondary"
+          className="p-2 text-muted-foreground hover:text-foreground active:scale-95 transition-all rounded-md hover:bg-secondary cursor-pointer"
         >
           <Search size={18} />
         </button>
@@ -80,7 +56,7 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
         <button
           onClick={() => onNavigate('notifications')}
           aria-label="Notifications"
-          className={`p-2 active:scale-95 transition-all rounded-md hover:bg-secondary ${
+          className={`p-2 active:scale-95 transition-all rounded-md hover:bg-secondary cursor-pointer ${
             current === 'notifications'
               ? 'text-foreground bg-secondary'
               : 'text-muted-foreground hover:text-foreground'
@@ -109,7 +85,7 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
                   setDropdownOpen(false)
                   onNavigate('settings')
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors text-left cursor-pointer"
               >
                 <User size={13} />
                 <span>Settings</span>
@@ -120,7 +96,7 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
                     signOut()
                   }
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-400 hover:text-red-500 hover:bg-red-500/10 transition-colors text-left cursor-pointer"
               >
                 <LogOut size={13} />
                 <span>Sign Out</span>
@@ -129,11 +105,6 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
           )}
         </div>
       </div>
-
-      <MobileWorkspaceSwitcher
-        isOpen={mobileSwitcherOpen}
-        onClose={() => setMobileSwitcherOpen(false)}
-      />
     </header>
   )
 }
