@@ -133,8 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async function checkDatabaseOnline() {
       if (!isDemoModeEnabled() || !env.supabaseUrl) return
       try {
-        const res = await fetch(`${env.supabaseUrl}/auth/v1/health`)
-        if (res.ok) {
+        const res = await fetch(env.supabaseUrl)
+        if (res.status >= 200 && res.status < 500) {
           console.log('Supabase database is back online. Disabling Demo Mode.')
           setDemoModeEnabled(false)
           window.location.reload()

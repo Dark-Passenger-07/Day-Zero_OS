@@ -6,11 +6,13 @@ import BottomBar from '@/components/BottomBar'
 import { CommandPalette } from '@/components/ui/CommandPalette'
 import { OfflineFallback } from '@/components/feedback/OfflineFallback'
 import { getScreenFromPath, screenPaths, type Screen } from '@/types/navigation'
+import { isDemoModeEnabled, setDemoModeEnabled } from '@/lib/supabase/mockClient'
 
 export function WorkspaceLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [commandOpen, setCommandOpen] = useState(false)
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
+  const [isDemoMode, setIsDemoMode] = useState(isDemoModeEnabled())
   const navigate = useNavigate()
   const location = useLocation()
   const current = getScreenFromPath(location.pathname)
@@ -59,6 +61,21 @@ export function WorkspaceLayout() {
 
       {/* Main content container */}
       <div className="flex-1 flex flex-col h-full min-w-0 overflow-hidden pb-16 lg:pb-0">
+        {isDemoMode && (
+          <div className="bg-indigo-600 text-white text-xs py-2 px-4 flex items-center justify-between shrink-0 font-medium shadow-md">
+            <span>⚠️ Running in <strong>Demo Mode</strong> (Local Database Fallback). Real integrations are paused.</span>
+            <button
+              onClick={() => {
+                setDemoModeEnabled(false)
+                setIsDemoMode(false)
+                window.location.reload()
+              }}
+              className="bg-white/20 hover:bg-white/30 text-white px-2.5 py-1 rounded font-semibold text-[10px] uppercase transition-colors shrink-0"
+            >
+              Switch to Live Supabase
+            </button>
+          </div>
+        )}
         {/* Top Header (Mobile/Tablet Only) */}
         <TopHeader current={current} onSearchOpen={() => setCommandOpen(true)} onNavigate={handleNavigate} />
 
