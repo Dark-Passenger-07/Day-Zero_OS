@@ -63,62 +63,58 @@ export class SupabaseWorkspaceRepository implements WorkspaceRepository {
 
   async getRawWorkspaceMembers(workspaceId: string): Promise<WorkspaceMember[]> {
     const supabase = getSupabaseClient()
-    const { data, error } = await supabase
+    const { data: membersData, error: membersError } = await supabase
       .from('workspace_members')
-      .select(`
-        id,
-        workspace_id,
-        user_id,
-        role,
-        status,
-        joined_at,
-        team_title,
-        department,
-        team_bio,
-        availability,
-        profile:profiles (
-          id,
-          full_name,
-          username,
-          avatar_url,
-          email,
-          display_name,
-          github,
-          linkedin,
-          website,
-          location
-        )
-      `)
+      .select('id, workspace_id, user_id, role, status, joined_at, team_title, department, team_bio, availability')
       .eq('workspace_id', workspaceId)
       .neq('status', 'removed')
 
-    if (error) throw error
+    if (membersError) throw membersError
+    if (!membersData || membersData.length === 0) return []
 
-    return (data ?? []).map((item: any) => ({
-      id: item.id,
-      workspaceId: item.workspace_id,
-      userId: item.user_id,
-      role: item.role as WorkspaceRole,
-      status: item.status as any,
-      joinedAt: item.joined_at,
-      teamTitle: item.team_title ?? null,
-      department: item.department ?? null,
-      teamBio: item.team_bio ?? null,
-      availability: (item.availability as any) ?? 'available',
-      profile: item.profile
-        ? {
-            fullName: item.profile.full_name ?? null,
-            username: item.profile.username ?? null,
-            avatarUrl: item.profile.avatar_url ?? null,
-            email: item.profile.email ?? null,
-            displayName: item.profile.display_name ?? null,
-            github: item.profile.github ?? null,
-            linkedin: item.profile.linkedin ?? null,
-            website: item.profile.website ?? null,
-            location: item.profile.location ?? null,
-          }
-        : undefined,
-    }))
+    const userIds = membersData.map((m: any) => m.user_id)
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, full_name, username, avatar_url, email, display_name, github, linkedin, website, location')
+      .in('id', userIds)
+
+    if (profilesError) throw profilesError
+
+    const profileMap = new Map<string, any>()
+    if (profilesData) {
+      for (const p of profilesData) {
+        profileMap.set(p.id, p)
+      }
+    }
+
+    return membersData.map((item: any) => {
+      const prof = profileMap.get(item.user_id)
+      return {
+        id: item.id,
+        workspaceId: item.workspace_id,
+        userId: item.user_id,
+        role: item.role as WorkspaceRole,
+        status: item.status as any,
+        joinedAt: item.joined_at,
+        teamTitle: item.team_title ?? null,
+        department: item.department ?? null,
+        teamBio: item.team_bio ?? null,
+        availability: (item.availability as any) ?? 'available',
+        profile: prof
+          ? {
+              fullName: prof.full_name ?? null,
+              username: prof.username ?? null,
+              avatarUrl: prof.avatar_url ?? null,
+              email: prof.email ?? null,
+              displayName: prof.display_name ?? null,
+              github: prof.github ?? null,
+              linkedin: prof.linkedin ?? null,
+              website: prof.website ?? null,
+              location: prof.location ?? null,
+            }
+          : undefined,
+      }
+    })
   }
 
   async getRawWorkspaceInvitations(workspaceId: string): Promise<WorkspaceInvitation[]> {
