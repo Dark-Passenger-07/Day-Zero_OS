@@ -1,0 +1,27 @@
+{
+  "pwaUrl": "https://day-zero-os.vercel.app",
+  "name": "Day Zero OS",
+  "publisherId": "CN=Day Zero Team, O=Day Zero, C=US",
+  "publisherDisplayName": "Day Zero",
+  "packageId": "com.dayzeroos.app",
+  "version": "1.0.0.0",
+  "storeListing": {
+    "title": "Day Zero OS — Operating System for Builders",
+    "description": "Day Zero OS is a next-generation operating system for builders—a unified digital workspace designed to help software engineers, AI builders, freelancers, startup founders, and creators manage the complete lifecycle of building products.",
+    "pricing": "Free",
+    "categories": [
+      "Developer tools",
+      "Productivity"
+    ],
+    "keywords": [
+      "Workspace",
+      "Developer",
+      "Task manager",
+      "Freelance",
+      "AI tools"
+    ],
+    "privacyPolicyUrl": "https://day-zero-os.vercel.app/privacy",
+    "supportUrl": "https://day-zero-os.vercel.app/support",
+    "termsOfServiceUrl": "https://day-zero-os.vercel.app/terms"
+  }
+}

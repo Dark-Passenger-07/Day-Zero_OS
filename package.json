@@ -12,14 +12,20 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "cap:sync": "cap sync",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.2",
     "lucide-react": "^1.24.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.18.1",
+    "workbox-window": "^7.4.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
