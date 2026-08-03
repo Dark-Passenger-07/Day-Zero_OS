@@ -186,6 +186,16 @@ export async function getWorkspaceTeamData(workspaceId: string, currentUserId: s
       }
       rawMembers.unshift(synthesizedOwner)
     }
+  } else if (ownerMember.role !== 'owner') {
+    console.warn(`Self-Healing: Owner ${ownerId} is present but has incorrect role ${ownerMember.role}. Repairing to 'owner'.`)
+    try {
+      await repository.updateWorkspaceMember(workspaceId, ownerId, { role: 'owner' })
+      rawMembers = await repository.getRawWorkspaceMembers(workspaceId)
+    } catch (err) {
+      console.error('Self-Healing Repair: Failed to correct owner role.', err)
+      // Force change in memory
+      ownerMember.role = 'owner'
+    }
   }
 
   // 3. Compute dynamic statistics
@@ -201,7 +211,7 @@ export async function getWorkspaceTeamData(workspaceId: string, currentUserId: s
 
   // 4. Compute capabilities
   const currentUserMember = rawMembers.find((m) => m.userId === currentUserId)
-  const userRole = currentUserMember ? currentUserMember.role : (ws.ownerId === currentUserId ? 'owner' : null)
+  const userRole = ws.ownerId === currentUserId ? 'owner' : (currentUserMember ? currentUserMember.role : null)
   const capabilities = computeCapabilities(userRole, ws.isPersonal)
 
   return {

@@ -354,8 +354,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   )
 
   const userRole: WorkspaceRole | null =
-    members.find((m) => m.userId === user?.id)?.role ??
-    (currentWorkspace?.ownerId === user?.id ? 'owner' : null)
+    currentWorkspace?.ownerId === user?.id
+      ? 'owner'
+      : (members.find((m) => m.userId === user?.id)?.role ?? null)
 
   const value: WorkspaceContextValue = {
     workspaces,
