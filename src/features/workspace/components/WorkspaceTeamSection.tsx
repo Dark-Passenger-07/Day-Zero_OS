@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, Fragment } from 'react'
+import { useState, useEffect, useCallback, Fragment, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useWorkspace } from '../context/WorkspaceContext'
 import { useAuth } from '@/app/providers/AuthProvider'
 import {
@@ -391,6 +392,11 @@ function MemberActionMenu({
   onCopyEmail: () => void
 }) {
   const [open, setOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [menuStyles, setMenuStyles] = useState<React.CSSProperties>({})
+  
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const roleOptions: { role: 'admin' | 'editor' | 'viewer'; label: string; icon: React.ReactNode }[] = [
     { role: 'admin', label: 'Admin', icon: <Shield className="w-3.5 h-3.5" /> },
@@ -398,29 +404,267 @@ function MemberActionMenu({
     { role: 'viewer', label: 'Viewer', icon: <Eye className="w-3.5 h-3.5" /> },
   ]
 
+  // Detect mobile width
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Position calculation for Desktop Popover
+  useEffect(() => {
+    if (!open || isMobile || !buttonRef.current) return
+
+    const calculatePosition = () => {
+      const rect = buttonRef.current!.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const viewportHeight = window.innerHeight
+
+      const menuWidth = 192 // w-48
+      const estimatedHeight = 280
+
+      // Horizontal position adjustment (shift left/right to prevent overflow)
+      let left = rect.right - menuWidth
+      if (left < 10) {
+        left = rect.left
+      }
+      if (left + menuWidth > viewportWidth - 10) {
+        left = viewportWidth - menuWidth - 10
+      }
+
+      // Vertical position adjustment (flip top/bottom based on available space)
+      let top = rect.bottom + 6
+      let maxHeight = viewportHeight - rect.bottom - 20
+      let transformOrigin = 'top right'
+
+      if (maxHeight < estimatedHeight && rect.top > estimatedHeight) {
+        top = rect.top - estimatedHeight - 6
+        maxHeight = rect.top - 20
+        transformOrigin = 'bottom right'
+        if (top < 10) {
+          top = 10
+          maxHeight = rect.top - 20
+        }
+      } else {
+        if (maxHeight < 150) {
+          top = Math.max(10, rect.bottom + 6)
+          maxHeight = Math.max(150, viewportHeight - top - 10)
+        }
+      }
+
+      setMenuStyles({
+        position: 'fixed',
+        top: `${top}px`,
+        left: `${left}px`,
+        maxHeight: `${Math.min(maxHeight, viewportHeight * 0.7)}px`,
+        overflowY: 'auto',
+        width: `${menuWidth}px`,
+        transformOrigin,
+      })
+    }
+
+    calculatePosition()
+    const frameId = requestAnimationFrame(calculatePosition)
+    return () => cancelAnimationFrame(frameId)
+  }, [open, isMobile])
+
+  // Click outside to close
+  useEffect(() => {
+    if (!open) return
+    const listener = (e: MouseEvent | TouchEvent) => {
+      if (
+        buttonRef.current?.contains(e.target as Node) ||
+        menuRef.current?.contains(e.target as Node)
+      ) {
+        return
+      }
+      setOpen(false)
+    }
+    document.addEventListener('mousedown', listener, true)
+    document.addEventListener('touchstart', listener, true)
+    return () => {
+      document.removeEventListener('mousedown', listener, true)
+      document.removeEventListener('touchstart', listener, true)
+    }
+  }, [open])
+
+  // Close on window scroll/resize to prevent floating detachments
   useEffect(() => {
     if (!open) return
     const close = () => setOpen(false)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
+    window.addEventListener('scroll', close, true)
+    window.addEventListener('resize', close)
+    return () => {
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('resize', close)
+    }
   }, [open])
 
+  // Keyboard navigation & accessibility
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setOpen(false)
+      buttonRef.current?.focus()
+      return
+    }
+
+    const focusable = menuRef.current?.querySelectorAll('button')
+    if (!focusable || focusable.length === 0) return
+
+    const index = Array.from(focusable).indexOf(document.activeElement as HTMLButtonElement)
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      const nextIndex = (index + 1) % focusable.length
+      focusable[nextIndex].focus()
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      const nextIndex = (index - 1 + focusable.length) % focusable.length
+      focusable[nextIndex].focus()
+    }
+  }
+
+  // Initial focus management
+  useEffect(() => {
+    if (open && !isMobile) {
+      setTimeout(() => {
+        const firstBtn = menuRef.current?.querySelector('button')
+        firstBtn?.focus()
+      }, 50)
+    }
+  }, [open, isMobile])
+
+  const handleToggle = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setOpen((o) => !o)
+  }
+
+  // ─── Rendering Mobile Bottom Sheet ───
+  if (isMobile) {
+    return (
+      <>
+        <button
+          ref={buttonRef}
+          onClick={handleToggle}
+          className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.06] transition-colors cursor-pointer"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
+
+        {open && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-end justify-center" onClick={() => setOpen(false)}>
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" />
+            
+            {/* Sheet */}
+            <div
+              ref={menuRef}
+              className="relative w-full max-w-md bg-[#111827] border-t border-white/[.08] rounded-t-2xl shadow-2xl z-10 px-5 pb-8 pt-4 space-y-4 animate-in slide-in-from-bottom duration-300 ease-out"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Drag Handle */}
+              <div className="w-12 h-1 bg-white/[.15] rounded-full mx-auto mb-2" />
+              
+              <div className="flex items-center justify-between border-b border-white/[.06] pb-2">
+                <span className="text-xs font-bold text-white uppercase tracking-wider">Member Actions</span>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.06] transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <button
+                  onClick={() => { onCopyEmail(); setOpen(false) }}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/[.02] border border-white/[.04] text-sm text-white hover:bg-white/[.06] transition-all cursor-pointer font-medium"
+                >
+                  <Mail className="w-4 h-4 text-[#707B95]" />
+                  <span>Copy Email</span>
+                </button>
+
+                {capabilities.canManageRoles && member.role !== 'owner' && (
+                  <div className="space-y-1.5 pt-2">
+                    <span className="text-[10px] font-bold text-[#707B95] uppercase tracking-wider block px-1">
+                      Change Role
+                    </span>
+                    <div className="grid grid-cols-3 gap-2">
+                      {roleOptions.map((opt) => (
+                        <button
+                          key={opt.role}
+                          onClick={() => { onChangeRole(opt.role); setOpen(false) }}
+                          className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl border text-xs transition-all cursor-pointer ${
+                            member.role === opt.role
+                              ? 'border-[#6C5CFF] bg-[#6C5CFF]/15 text-[#6C5CFF] font-semibold'
+                              : 'border-white/[.06] bg-white/[.01] text-[#A9B1C7] hover:border-white/[.15] hover:bg-white/[.03]'
+                          }`}
+                        >
+                          {opt.icon}
+                          <span>{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {capabilities.canTransferOwnership && member.role !== 'owner' && (
+                  <button
+                    onClick={() => { onTransfer(); setOpen(false) }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-sm text-amber-400 hover:bg-amber-500/10 transition-all cursor-pointer font-medium"
+                  >
+                    <ArrowRightLeft className="w-4 h-4" />
+                    <span>Transfer Ownership</span>
+                  </button>
+                )}
+
+                {capabilities.canManageMembers && member.role !== 'owner' && (
+                  <button
+                    onClick={() => { onRemove(); setOpen(false) }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/5 border border-red-500/10 text-sm text-[#EF5350] hover:bg-red-500/10 transition-all cursor-pointer font-medium"
+                  >
+                    <UserMinus className="w-4 h-4" />
+                    <span>Remove Member</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+      </>
+    )
+  }
+
+  // ─── Rendering Desktop Popover (via Portal) ───
   return (
-    <div className="relative">
+    <>
       <button
-        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o) }}
+        ref={buttonRef}
+        onClick={handleToggle}
         className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.06] transition-colors cursor-pointer"
+        aria-haspopup="true"
+        aria-expanded={open}
       >
         <MoreHorizontal className="w-4 h-4" />
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-full mt-1.5 z-50 w-48 bg-[#111827] border border-white/[.08] rounded-xl shadow-2xl py-1" onClick={(e) => e.stopPropagation()}>
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          style={menuStyles}
+          onKeyDown={handleKeyDown}
+          className="z-[100] bg-[#111827] border border-white/[.08] rounded-xl shadow-2xl py-1 focus:outline-none animate-in fade-in zoom-in-95 duration-100 ease-out"
+          role="menu"
+          tabIndex={-1}
+        >
           <button
             onClick={() => { onCopyEmail(); setOpen(false) }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#A9B1C7] hover:text-white hover:bg-white/[.04] transition-colors cursor-pointer"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#A9B1C7] hover:text-white hover:bg-white/[.04] transition-colors cursor-pointer focus:bg-white/[.04] focus:text-white focus:outline-none font-medium"
+            role="menuitem"
           >
-            <Mail className="w-3.5 h-3.5" />
+            <Mail className="w-3.5 h-3.5 text-[#707B95]" />
             <span>Copy Email</span>
           </button>
 
@@ -434,15 +678,16 @@ function MemberActionMenu({
                 <button
                   key={opt.role}
                   onClick={() => { onChangeRole(opt.role); setOpen(false) }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors cursor-pointer ${
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors cursor-pointer focus:outline-none ${
                     member.role === opt.role
-                      ? 'text-[#6C5CFF] bg-[#6C5CFF]/10 font-medium'
-                      : 'text-[#A9B1C7] hover:text-white hover:bg-white/[.04]'
+                      ? 'text-[#6C5CFF] bg-[#6C5CFF]/10 font-semibold focus:bg-[#6C5CFF]/15'
+                      : 'text-[#A9B1C7] hover:text-white hover:bg-white/[.04] focus:bg-white/[.04] focus:text-white font-medium'
                   }`}
+                  role="menuitem"
                 >
                   {opt.icon}
                   <span>{opt.label}</span>
-                  {member.role === opt.role && <Check className="w-3.5 h-3.5 ml-auto" />}
+                  {member.role === opt.role && <Check className="w-3.5 h-3.5 ml-auto text-[#6C5CFF]" />}
                 </button>
               ))}
             </>
@@ -453,9 +698,10 @@ function MemberActionMenu({
               <div className="h-px bg-white/[.06] my-1" />
               <button
                 onClick={() => { onTransfer(); setOpen(false) }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer focus:bg-amber-500/10 focus:text-amber-300 focus:outline-none font-medium"
+                role="menuitem"
               >
-                <ArrowRightLeft className="w-3.5 h-3.5" />
+                <ArrowRightLeft className="w-3.5 h-3.5 text-amber-500" />
                 <span>Transfer Ownership</span>
               </button>
             </>
@@ -466,16 +712,18 @@ function MemberActionMenu({
               <div className="h-px bg-white/[.06] my-1" />
               <button
                 onClick={() => { onRemove(); setOpen(false) }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#EF5350] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#EF5350] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer focus:bg-red-500/10 focus:text-red-400 focus:outline-none font-medium"
+                role="menuitem"
               >
-                <UserMinus className="w-3.5 h-3.5" />
+                <UserMinus className="w-3.5 h-3.5 text-[#EF5350]" />
                 <span>Remove Member</span>
               </button>
             </>
           )}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   )
 }
 
