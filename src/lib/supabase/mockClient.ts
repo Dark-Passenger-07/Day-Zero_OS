@@ -26,6 +26,51 @@ const DEFAULT_PROFILE = {
   avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
   timezone: 'UTC',
   workspace_name: 'Builder Workspace',
+  email: 'aravindhnani@dayzero.dev',
+  display_name: 'Aravindhnani',
+  github: 'https://github.com/aravindhnani',
+  linkedin: 'https://linkedin.com/in/aravindhnani',
+  website: 'https://aravindhnani.dev',
+  location: 'San Francisco, CA',
+}
+
+const MEMBER_PROFILE_2 = {
+  id: 'mock-member-2',
+  full_name: 'Alex Rivera',
+  username: 'alexr',
+  avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
+  email: 'alexr@startup.io',
+  display_name: 'Alex',
+  github: 'https://github.com/alexr',
+  linkedin: 'https://linkedin.com/in/alexr',
+  website: 'https://alexr.design',
+  location: 'New York, NY',
+}
+
+const MEMBER_PROFILE_3 = {
+  id: 'mock-member-3',
+  full_name: 'Sarah Chen',
+  username: 'sarahc',
+  avatar_url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80',
+  email: 'sarahc@dayzero.dev',
+  display_name: 'Sarah',
+  github: 'https://github.com/sarahc',
+  linkedin: 'https://linkedin.com/in/sarahc',
+  website: 'https://sarahc.codes',
+  location: 'Seattle, WA',
+}
+
+const MEMBER_PROFILE_4 = {
+  id: 'mock-member-4',
+  full_name: 'David Kim',
+  username: 'davidk',
+  avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80',
+  email: 'davidk@dayzero.dev',
+  display_name: 'David',
+  github: 'https://github.com/davidk',
+  linkedin: 'https://linkedin.com/in/davidk',
+  website: 'https://davidk.xyz',
+  location: 'Austin, TX',
 }
 
 const DEFAULT_SETTINGS = {
@@ -45,7 +90,7 @@ const DEFAULT_SETTINGS = {
 }
 
 const INITIAL_DATA: Record<string, any[]> = {
-  profiles: [DEFAULT_PROFILE],
+  profiles: [DEFAULT_PROFILE, MEMBER_PROFILE_2, MEMBER_PROFILE_3, MEMBER_PROFILE_4],
   user_settings: [DEFAULT_SETTINGS],
   workspaces: [
     {
@@ -76,6 +121,20 @@ const INITIAL_DATA: Record<string, any[]> = {
       created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
       updated_at: new Date().toISOString(),
     },
+    {
+      id: 'ws-team-2',
+      owner_id: 'mock-member-2',
+      name: 'Startup Design Workspace',
+      slug: 'startup-design',
+      is_personal: false,
+      logo_url: null,
+      storage_path: null,
+      join_code: 'DESIGNCO',
+      default_join_role: 'editor',
+      metadata: {},
+      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
   ],
   workspace_members: [
     {
@@ -85,6 +144,10 @@ const INITIAL_DATA: Record<string, any[]> = {
       role: 'owner',
       status: 'active',
       joined_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      team_title: 'Founding Developer',
+      department: 'Engineering',
+      team_bio: 'Co-Founder & Creator of Day Zero OS.',
+      availability: 'available',
     },
     {
       id: 'wm-2',
@@ -93,6 +156,10 @@ const INITIAL_DATA: Record<string, any[]> = {
       role: 'owner',
       status: 'active',
       joined_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      team_title: 'Tech Lead',
+      department: 'Engineering',
+      team_bio: 'Leading engineering team at Day Zero.',
+      availability: 'available',
     },
     {
       id: 'wm-3',
@@ -101,11 +168,46 @@ const INITIAL_DATA: Record<string, any[]> = {
       role: 'editor',
       status: 'active',
       joined_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      profile: {
-        full_name: 'Alex Rivera',
-        username: 'alexr',
-        avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
-      },
+      team_title: 'Product Designer',
+      department: 'Design',
+      team_bio: 'Focusing on typography & interface design.',
+      availability: 'busy',
+    },
+    {
+      id: 'wm-4',
+      workspace_id: 'ws-team-1',
+      user_id: 'mock-member-3',
+      role: 'admin',
+      status: 'active',
+      joined_at: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+      team_title: 'Engineering Manager',
+      department: 'Engineering',
+      team_bio: 'Helping developers build high quality tools.',
+      availability: 'available',
+    },
+    {
+      id: 'wm-5',
+      workspace_id: 'ws-team-1',
+      user_id: 'mock-member-4',
+      role: 'viewer',
+      status: 'active',
+      joined_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      team_title: 'Advisor',
+      department: 'Operations',
+      team_bio: 'Operational scaling and advisory.',
+      availability: 'offline',
+    },
+    {
+      id: 'wm-6',
+      workspace_id: 'ws-team-2',
+      user_id: 'mock-member-2',
+      role: 'owner',
+      status: 'active',
+      joined_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      team_title: 'Lead Designer',
+      department: 'Design',
+      team_bio: 'Startup workspace creator.',
+      availability: 'available',
     },
   ],
   workspace_invitations: [

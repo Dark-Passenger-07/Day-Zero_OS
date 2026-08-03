@@ -3,17 +3,18 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
 import { useAuth } from '@/app/providers/AuthProvider'
+import { getSupabaseClient } from '@/lib/supabase/client'
+import { isDemoModeEnabled } from '@/lib/supabase/mockClient'
 import {
   listUserWorkspaces,
   resolveCurrentWorkspaceId,
   setCurrentWorkspace,
   createWorkspace as createWorkspaceService,
-  getWorkspaceMembers,
-  getWorkspaceInvitations,
   inviteWorkspaceMember,
   revokeWorkspaceInvitation,
   transferWorkspaceOwnership,
@@ -26,11 +27,24 @@ import {
   joinWorkspaceByCode as joinWorkspaceByCodeService,
   regenerateJoinCode as regenerateJoinCodeService,
   updateDefaultJoinRole as updateDefaultJoinRoleService,
+  getWorkspaceTeamData,
+  updateWorkspaceMemberProfileFields,
+  updateGlobalUserProfile,
   type Workspace,
   type WorkspaceMember,
   type WorkspaceInvitation,
   type WorkspaceRole,
+  type WorkspaceStats,
+  type WorkspaceCapabilities,
 } from '../services/workspace.service'
+
+type WorkspaceCacheItem = {
+  members: WorkspaceMember[]
+  invitations: WorkspaceInvitation[]
+  stats: WorkspaceStats
+  capabilities: WorkspaceCapabilities
+  lastUpdated: number
+}
 
 type WorkspaceContextValue = {
   workspaces: Workspace[]
@@ -39,6 +53,8 @@ type WorkspaceContextValue = {
   userRole: WorkspaceRole | null
   members: WorkspaceMember[]
   invitations: WorkspaceInvitation[]
+  stats: WorkspaceStats | null
+  capabilities: WorkspaceCapabilities | null
   isLoading: boolean
   error: Error | null
   switchWorkspace: (workspaceId: string) => Promise<void>
@@ -55,6 +71,8 @@ type WorkspaceContextValue = {
   regenerateJoinCode: () => Promise<string>
   updateDefaultJoinRole: (role: 'editor' | 'viewer') => Promise<void>
   refreshWorkspaces: () => Promise<void>
+  updateWorkspaceProfile: (updates: { teamTitle?: string | null; department?: string | null; teamBio?: string | null; availability?: 'available' | 'busy' | 'offline' }) => Promise<void>
+  updateGlobalProfile: (updates: { displayName?: string | null; avatarUrl?: string | null; fullName?: string | null; github?: string | null; linkedin?: string | null; website?: string | null; location?: string | null }) => Promise<void>
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | undefined>(undefined)
@@ -65,77 +83,136 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [currentWorkspace, setCurrentWorkspaceState] = useState<Workspace | null>(null)
   const [members, setMembers] = useState<WorkspaceMember[]>([])
   const [invitations, setInvitations] = useState<WorkspaceInvitation[]>([])
+  const [stats, setStats] = useState<WorkspaceStats | null>(null)
+  const [capabilities, setCapabilities] = useState<WorkspaceCapabilities | null>(null)
+  const workspaceCacheRef = useRef<Record<string, WorkspaceCacheItem>>({})
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
 
-  const loadWorkspaceDetails = useCallback(async (wsId: string) => {
-    try {
-      const [mems, invs] = await Promise.all([
-        getWorkspaceMembers(wsId).catch(() => []),
-        getWorkspaceInvitations(wsId).catch(() => []),
-      ])
-      setMembers(mems)
-      setInvitations(invs)
-    } catch (err) {
-      console.error('Failed to load workspace details:', err)
-    }
-  }, [])
+  const refreshWorkspaceDataRef = useRef<any>(null)
 
-  const loadWorkspaces = useCallback(async () => {
-    if (!isAuthenticated || !user) {
-      setWorkspaces([])
-      setCurrentWorkspaceState(null)
-      setMembers([])
-      setInvitations([])
-      setIsLoading(false)
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      let list = await listUserWorkspaces(user.id)
-
-      // Fallback: If user has zero workspaces, auto-create Personal Workspace
-      if (list.length === 0) {
-        const personalWs = await createWorkspaceService(user.id, 'Personal Workspace')
-        list = [personalWs]
+  // Centralized Refresh Function
+  const refreshWorkspaceData = useCallback(
+    async (targetWsId?: string, forceFetch?: boolean) => {
+      if (!isAuthenticated || !user) {
+        setWorkspaces([])
+        setCurrentWorkspaceState(null)
+        setMembers([])
+        setInvitations([])
+        setStats(null)
+        setCapabilities(null)
+        setIsLoading(false)
+        return
       }
 
-      setWorkspaces(list)
+      setIsLoading(true)
+      setError(null)
 
-      // Resolve active workspace using priority rules
-      const activeWsId = await resolveCurrentWorkspaceId(user.id)
-      const activeWs = list.find((w) => w.id === activeWsId) ?? list[0]
+      try {
+        let list = await listUserWorkspaces(user.id)
 
-      setCurrentWorkspaceState(activeWs)
-      setCachedActiveWorkspaceId(activeWs.id)
+        // Fallback: Auto-create personal workspace if none exist
+        if (list.length === 0) {
+          const personalWs = await createWorkspaceService(user.id, 'Personal Workspace')
+          list = [personalWs]
+        }
 
-      await loadWorkspaceDetails(activeWs.id)
-    } catch (err: any) {
-      console.error('Error loading workspaces:', err)
-      setError(err instanceof Error ? err : new Error(String(err)))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [user, isAuthenticated, loadWorkspaceDetails])
+        setWorkspaces(list)
 
+        const activeWsId = targetWsId || (await resolveCurrentWorkspaceId(user.id))
+        const activeWs = list.find((w) => w.id === activeWsId) ?? list[0]
+
+        setCurrentWorkspaceState(activeWs)
+        setCachedActiveWorkspaceId(activeWs.id)
+
+        // Cache lookup per workspace ID
+        const cached = workspaceCacheRef.current[activeWs.id]
+        const cacheValid = cached && Date.now() - cached.lastUpdated < 10000 // 10s TTL
+
+        if (cacheValid && !forceFetch) {
+          setMembers(cached.members)
+          setInvitations(cached.invitations)
+          setStats(cached.stats)
+          setCapabilities(cached.capabilities)
+        } else {
+          try {
+            const teamData = await getWorkspaceTeamData(activeWs.id, user.id)
+            setMembers(teamData.members)
+            setInvitations(teamData.invitations)
+            setStats(teamData.stats)
+            setCapabilities(teamData.capabilities)
+
+            workspaceCacheRef.current[activeWs.id] = {
+              ...teamData,
+              lastUpdated: Date.now(),
+            }
+          } catch (err) {
+            console.error('Failed to load workspace team details:', err)
+            // Kicked User Fallback: Switch them to their personal workspace
+            const personalWs = list.find((w) => w.isPersonal) ?? list[0]
+            if (personalWs && personalWs.id !== activeWs.id) {
+              console.warn(`User kicked from workspace ${activeWs.id}. Redirecting to ${personalWs.id}.`)
+              await setCurrentWorkspace(user.id, personalWs.id)
+              setCachedActiveWorkspaceId(personalWs.id)
+              setTimeout(() => {
+                refreshWorkspaceDataRef.current?.(personalWs.id, true)
+              }, 50)
+            }
+          }
+        }
+      } catch (err: any) {
+        console.error('Error in refreshWorkspaceData:', err)
+        setError(err instanceof Error ? err : new Error(String(err)))
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    [user, isAuthenticated],
+  )
+
+  // Keep ref up to date
   useEffect(() => {
-    loadWorkspaces()
-  }, [loadWorkspaces])
+    refreshWorkspaceDataRef.current = refreshWorkspaceData
+  }, [refreshWorkspaceData])
+
+  // Load initially
+  useEffect(() => {
+    refreshWorkspaceData()
+  }, [isAuthenticated, user, refreshWorkspaceData]) // Run only on auth change to prevent loop
+
+  // Supabase Realtime Synchronization
+  useEffect(() => {
+    if (isDemoModeEnabled() || !user || !isAuthenticated) return
+
+    const supabase = getSupabaseClient()
+    const channel = supabase
+      .channel('workspace_realtime_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'workspaces' }, () => {
+        refreshWorkspaceData(undefined, true)
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'workspace_members' }, () => {
+        refreshWorkspaceData(undefined, true)
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'workspace_invitations' }, () => {
+        refreshWorkspaceData(undefined, true)
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        refreshWorkspaceData(undefined, true)
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [user, isAuthenticated, refreshWorkspaceData])
 
   const switchWorkspaceHandler = useCallback(
     async (targetWorkspaceId: string) => {
       if (!user) return
-      const target = workspaces.find((w) => w.id === targetWorkspaceId)
-      if (!target) return
-
       setIsLoading(true)
       try {
         await setCurrentWorkspace(user.id, targetWorkspaceId)
-        setCurrentWorkspaceState(target)
-        await loadWorkspaceDetails(targetWorkspaceId)
+        await refreshWorkspaceData(targetWorkspaceId, true)
       } catch (err: any) {
         console.error('Error switching workspace:', err)
         setError(err instanceof Error ? err : new Error(String(err)))
@@ -143,7 +220,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
       }
     },
-    [user, workspaces, loadWorkspaceDetails],
+    [user, refreshWorkspaceData],
   )
 
   const createWorkspaceHandler = useCallback(
@@ -152,121 +229,128 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
       try {
         const newWs = await createWorkspaceService(user.id, name)
-        setWorkspaces((prev) => [...prev, newWs])
-        setCurrentWorkspaceState(newWs)
-        await loadWorkspaceDetails(newWs.id)
+        await refreshWorkspaceData(newWs.id, true)
         return newWs
       } finally {
         setIsLoading(false)
       }
     },
-    [user, loadWorkspaceDetails],
+    [user, refreshWorkspaceData],
   )
 
   const inviteMemberHandler = useCallback(
     async (email: string, role: 'admin' | 'editor' | 'viewer' = 'editor') => {
       if (!user || !currentWorkspace) return
       await inviteWorkspaceMember(currentWorkspace.id, user.id, email, role)
-      const invs = await getWorkspaceInvitations(currentWorkspace.id)
-      setInvitations(invs)
+      await refreshWorkspaceData(currentWorkspace.id, true)
     },
-    [user, currentWorkspace],
+    [user, currentWorkspace, refreshWorkspaceData],
   )
 
   const revokeInvitationHandler = useCallback(
     async (invitationId: string) => {
       if (!currentWorkspace) return
       await revokeWorkspaceInvitation(currentWorkspace.id, invitationId)
-      setInvitations((prev) => prev.filter((i) => i.id !== invitationId))
+      await refreshWorkspaceData(currentWorkspace.id, true)
     },
-    [currentWorkspace],
+    [currentWorkspace, refreshWorkspaceData],
   )
 
   const transferOwnershipHandler = useCallback(
     async (newOwnerId: string) => {
       if (!user || !currentWorkspace) return
       await transferWorkspaceOwnership(currentWorkspace.id, user.id, newOwnerId)
-      await loadWorkspaces()
+      await refreshWorkspaceData(currentWorkspace.id, true)
     },
-    [user, currentWorkspace, loadWorkspaces],
+    [user, currentWorkspace, refreshWorkspaceData],
   )
 
   const removeMemberHandler = useCallback(
     async (memberUserId: string) => {
-      if (!currentWorkspace) return
-      await removeWorkspaceMember(currentWorkspace.id, memberUserId)
-      setMembers((prev) => prev.filter((m) => m.userId !== memberUserId))
+      if (!currentWorkspace || !user) return
+      await removeWorkspaceMember(currentWorkspace.id, memberUserId, user.id)
+      await refreshWorkspaceData(currentWorkspace.id, true)
     },
-    [currentWorkspace],
+    [currentWorkspace, user, refreshWorkspaceData],
   )
 
   const updateMemberRoleHandler = useCallback(
     async (memberUserId: string, newRole: 'admin' | 'editor' | 'viewer') => {
-      if (!currentWorkspace) return
-      await updateWorkspaceMemberRole(currentWorkspace.id, memberUserId, newRole)
-      setMembers((prev) =>
-        prev.map((m) => (m.userId === memberUserId ? { ...m, role: newRole } : m)),
-      )
+      if (!currentWorkspace || !user) return
+      await updateWorkspaceMemberRole(currentWorkspace.id, memberUserId, newRole, user.id)
+      await refreshWorkspaceData(currentWorkspace.id, true)
     },
-    [currentWorkspace],
+    [currentWorkspace, user, refreshWorkspaceData],
   )
 
   const deleteWorkspaceHandler = useCallback(
     async (workspaceId: string) => {
-      await deleteWorkspaceService(workspaceId)
-      await loadWorkspaces()
+      if (!user) return
+      await deleteWorkspaceService(workspaceId, user.id)
+      await refreshWorkspaceData(undefined, true)
     },
-    [loadWorkspaces],
+    [user, refreshWorkspaceData],
   )
 
   const leaveWorkspaceHandler = useCallback(
     async (workspaceId: string) => {
       if (!user) return
       await leaveWorkspaceService(workspaceId, user.id)
-      await loadWorkspaces()
+      await refreshWorkspaceData(undefined, true)
     },
-    [user, loadWorkspaces],
+    [user, refreshWorkspaceData],
   )
 
   const updateWorkspaceDetailsHandler = useCallback(
     async (updates: { name?: string; logoUrl?: string | null; description?: string }) => {
       if (!currentWorkspace) return
       await updateWorkspaceDetailsService(currentWorkspace.id, updates)
-      await loadWorkspaces()
+      await refreshWorkspaceData(currentWorkspace.id, true)
     },
-    [currentWorkspace, loadWorkspaces],
+    [currentWorkspace, refreshWorkspaceData],
   )
 
   const joinWorkspaceByCodeHandler = useCallback(
     async (code: string) => {
       if (!user) throw new Error('User not authenticated')
       const targetWsId = await joinWorkspaceByCodeService(code, user.id)
-      await loadWorkspaces()
       await switchWorkspaceHandler(targetWsId)
     },
-    [user, loadWorkspaces, switchWorkspaceHandler],
+    [user, switchWorkspaceHandler],
   )
 
   const regenerateJoinCodeHandler = useCallback(async () => {
     if (!currentWorkspace) throw new Error('No active workspace selected')
     const newCode = await regenerateJoinCodeService(currentWorkspace.id)
-    setCurrentWorkspaceState((prev) => (prev ? { ...prev, joinCode: newCode } : null))
-    setWorkspaces((prev) =>
-      prev.map((w) => (w.id === currentWorkspace.id ? { ...w, joinCode: newCode } : w)),
-    )
+    await refreshWorkspaceData(currentWorkspace.id, true)
     return newCode
-  }, [currentWorkspace])
+  }, [currentWorkspace, refreshWorkspaceData])
 
   const updateDefaultJoinRoleHandler = useCallback(
     async (role: 'editor' | 'viewer') => {
       if (!currentWorkspace) throw new Error('No active workspace selected')
       await updateDefaultJoinRoleService(currentWorkspace.id, role)
-      setCurrentWorkspaceState((prev) => (prev ? { ...prev, defaultJoinRole: role } : null))
-      setWorkspaces((prev) =>
-        prev.map((w) => (w.id === currentWorkspace.id ? { ...w, defaultJoinRole: role } : w)),
-      )
+      await refreshWorkspaceData(currentWorkspace.id, true)
     },
-    [currentWorkspace],
+    [currentWorkspace, refreshWorkspaceData],
+  )
+
+  const updateWorkspaceProfileHandler = useCallback(
+    async (updates: { teamTitle?: string | null; department?: string | null; teamBio?: string | null; availability?: 'available' | 'busy' | 'offline' }) => {
+      if (!currentWorkspace || !user) return
+      await updateWorkspaceMemberProfileFields(currentWorkspace.id, user.id, user.id, updates)
+      await refreshWorkspaceData(currentWorkspace.id, true)
+    },
+    [currentWorkspace, user, refreshWorkspaceData],
+  )
+
+  const updateGlobalProfileHandler = useCallback(
+    async (updates: { displayName?: string | null; avatarUrl?: string | null; fullName?: string | null; github?: string | null; linkedin?: string | null; website?: string | null; location?: string | null }) => {
+      if (!user || !currentWorkspace) return
+      await updateGlobalUserProfile(user.id, user.id, updates)
+      await refreshWorkspaceData(currentWorkspace.id, true)
+    },
+    [user, currentWorkspace, refreshWorkspaceData],
   )
 
   const userRole: WorkspaceRole | null =
@@ -280,6 +364,8 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     userRole,
     members,
     invitations,
+    stats,
+    capabilities,
     isLoading,
     error,
     switchWorkspace: switchWorkspaceHandler,
@@ -295,7 +381,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     joinWorkspaceByCode: joinWorkspaceByCodeHandler,
     regenerateJoinCode: regenerateJoinCodeHandler,
     updateDefaultJoinRole: updateDefaultJoinRoleHandler,
-    refreshWorkspaces: loadWorkspaces,
+    refreshWorkspaces: async () => {
+      await refreshWorkspaceData(undefined, true)
+    },
+    updateWorkspaceProfile: updateWorkspaceProfileHandler,
+    updateGlobalProfile: updateGlobalProfileHandler,
   }
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>

@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback, Fragment } from 'react'
 import { useWorkspace } from '../context/WorkspaceContext'
 import { useAuth } from '@/app/providers/AuthProvider'
-import { updateMemberProfile } from '../services/workspace.service'
-import type { WorkspaceMember } from '../services/workspace.service'
 import {
   Users,
-  ShieldCheck,
   Copy,
   Check,
   Loader2,
@@ -26,9 +23,28 @@ import {
   Hash,
   Clock,
   Send,
+  Globe,
+  MapPin,
+  Briefcase,
+  Tag,
 } from 'lucide-react'
 
-/* ─── Role badge colors ─── */
+const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+    <path d="M9 18c-4.51 2-5-2-7-2" />
+  </svg>
+)
+
+const LinkedinIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+    <rect x="2" y="9" width="4" height="12" />
+    <circle cx="4" cy="4" r="2" />
+  </svg>
+)
+import type { WorkspaceMember } from '../services/workspace.service'
+
 const roleBadge: Record<string, { bg: string; text: string; border: string }> = {
   owner: { bg: 'rgba(251,191,36,.12)', text: '#FBBF24', border: 'rgba(251,191,36,.25)' },
   admin: { bg: 'rgba(108,92,255,.12)', text: '#8B7FFF', border: 'rgba(108,92,255,.25)' },
@@ -36,20 +52,24 @@ const roleBadge: Record<string, { bg: string; text: string; border: string }> = 
   viewer: { bg: 'rgba(112,123,149,.12)', text: '#A9B1C7', border: 'rgba(112,123,149,.25)' },
 }
 
-/* ─── Utility: format join code ─── */
+const availabilityBadge: Record<string, { bg: string; text: string; dot: string }> = {
+  available: { bg: 'bg-[#16C784]/10', text: 'text-[#16C784]', dot: 'bg-[#16C784]' },
+  busy: { bg: 'bg-[#EF5350]/10', text: 'text-[#EF5350]', dot: 'bg-[#EF5350]' },
+  offline: { bg: 'bg-[#707B95]/10', text: 'text-[#707B95]', dot: 'bg-[#707B95]' },
+}
+
 function fmtCode(code?: string | null) {
   if (!code) return '--------'
   return `${code.slice(0, 4)}-${code.slice(4)}`
 }
 
-/* ─── Utility: relative date ─── */
 function relDate(iso?: string | null) {
   if (!iso) return 'Unknown'
   const d = new Date(iso)
-  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-/* ─── Sub-component: Edit Profile Dialog ─── */
+/* ─── Profile Dialog: Global & Workspace Tabs ─── */
 function EditProfileDialog({
   member,
   onClose,
@@ -59,18 +79,57 @@ function EditProfileDialog({
   onClose: () => void
   onSaved: () => void
 }) {
-  const [teamTitle, setTeamTitle] = useState(member.profile?.teamTitle ?? '')
-  const [aboutBio, setAboutBio] = useState(member.profile?.aboutBio ?? '')
+  const { updateWorkspaceProfile, updateGlobalProfile } = useWorkspace()
+  const [activeTab, setActiveTab] = useState<'workspace' | 'global'>('workspace')
   const [saving, setSaving] = useState(false)
 
-  const handleSave = async () => {
+  // Workspace fields
+  const [teamTitle, setTeamTitle] = useState(member.teamTitle ?? '')
+  const [department, setDepartment] = useState(member.department ?? '')
+  const [availability, setAvailability] = useState<'available' | 'busy' | 'offline'>(member.availability ?? 'available')
+  const [teamBio, setTeamBio] = useState(member.teamBio ?? '')
+
+  // Global fields
+  const [displayName, setDisplayName] = useState(member.profile?.displayName ?? '')
+  const [avatarUrl, setAvatarUrl] = useState(member.profile?.avatarUrl ?? '')
+  const [fullName, setFullName] = useState(member.profile?.fullName ?? '')
+  const [github, setGithub] = useState(member.profile?.github ?? '')
+  const [linkedin, setLinkedin] = useState(member.profile?.linkedin ?? '')
+  const [website, setWebsite] = useState(member.profile?.website ?? '')
+  const [location, setLocation] = useState(member.profile?.location ?? '')
+
+  const handleSaveWorkspace = async () => {
     setSaving(true)
     try {
-      await updateMemberProfile(member.userId, { teamTitle, aboutBio })
+      await updateWorkspaceProfile({
+        teamTitle: teamTitle || null,
+        department: department || null,
+        availability,
+        teamBio: teamBio || null,
+      })
       onSaved()
-      onClose()
-    } catch {
-      /* swallow */
+    } catch (err: any) {
+      alert(err.message || 'Failed to save workspace profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveGlobal = async () => {
+    setSaving(true)
+    try {
+      await updateGlobalProfile({
+        displayName: displayName || null,
+        avatarUrl: avatarUrl || null,
+        fullName: fullName || null,
+        github: github || null,
+        linkedin: linkedin || null,
+        website: website || null,
+        location: location || null,
+      })
+      onSaved()
+    } catch (err: any) {
+      alert(err.message || 'Failed to save global profile')
     } finally {
       setSaving(false)
     }
@@ -78,61 +137,202 @@ function EditProfileDialog({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
       <div
-        className="relative w-full max-w-md rounded-2xl border border-white/[.08] bg-[#161F36] shadow-2xl"
+        className="relative w-full max-w-lg rounded-2xl border border-white/[.08] bg-[#111827] shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[.06]">
-          <h3 className="text-sm font-semibold text-white">Edit Your Profile</h3>
+          <h3 className="text-base font-bold text-white">Edit Profile</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.06] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
-        {/* Body */}
-        <div className="px-6 py-5 space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Team Title</label>
-            <input
-              type="text"
-              value={teamTitle}
-              onChange={(e) => setTeamTitle(e.target.value)}
-              placeholder="e.g. Frontend Engineer"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#0D1427] border border-white/[.08] text-white placeholder-[#707B95] text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">About / Bio</label>
-            <textarea
-              value={aboutBio}
-              onChange={(e) => setAboutBio(e.target.value)}
-              rows={3}
-              placeholder="Tell your team about yourself..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#0D1427] border border-white/[.08] text-white placeholder-[#707B95] text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors resize-none"
-            />
-          </div>
-        </div>
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/[.06]">
-          <button onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-medium text-[#A9B1C7] hover:text-white hover:bg-white/[.06] transition-colors">
-            Cancel
+
+        {/* Tab Switcher */}
+        <div className="flex border-b border-white/[.06] bg-white/[.01] px-4">
+          <button
+            onClick={() => setActiveTab('workspace')}
+            className={`px-4 py-3 text-xs font-semibold border-b-2 transition-all ${
+              activeTab === 'workspace' ? 'border-[#6C5CFF] text-[#6C5CFF]' : 'border-transparent text-[#707B95] hover:text-white'
+            }`}
+          >
+            Workspace Details
           </button>
           <button
-            onClick={handleSave}
-            disabled={saving}
-            className="px-5 py-2 rounded-xl bg-[#6C5CFF] hover:bg-[#7E70FF] text-white text-xs font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+            onClick={() => setActiveTab('global')}
+            className={`px-4 py-3 text-xs font-semibold border-b-2 transition-all ${
+              activeTab === 'global' ? 'border-[#6C5CFF] text-[#6C5CFF]' : 'border-transparent text-[#707B95] hover:text-white'
+            }`}
           >
-            {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-            Save
+            Global Profile Info
           </button>
+        </div>
+
+        {/* Form Body */}
+        <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
+          {activeTab === 'workspace' ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Team Title</label>
+                  <input
+                    type="text"
+                    value={teamTitle}
+                    onChange={(e) => setTeamTitle(e.target.value)}
+                    placeholder="e.g. Lead Dev"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Department</label>
+                  <input
+                    type="text"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    placeholder="e.g. Engineering"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Availability Status</label>
+                <select
+                  value={availability}
+                  onChange={(e) => setAvailability(e.target.value as any)}
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors cursor-pointer"
+                >
+                  <option value="available">🟢 Available</option>
+                  <option value="busy">🔴 Busy</option>
+                  <option value="offline">⚫ Offline</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Team Bio / About</label>
+                <textarea
+                  value={teamBio}
+                  onChange={(e) => setTeamBio(e.target.value)}
+                  rows={3}
+                  placeholder="Share a short bio with the team..."
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors resize-none"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={handleSaveWorkspace}
+                  disabled={saving}
+                  className="w-full py-2.5 rounded-xl bg-[#6C5CFF] hover:bg-[#7E70FF] text-white text-xs font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Save Workspace Profile
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Display Name</label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    placeholder="e.g. Aravindh"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="e.g. Aravindhnani"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Avatar URL</label>
+                <input
+                  type="text"
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  placeholder="https://example.com/avatar.jpg"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">GitHub URL</label>
+                  <input
+                    type="text"
+                    value={github}
+                    onChange={(e) => setGithub(e.target.value)}
+                    placeholder="https://github.com/..."
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">LinkedIn URL</label>
+                  <input
+                    type="text"
+                    value={linkedin}
+                    onChange={(e) => setLinkedin(e.target.value)}
+                    placeholder="https://linkedin.com/in/..."
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Website URL</label>
+                  <input
+                    type="text"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">Location</label>
+                  <input
+                    type="text"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    placeholder="e.g. San Francisco, CA"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={handleSaveGlobal}
+                  disabled={saving}
+                  className="w-full py-2.5 rounded-xl bg-[#6C5CFF] hover:bg-[#7E70FF] text-white text-xs font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  Save Global Profile Info
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-/* ─── Sub-component: Confirm Dialog ─── */
+/* ─── Confirm Dialog ─── */
 function ConfirmDialog({
   title,
   description,
@@ -150,19 +350,19 @@ function ConfirmDialog({
 }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onCancel}>
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-      <div className="relative w-full max-w-sm rounded-2xl border border-white/[.08] bg-[#161F36] shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        <div className="px-6 py-5 space-y-2">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+      <div className="relative w-full max-w-sm rounded-2xl border border-white/[.08] bg-[#111827] shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="p-6 space-y-2">
           <h3 className="text-sm font-semibold text-white">{title}</h3>
           <p className="text-xs text-[#A9B1C7] leading-relaxed">{description}</p>
         </div>
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/[.06]">
-          <button onClick={onCancel} className="px-4 py-2 rounded-xl text-xs font-medium text-[#A9B1C7] hover:text-white hover:bg-white/[.06] transition-colors">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/[.06] bg-white/[.01]">
+          <button onClick={onCancel} className="px-4 py-2 rounded-xl text-xs font-medium text-[#A9B1C7] hover:text-white hover:bg-white/[.06] transition-colors cursor-pointer">
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className={`px-5 py-2 rounded-xl text-white text-xs font-semibold transition-colors ${
+            className={`px-5 py-2 rounded-xl text-white text-xs font-semibold transition-colors cursor-pointer ${
               danger ? 'bg-[#EF5350] hover:bg-[#F44336]' : 'bg-[#6C5CFF] hover:bg-[#7E70FF]'
             }`}
           >
@@ -174,19 +374,21 @@ function ConfirmDialog({
   )
 }
 
-/* ─── Sub-component: Member Action Menu ─── */
+/* ─── Member Card Action Menu ─── */
 function MemberActionMenu({
   member,
+  capabilities,
   onChangeRole,
   onRemove,
   onTransfer,
-  canTransfer,
+  onCopyEmail,
 }: {
   member: WorkspaceMember
+  capabilities: any
   onChangeRole: (role: 'admin' | 'editor' | 'viewer') => void
   onRemove: () => void
   onTransfer: () => void
-  canTransfer: boolean
+  onCopyEmail: () => void
 }) {
   const [open, setOpen] = useState(false)
 
@@ -207,51 +409,70 @@ function MemberActionMenu({
     <div className="relative">
       <button
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o) }}
-        className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.06] transition-colors"
+        className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.06] transition-colors cursor-pointer"
       >
         <MoreHorizontal className="w-4 h-4" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 z-50 w-48 bg-[#161F36] border border-white/[.08] rounded-xl shadow-2xl py-1 animate-in fade-in slide-in-from-top-2 duration-150" onClick={(e) => e.stopPropagation()}>
-          <div className="px-3 py-1.5 text-[10px] font-semibold text-[#707B95] uppercase tracking-wider">
-            Change Role
-          </div>
-          {roleOptions.map((opt) => (
-            <button
-              key={opt.role}
-              onClick={() => { onChangeRole(opt.role); setOpen(false) }}
-              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors ${
-                member.role === opt.role
-                  ? 'text-[#6C5CFF] bg-[#6C5CFF]/10 font-medium'
-                  : 'text-[#A9B1C7] hover:text-white hover:bg-white/[.04]'
-              }`}
-            >
-              {opt.icon}
-              <span>{opt.label}</span>
-              {member.role === opt.role && <Check className="w-3.5 h-3.5 ml-auto" />}
-            </button>
-          ))}
+        <div className="absolute right-0 top-full mt-1.5 z-50 w-48 bg-[#111827] border border-white/[.08] rounded-xl shadow-2xl py-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => { onCopyEmail(); setOpen(false) }}
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#A9B1C7] hover:text-white hover:bg-white/[.04] transition-colors cursor-pointer"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>Copy Email</span>
+          </button>
 
-          <div className="h-px bg-white/[.06] my-1" />
-
-          {canTransfer && (
-            <button
-              onClick={() => { onTransfer(); setOpen(false) }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors"
-            >
-              <ArrowRightLeft className="w-3.5 h-3.5" />
-              <span>Transfer Ownership</span>
-            </button>
+          {capabilities.canManageRoles && member.role !== 'owner' && (
+            <>
+              <div className="h-px bg-white/[.06] my-1" />
+              <div className="px-3 py-1.5 text-[9px] font-bold text-[#707B95] uppercase tracking-wider">
+                Change Role
+              </div>
+              {roleOptions.map((opt) => (
+                <button
+                  key={opt.role}
+                  onClick={() => { onChangeRole(opt.role); setOpen(false) }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs transition-colors cursor-pointer ${
+                    member.role === opt.role
+                      ? 'text-[#6C5CFF] bg-[#6C5CFF]/10 font-medium'
+                      : 'text-[#A9B1C7] hover:text-white hover:bg-white/[.04]'
+                  }`}
+                >
+                  {opt.icon}
+                  <span>{opt.label}</span>
+                  {member.role === opt.role && <Check className="w-3.5 h-3.5 ml-auto" />}
+                </button>
+              ))}
+            </>
           )}
 
-          <button
-            onClick={() => { onRemove(); setOpen(false) }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#EF5350] hover:text-red-400 hover:bg-red-500/10 transition-colors"
-          >
-            <UserMinus className="w-3.5 h-3.5" />
-            <span>Remove Member</span>
-          </button>
+          {capabilities.canTransferOwnership && member.role !== 'owner' && (
+            <>
+              <div className="h-px bg-white/[.06] my-1" />
+              <button
+                onClick={() => { onTransfer(); setOpen(false) }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 transition-colors cursor-pointer"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" />
+                <span>Transfer Ownership</span>
+              </button>
+            </>
+          )}
+
+          {capabilities.canManageMembers && member.role !== 'owner' && (
+            <>
+              <div className="h-px bg-white/[.06] my-1" />
+              <button
+                onClick={() => { onRemove(); setOpen(false) }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-[#EF5350] hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+              >
+                <UserMinus className="w-3.5 h-3.5" />
+                <span>Remove Member</span>
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -263,9 +484,10 @@ export function WorkspaceTeamSection() {
   const { user } = useAuth()
   const {
     currentWorkspace,
-    userRole,
     members,
     invitations,
+    stats,
+    capabilities,
     removeMember,
     updateMemberRole,
     transferOwnership,
@@ -291,13 +513,16 @@ export function WorkspaceTeamSection() {
     setTimeout(() => setToastMsg(null), 4000)
   }, [])
 
-  if (!currentWorkspace) return null
+  if (!currentWorkspace || !stats || !capabilities) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-[#6C5CFF] animate-spin" />
+      </div>
+    )
+  }
 
-  const isOwnerOrAdmin = userRole === 'owner' || userRole === 'admin'
-  const isOwner = userRole === 'owner'
   const formattedCode = fmtCode(currentWorkspace.joinCode)
 
-  /* ─── Handlers ─── */
   const handleCopyCode = () => {
     if (!currentWorkspace.joinCode) return
     navigator.clipboard.writeText(currentWorkspace.joinCode)
@@ -306,13 +531,13 @@ export function WorkspaceTeamSection() {
   }
 
   const handleRegenerate = async () => {
-    if (!isOwnerOrAdmin) return
+    if (!capabilities.canRegenerateJoinCode) return
     setIsRegenerating(true)
     try {
       const code = await regenerateJoinCode()
       showToast('success', `Join code regenerated: ${fmtCode(code)}`)
     } catch (err: any) {
-      showToast('error', err.message || 'Failed to regenerate')
+      showToast('error', err.message || 'Failed to regenerate join code')
     } finally {
       setIsRegenerating(false)
     }
@@ -336,25 +561,25 @@ export function WorkspaceTeamSection() {
   const handleRemoveMember = (m: WorkspaceMember) => {
     setConfirmAction({
       title: 'Remove Member',
-      description: `Are you sure you want to remove ${m.profile?.fullName || 'this member'} from the workspace? They will lose access immediately.`,
+      description: `Are you sure you want to remove ${m.profile?.displayName || m.profile?.fullName || 'this member'} from the workspace? They will lose access immediately.`,
       confirmLabel: 'Remove',
       danger: true,
       action: async () => {
         await removeMember(m.userId)
-        showToast('success', `${m.profile?.fullName || 'Member'} has been removed`)
+        showToast('success', `${m.profile?.displayName || 'Member'} has been removed`)
       },
     })
   }
 
   const handleTransferOwnership = (m: WorkspaceMember) => {
     setConfirmAction({
-      title: 'Transfer Ownership',
-      description: `Are you sure you want to transfer workspace ownership to ${m.profile?.fullName || 'this member'}? You will be demoted to Admin.`,
+      title: 'Transfer Workspace Ownership',
+      description: `Are you sure you want to transfer ownership to ${m.profile?.displayName || m.profile?.fullName}? This action is irreversible. You will be demoted to Admin.`,
       confirmLabel: 'Transfer',
       danger: false,
       action: async () => {
         await transferOwnership(m.userId)
-        showToast('success', `Ownership transferred to ${m.profile?.fullName || 'member'}`)
+        showToast('success', `Ownership transferred successfully.`)
       },
     })
   }
@@ -372,35 +597,32 @@ export function WorkspaceTeamSection() {
     })
   }
 
-  /* ─── Statistics ─── */
-  const stats = {
-    total: members.length,
-    pending: invitations.length,
-    admins: members.filter((m) => m.role === 'admin').length,
-    editors: members.filter((m) => m.role === 'editor').length,
-    viewers: members.filter((m) => m.role === 'viewer').length,
+  const handleCopyEmail = (email?: string | null) => {
+    if (!email) return
+    navigator.clipboard.writeText(email)
+    showToast('success', 'Email copied to clipboard')
   }
 
   return (
     <Fragment>
-      {/* Toast */}
+      {/* Toast Alert */}
       {toastMsg && (
         <div
-          className={`fixed top-4 right-4 z-[70] flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-2xl text-xs font-medium animate-in slide-in-from-top-3 fade-in duration-200 ${
+          className={`fixed top-4 right-4 z-[70] flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-2xl text-xs font-semibold animate-in slide-in-from-top-3 fade-in duration-200 ${
             toastMsg.type === 'success'
               ? 'bg-[#16C784]/15 border-[#16C784]/25 text-[#16C784]'
               : 'bg-[#EF5350]/15 border-[#EF5350]/25 text-[#EF5350]'
           }`}
         >
           {toastMsg.type === 'success' ? <Check className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-          {toastMsg.text}
-          <button onClick={() => setToastMsg(null)} className="ml-2 p-0.5 rounded hover:bg-white/10">
+          <span>{toastMsg.text}</span>
+          <button onClick={() => setToastMsg(null)} className="ml-2 p-0.5 rounded hover:bg-white/10 cursor-pointer">
             <X className="w-3 h-3" />
           </button>
         </div>
       )}
 
-      {/* Confirm Dialog */}
+      {/* Confirm Action Dialog */}
       {confirmAction && (
         <ConfirmDialog
           title={confirmAction.title}
@@ -425,96 +647,44 @@ export function WorkspaceTeamSection() {
           member={editingMember}
           onClose={() => setEditingMember(null)}
           onSaved={() => {
-            showToast('success', 'Profile updated')
-            refreshWorkspaces()
+            showToast('success', 'Profile saved successfully')
+            setEditingMember(null)
           }}
         />
       )}
 
       <div className="space-y-6">
-        {/* ─── Page Header ─── */}
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">Workspace Team</h2>
-              <p className="text-xs text-[#707B95] mt-0.5">Manage members, permissions and invitations.</p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#12192C] border border-white/[.06] text-xs text-[#A9B1C7]">
-                <Users className="w-3.5 h-3.5" />
-                {stats.total} Members
-              </span>
-              {stats.pending > 0 && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
-                  <Clock className="w-3.5 h-3.5" />
-                  {stats.pending} Pending
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#12192C] border border-white/[.06] text-xs text-[#A9B1C7]">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#6C5CFF]" />
-                <span className="capitalize">{userRole || 'Member'}</span>
-              </span>
-            </div>
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[.06] pb-5">
+          <div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Team Settings</h2>
+            <p className="text-xs text-[#707B95] mt-0.5">Manage permissions, invite new contributors, and update workspace availability.</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => refreshWorkspaces()}
+              className="p-2 rounded-lg bg-[#111827] border border-white/[.08] text-[#A9B1C7] hover:text-white hover:bg-white/[.04] transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Sync Data
+            </button>
           </div>
         </div>
 
-        {/* ─── Dashboard Layout: Desktop two-column, Mobile single-column ─── */}
+        {/* Dashboard Layout: Left members list (70%), Right details panels (30%) */}
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* ─── LEFT COLUMN (Members focused) ─── */}
+          
+          {/* LEFT COLUMN: Team Members (70%) */}
           <div className="flex-1 min-w-0 space-y-6 order-2 lg:order-1">
-            {/* Invite Member (Owner/Admin only) */}
-            {isOwnerOrAdmin && !currentWorkspace.isPersonal && (
-              <div className="rounded-2xl border border-white/[.08] bg-[#12192C] p-5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-[#6C5CFF]/10 border border-[#6C5CFF]/20 flex items-center justify-center">
-                    <UserPlus className="w-4 h-4 text-[#6C5CFF]" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-white">Invite Member</h3>
-                    <p className="text-[11px] text-[#707B95]">Send an invitation email with the workspace join code.</p>
-                  </div>
-                </div>
-                <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 relative">
-                    <Mail className="w-4 h-4 text-[#707B95] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="email"
-                      required
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="colleague@company.com"
-                      className="w-full pl-10 pr-3 py-3 rounded-xl bg-[#0D1427] border border-white/[.08] text-white placeholder-[#707B95] text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
-                    />
-                  </div>
-                  <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as 'editor' | 'viewer')}
-                    className="px-3.5 py-3 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors cursor-pointer"
-                  >
-                    <option value="editor">Editor</option>
-                    <option value="viewer">Viewer</option>
-                  </select>
-                  <button
-                    type="submit"
-                    disabled={isSendingInvite}
-                    className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-[#6C5CFF] hover:bg-[#7E70FF] text-white text-sm font-semibold transition-all disabled:opacity-50 shrink-0 cursor-pointer active:scale-[.97]"
-                  >
-                    {isSendingInvite ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    <span className="hidden sm:inline">Send Invite</span>
-                    <span className="sm:hidden">Invite</span>
-                  </button>
-                </form>
-              </div>
-            )}
-
-            {/* Pending Invitations */}
-            {invitations.length > 0 && (
-              <div className="rounded-2xl border border-white/[.08] bg-[#12192C]">
-                <div className="px-5 py-4 border-b border-white/[.06] flex items-center justify-between">
+            
+            {/* Pending Invitations list */}
+            {capabilities.canViewInvitations && invitations.length > 0 && (
+              <div className="rounded-2xl border border-white/[.08] bg-[#111827] overflow-hidden">
+                <div className="px-5 py-4 border-b border-white/[.06] flex items-center justify-between bg-white/[.01]">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-amber-400" />
-                    <h3 className="text-sm font-semibold text-white">Pending Invitations</h3>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-medium">
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Pending Invitations</h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-semibold">
                       {invitations.length}
                     </span>
                   </div>
@@ -523,75 +693,68 @@ export function WorkspaceTeamSection() {
                   {invitations.map((inv) => (
                     <div key={inv.id} className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-full bg-[#161F36] border border-white/[.08] flex items-center justify-center text-[#707B95] shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-[#1F2937] border border-white/[.08] flex items-center justify-center text-[#707B95] shrink-0">
                           <Mail className="w-3.5 h-3.5" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-sm text-white truncate">{inv.email}</p>
+                          <p className="text-xs font-semibold text-white truncate">{inv.email}</p>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span
-                              className="text-[10px] px-1.5 py-0.5 rounded font-medium capitalize"
+                              className="text-[9px] px-1.5 py-0.2 rounded font-bold capitalize border"
                               style={{
                                 background: roleBadge[inv.role]?.bg,
                                 color: roleBadge[inv.role]?.text,
-                                border: `1px solid ${roleBadge[inv.role]?.border}`,
+                                borderColor: roleBadge[inv.role]?.border,
                               }}
                             >
                               {inv.role}
                             </span>
-                            <span className="text-[11px] text-[#707B95]">
+                            <span className="text-[10px] text-[#707B95]">
                               Sent {relDate(inv.createdAt)}
                             </span>
                           </div>
                         </div>
                       </div>
-                      {isOwnerOrAdmin && (
-                        <button
-                          onClick={() => handleRevokeInvitation(inv.id)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[#EF5350] hover:bg-[#EF5350]/10 transition-colors shrink-0"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          Cancel
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleRevokeInvitation(inv.id)}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-[#EF5350] hover:bg-[#EF5350]/10 transition-colors shrink-0 font-medium cursor-pointer"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Cancel Invitation
+                      </button>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* ─── Team Members ─── */}
-            <div className="rounded-2xl border border-white/[.08] bg-[#12192C]">
-              <div className="px-5 py-4 border-b border-white/[.06] flex items-center justify-between">
+            {/* Team Members List Card */}
+            <div className="rounded-2xl border border-white/[.08] bg-[#111827] overflow-hidden">
+              <div className="px-5 py-4 border-b border-white/[.06] flex items-center justify-between bg-white/[.01]">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#6C5CFF]" />
-                  <h3 className="text-sm font-semibold text-white">Team Members</h3>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#6C5CFF]/15 text-[#6C5CFF] font-medium">
-                    {members.length}
+                  <h3 className="text-xs font-bold text-white uppercase tracking-wider">Workspace Members</h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#6C5CFF]/15 text-[#6C5CFF] font-semibold">
+                    {stats.total} Active
                   </span>
                 </div>
               </div>
 
               {members.length === 0 ? (
-                /* Empty State */
-                <div className="px-5 py-12 flex flex-col items-center text-center">
-                  <div className="w-14 h-14 rounded-2xl bg-[#161F36] border border-white/[.08] flex items-center justify-center mb-4">
-                    <Users className="w-7 h-7 text-[#707B95]" />
-                  </div>
-                  <h4 className="text-sm font-semibold text-white mb-1">No team members yet</h4>
-                  <p className="text-xs text-[#707B95] max-w-xs">
-                    Invite your first teammate using their email or share your workspace join code.
-                  </p>
+                <div className="px-5 py-16 flex flex-col items-center text-center">
+                  <Users className="w-8 h-8 text-[#707B95] mb-2.5" />
+                  <h4 className="text-sm font-bold text-white">No active members found</h4>
+                  <p className="text-xs text-[#707B95] max-w-xs mt-1">This workspace doesn't have any members.</p>
                 </div>
               ) : (
-                /* Members Grid */
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-white/[.04]">
+                <div className="divide-y divide-white/[.04]">
                   {members.map((member) => {
                     const isSelf = member.userId === user?.id
                     const isMemberOwner = member.role === 'owner'
                     const badge = roleBadge[member.role] || roleBadge.viewer
-                    const initials = member.profile?.fullName
-                      ? member.profile.fullName
+                    const statusConfig = availabilityBadge[member.availability || 'available']
+                    const initials = member.profile?.displayName
+                      ? member.profile.displayName
                           .split(' ')
                           .map((n) => n[0])
                           .join('')
@@ -602,96 +765,137 @@ export function WorkspaceTeamSection() {
                     return (
                       <div
                         key={member.id}
-                        className="bg-[#12192C] p-5 hover:bg-[#161F36] transition-colors group relative"
+                        className="p-5 hover:bg-white/[.01] transition-colors relative flex flex-col sm:flex-row sm:items-start justify-between gap-4 group"
                       >
-                        <div className="flex items-start gap-3.5">
-                          {/* Avatar */}
-                          <div className="relative shrink-0">
+                        <div className="flex items-start gap-4 min-w-0">
+                          {/* Avatar & Online Dot */}
+                          <div className="relative shrink-0 mt-0.5">
                             {member.profile?.avatarUrl ? (
                               <img
                                 src={member.profile.avatarUrl}
                                 alt=""
-                                className="w-10 h-10 rounded-full object-cover border border-white/[.08]"
+                                className="w-12 h-12 rounded-xl object-cover border border-white/[.08]"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6C5CFF] to-[#9B8FFF] flex items-center justify-center text-white text-sm font-semibold">
+                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#6C5CFF] to-[#9B8FFF] flex items-center justify-center text-white text-base font-bold shadow-lg">
                                 {initials}
                               </div>
                             )}
+                            {/* Crown for Owner */}
                             {isMemberOwner && (
-                              <div className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-amber-500 flex items-center justify-center border-2 border-[#12192C]">
+                              <div className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-amber-500 flex items-center justify-center border border-[#111827] shadow">
                                 <Crown className="w-2.5 h-2.5 text-white" />
                               </div>
                             )}
+                            {/* Availability status badge */}
+                            <div
+                              className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-[#111827] ${statusConfig.dot}`}
+                              title={`Status: ${member.availability}`}
+                            />
                           </div>
 
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              <span className="text-sm font-semibold text-white truncate">
-                                {member.profile?.fullName || 'Team Member'}
+                          {/* Member info */}
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-bold text-white truncate">
+                                {member.profile?.displayName || member.profile?.fullName || 'Team Member'}
                               </span>
+                              
+                              {/* Badges */}
                               {isSelf && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#6C5CFF]/15 text-[#6C5CFF] font-medium">
+                                <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#6C5CFF]/15 text-[#6C5CFF] font-semibold border border-[#6C5CFF]/20">
                                   You
                                 </span>
                               )}
-                            </div>
-
-                            {member.profile?.teamTitle && (
-                              <p className="text-xs text-[#A9B1C7] mt-0.5 truncate">{member.profile.teamTitle}</p>
-                            )}
-
-                            {member.profile?.aboutBio && (
-                              <p className="text-[11px] text-[#707B95] mt-1 line-clamp-2 leading-relaxed">
-                                {member.profile.aboutBio}
-                              </p>
-                            )}
-
-                            <div className="flex items-center flex-wrap gap-2 mt-2">
                               <span
-                                className="text-[10px] px-1.5 py-0.5 rounded font-medium capitalize"
+                                className="text-[9px] px-1.5 py-0.2 rounded font-bold capitalize border"
                                 style={{
                                   background: badge.bg,
                                   color: badge.text,
-                                  border: `1px solid ${badge.border}`,
+                                  borderColor: badge.border,
                                 }}
                               >
                                 {member.role}
                               </span>
+                              {member.department && (
+                                <span className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded bg-white/[.03] text-[#A9B1C7] border border-white/[.06]">
+                                  <Tag className="w-2.5 h-2.5 text-[#707B95]" />
+                                  {member.department}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Job Title */}
+                            <p className="text-xs font-medium text-white/[.8] flex items-center gap-1.5">
+                              <Briefcase className="w-3.5 h-3.5 text-[#707B95] shrink-0" />
+                              {member.teamTitle || 'No title set'}
+                            </p>
+
+                            {/* Bio / About */}
+                            {member.teamBio && (
+                              <p className="text-xs text-[#707B95] leading-relaxed max-w-xl italic">
+                                "{member.teamBio}"
+                              </p>
+                            )}
+
+                            {/* Social Icons & Meta details */}
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-1 text-[11px] text-[#707B95]">
                               {member.profile?.email && (
-                                <span className="text-[11px] text-[#707B95] truncate max-w-[160px]">
+                                <span className="hover:text-white transition-colors cursor-pointer truncate max-w-[180px]" onClick={() => handleCopyEmail(member.profile?.email)}>
                                   {member.profile.email}
                                 </span>
                               )}
-                              <span className="text-[11px] text-[#707B95] flex items-center gap-1">
+                              {member.profile?.location && (
+                                <span className="flex items-center gap-1 shrink-0">
+                                  <MapPin className="w-3 h-3" />
+                                  {member.profile.location}
+                                </span>
+                              )}
+                              <span className="flex items-center gap-1 shrink-0">
                                 <Calendar className="w-3 h-3" />
-                                {relDate(member.joinedAt)}
+                                Joined {relDate(member.joinedAt)}
                               </span>
+                              {/* Global Links */}
+                              {member.profile?.github && (
+                                <a href={member.profile.github} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors shrink-0">
+                                  <GithubIcon className="w-3 h-3" />
+                                </a>
+                              )}
+                              {member.profile?.linkedin && (
+                                <a href={member.profile.linkedin} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors shrink-0">
+                                  <LinkedinIcon className="w-3 h-3" />
+                                </a>
+                              )}
+                              {member.profile?.website && (
+                                <a href={member.profile.website} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors shrink-0">
+                                  <Globe className="w-3 h-3" />
+                                </a>
+                              )}
                             </div>
                           </div>
+                        </div>
 
-                          {/* Actions */}
-                          <div className="shrink-0 flex items-center gap-1">
-                            {isSelf && (
-                              <button
-                                onClick={() => setEditingMember(member)}
-                                className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.06] transition-colors"
-                                title="Edit Profile"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-                            )}
-                            {isOwnerOrAdmin && !isSelf && !isMemberOwner && (
-                              <MemberActionMenu
-                                member={member}
-                                onChangeRole={(role) => updateMemberRole(member.userId, role)}
-                                onRemove={() => handleRemoveMember(member)}
-                                onTransfer={() => handleTransferOwnership(member)}
-                                canTransfer={isOwner}
-                              />
-                            )}
-                          </div>
+                        {/* Actions */}
+                        <div className="flex items-center gap-1.5 self-end sm:self-start">
+                          {isSelf && (
+                            <button
+                              onClick={() => setEditingMember(member)}
+                              className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.06] transition-colors cursor-pointer"
+                              title="Edit Your Profile"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                          )}
+                          {!isSelf && (
+                            <MemberActionMenu
+                              member={member}
+                              capabilities={capabilities}
+                              onChangeRole={(role) => updateMemberRole(member.userId, role)}
+                              onRemove={() => handleRemoveMember(member)}
+                              onTransfer={() => handleTransferOwnership(member)}
+                              onCopyEmail={() => handleCopyEmail(member.profile?.email)}
+                            />
+                          )}
                         </div>
                       </div>
                     )
@@ -701,108 +905,158 @@ export function WorkspaceTeamSection() {
             </div>
           </div>
 
-          {/* ─── RIGHT COLUMN (Info panels) ─── */}
+          {/* RIGHT COLUMN: Sidebar Cards (30%) */}
           <div className="w-full lg:w-80 xl:w-96 shrink-0 space-y-5 order-1 lg:order-2">
-            {/* Workspace Info Card */}
-            <div className="rounded-2xl border border-white/[.08] bg-[#12192C] p-5 space-y-4">
+            
+            {/* Overview / Card */}
+            <div className="rounded-2xl border border-white/[.08] bg-[#111827] p-5 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6C5CFF] to-[#9B8FFF] flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6C5CFF] to-[#9B8FFF] flex items-center justify-center text-white font-bold text-sm shadow-md">
                   {currentWorkspace.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-white truncate">{currentWorkspace.name}</h3>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium border ${
+                  <h3 className="text-sm font-bold text-white truncate">{currentWorkspace.name}</h3>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold border uppercase tracking-wider ${
                     currentWorkspace.isPersonal
                       ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                      : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                      : 'bg-[#6C5CFF]/10 text-[#6C5CFF] border-[#6C5CFF]/20'
                   }`}>
                     {currentWorkspace.isPersonal ? 'Personal' : 'Team Workspace'}
                   </span>
                 </div>
               </div>
+              
+              {!!currentWorkspace.metadata?.description && (
+                <p className="text-xs text-[#707B95] leading-relaxed pt-1">
+                  {currentWorkspace.metadata.description as string}
+                </p>
+              )}
 
-              <div className="space-y-2.5 pt-1">
+              <div className="space-y-2.5 pt-2 border-t border-white/[.06]">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-[#707B95]">Members</span>
-                  <span className="text-white font-medium">{stats.total}</span>
+                  <span className="text-[#707B95]">Active Members</span>
+                  <span className="text-white font-semibold">{stats.total}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-[#707B95]">Owners</span>
+                  <span className="text-white font-semibold">{stats.owners}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[#707B95]">Admins</span>
-                  <span className="text-white font-medium">{stats.admins}</span>
+                  <span className="text-white font-semibold">{stats.admins}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[#707B95]">Editors</span>
-                  <span className="text-white font-medium">{stats.editors}</span>
+                  <span className="text-white font-semibold">{stats.editors}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[#707B95]">Viewers</span>
-                  <span className="text-white font-medium">{stats.viewers}</span>
+                  <span className="text-white font-semibold">{stats.viewers}</span>
                 </div>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-[#707B95]">Pending</span>
-                  <span className="text-amber-400 font-medium">{stats.pending}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-[#707B95]">Created</span>
-                  <span className="text-white font-medium">{relDate(currentWorkspace.createdAt)}</span>
+                  <span className="text-amber-400 font-semibold">{stats.pending}</span>
                 </div>
               </div>
             </div>
 
-            {/* Join Code Card (non-personal only) */}
+            {/* Invite Form Card */}
+            {capabilities.canInvite && (
+              <div className="rounded-2xl border border-white/[.08] bg-[#111827] p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#6C5CFF]/10 border border-[#6C5CFF]/20 flex items-center justify-center">
+                    <UserPlus className="w-3.5 h-3.5 text-[#6C5CFF]" />
+                  </div>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Invite Contributor</h4>
+                </div>
+                <form onSubmit={handleSendInvite} className="space-y-3">
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-[#707B95] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="email"
+                      required
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="email@address.com"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white placeholder-[#707B95] text-xs focus:outline-none focus:border-[#6C5CFF] transition-colors"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <select
+                      value={inviteRole}
+                      onChange={(e) => setInviteRole(e.target.value as any)}
+                      className="flex-1 px-3 py-2 rounded-xl bg-[#0D1427] border border-white/[.08] text-white text-xs focus:outline-none focus:border-[#6C5CFF] transition-colors cursor-pointer"
+                    >
+                      <option value="editor">Editor</option>
+                      <option value="viewer">Viewer</option>
+                    </select>
+                    <button
+                      type="submit"
+                      disabled={isSendingInvite}
+                      className="px-4 py-2 rounded-xl bg-[#6C5CFF] hover:bg-[#7E70FF] text-white text-xs font-semibold transition-all disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                    >
+                      {isSendingInvite ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                      Invite
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Join Code Card */}
             {!currentWorkspace.isPersonal && (
-              <div className="rounded-2xl border border-white/[.08] bg-[#12192C] p-5 space-y-3">
+              <div className="rounded-2xl border border-white/[.08] bg-[#111827] p-5 space-y-3">
                 <div className="flex items-center gap-2">
                   <Hash className="w-4 h-4 text-[#6C5CFF]" />
-                  <h4 className="text-xs font-semibold text-white uppercase tracking-wider">Join Code</h4>
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">Join Code</h4>
                 </div>
 
-                <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#0D1427] border border-white/[.08]">
-                  <span className="font-mono text-base font-bold tracking-[0.2em] text-white uppercase select-all">
+                <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#0D1427] border border-white/[.08]">
+                  <span className="font-mono text-sm font-bold tracking-[0.2em] text-white uppercase select-all">
                     {formattedCode}
                   </span>
                   <button
                     onClick={handleCopyCode}
-                    className="p-1.5 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.08] transition-colors"
+                    className="p-1 rounded-lg text-[#707B95] hover:text-white hover:bg-white/[.08] transition-colors cursor-pointer"
                     title="Copy Code"
                   >
-                    {copied ? <Check className="w-4 h-4 text-[#16C784]" /> : <Copy className="w-4 h-4" />}
+                    {copied ? <Check className="w-3.5 h-3.5 text-[#16C784]" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
                 </div>
 
-                {isOwnerOrAdmin && (
+                {capabilities.canRegenerateJoinCode && (
                   <button
                     onClick={handleRegenerate}
                     disabled={isRegenerating}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/[.04] hover:bg-white/[.08] border border-white/[.06] text-xs font-medium text-[#A9B1C7] hover:text-white transition-all disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-white/[.03] hover:bg-white/[.06] border border-white/[.06] text-xs font-semibold text-[#A9B1C7] hover:text-white transition-all disabled:opacity-50 cursor-pointer"
                   >
-                    {isRegenerating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                    {isRegenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
                     Regenerate Code
                   </button>
                 )}
-
-                <p className="text-[11px] text-[#707B95] leading-relaxed">
-                  Share this code with teammates. They can join from the workspace switcher → <strong className="text-[#A9B1C7]">Join Workspace</strong>.
-                </p>
               </div>
             )}
 
-            {/* Statistics Card */}
-            <div className="rounded-2xl border border-white/[.08] bg-[#12192C] p-5">
-              <h4 className="text-xs font-semibold text-white uppercase tracking-wider mb-3">Role Distribution</h4>
-              <div className="space-y-2">
+            {/* Role Distribution Card */}
+            <div className="rounded-2xl border border-white/[.08] bg-[#111827] p-5">
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">Role Distribution</h4>
+              <div className="space-y-3">
                 {[
-                  { label: 'Owner', count: members.filter((m) => m.role === 'owner').length, color: '#FBBF24' },
-                  { label: 'Admin', count: stats.admins, color: '#8B7FFF' },
-                  { label: 'Editor', count: stats.editors, color: '#16C784' },
-                  { label: 'Viewer', count: stats.viewers, color: '#707B95' },
+                  { label: 'Owners', count: stats.owners, color: '#FBBF24' },
+                  { label: 'Admins', count: stats.admins, color: '#8B7FFF' },
+                  { label: 'Editors', count: stats.editors, color: '#16C784' },
+                  { label: 'Viewers', count: stats.viewers, color: '#707B95' },
                 ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: item.color }} />
-                    <span className="text-xs text-[#A9B1C7] flex-1">{item.label}</span>
-                    <span className="text-xs font-medium text-white">{item.count}</span>
+                  <div key={item.label} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs text-[#A9B1C7]">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full" style={{ background: item.color }} />
+                        <span>{item.label}</span>
+                      </div>
+                      <span className="font-semibold text-white">{item.count}</span>
+                    </div>
                     {stats.total > 0 && (
-                      <div className="w-16 h-1.5 rounded-full bg-white/[.06] overflow-hidden">
+                      <div className="w-full h-1.5 rounded-full bg-white/[.03] overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
                           style={{
@@ -816,6 +1070,7 @@ export function WorkspaceTeamSection() {
                 ))}
               </div>
             </div>
+
           </div>
         </div>
       </div>
