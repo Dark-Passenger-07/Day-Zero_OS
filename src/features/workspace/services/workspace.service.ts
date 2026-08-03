@@ -1,5 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
-import { isDemoModeEnabled } from '@/lib/supabase/mockClient'
+import { isDemoModeEnabled, getStoredData, saveStoredData, generateMockJoinCode } from '@/lib/supabase/mockClient'
 
 export type WorkspaceRole = 'owner' | 'admin' | 'editor' | 'viewer'
 export type WorkspaceMemberStatus = 'pending' | 'active' | 'suspended' | 'removed'
@@ -13,6 +13,8 @@ export type Workspace = {
   isPersonal: boolean
   logoUrl: string | null
   storagePath: string | null
+  joinCode: string
+  defaultJoinRole: 'editor' | 'viewer'
   metadata: Record<string, unknown>
   createdAt: string
   updatedAt: string
@@ -76,6 +78,8 @@ export async function listUserWorkspaces(userId: string): Promise<Workspace[]> {
       isPersonal: Boolean(ws.is_personal),
       logoUrl: ws.logo_url ?? null,
       storagePath: ws.storage_path ?? null,
+      joinCode: ws.join_code ?? '',
+      defaultJoinRole: (ws.default_join_role as 'editor' | 'viewer') ?? 'editor',
       metadata: ws.metadata ?? {},
       createdAt: ws.created_at,
       updatedAt: ws.updated_at,
@@ -172,6 +176,8 @@ export async function createWorkspace(userId: string, name: string): Promise<Wor
     isPersonal: Boolean(ws.is_personal),
     logoUrl: ws.logo_url ?? null,
     storagePath: ws.storage_path ?? null,
+    joinCode: ws.join_code ?? '',
+    defaultJoinRole: (ws.default_join_role as 'editor' | 'viewer') ?? 'editor',
     metadata: ws.metadata ?? {},
     createdAt: ws.created_at,
     updatedAt: ws.updated_at,
@@ -347,6 +353,124 @@ export async function updateWorkspaceDetails(
   const { error } = await supabase
     .from('workspaces')
     .update(payload)
+    .eq('id', workspaceId)
+
+  if (error) throw error
+}
+
+export async function joinWorkspaceByCode(code: string, userId: string): Promise<string> {
+  const cleanCode = code.replace(/-/, '').trim().toUpperCase()
+  if (cleanCode.length !== 8) {
+    throw new Error('Join code must be exactly 8 alphanumeric characters.')
+  }
+
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const workspaces = db['workspaces'] || []
+    const targetWs = workspaces.find((w: any) => w.join_code?.toUpperCase() === cleanCode)
+    if (!targetWs) {
+      throw new Error('Invalid join code or workspace has been deleted.')
+    }
+
+    const members = db['workspace_members'] || []
+    const existing = members.find((m: any) => m.workspace_id === targetWs.id && m.user_id === userId)
+    if (existing) {
+      if (existing.status === 'active') {
+        throw new Error('You are already an active member of this workspace.')
+      } else if (existing.status === 'suspended') {
+        throw new Error('Your access to this workspace is suspended.')
+      } else {
+        existing.status = 'active'
+        existing.role = targetWs.default_join_role || 'editor'
+        saveStoredData(db)
+        return targetWs.id
+      }
+    }
+
+    const defaultRole = targetWs.default_join_role || 'editor'
+    members.push({
+      id: `wm-${crypto.randomUUID()}`,
+      workspace_id: targetWs.id,
+      user_id: userId,
+      role: defaultRole,
+      status: 'active',
+      joined_at: new Date().toISOString(),
+    })
+    saveStoredData(db)
+
+    // Log Activity in mock DB
+    const actLog = db['activity_log'] || []
+    actLog.unshift({
+      id: crypto.randomUUID(),
+      workspace_id: targetWs.id,
+      project_id: null,
+      action: 'User joined via code',
+      entity_type: 'member',
+      created_at: new Date().toISOString(),
+    })
+    db['activity_log'] = actLog
+    saveStoredData(db)
+
+    return targetWs.id
+  }
+
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc('join_workspace_by_code', {
+    p_join_code: cleanCode,
+    p_user_id: userId,
+  })
+
+  if (error) throw error
+  if (!data || !data.success) {
+    throw new Error(data?.error || 'Failed to join workspace.')
+  }
+
+  return data.workspace_id
+}
+
+export async function regenerateJoinCode(workspaceId: string): Promise<string> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const workspaces = db['workspaces'] || []
+    const ws = workspaces.find((w: any) => w.id === workspaceId)
+    if (!ws) throw new Error('Workspace not found')
+    const newCode = generateMockJoinCode()
+    ws.join_code = newCode
+    saveStoredData(db)
+    return newCode
+  }
+
+  const supabase = getSupabaseClient()
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let newCode = ''
+  for (let i = 0; i < 8; i++) {
+    newCode += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+
+  const { error } = await supabase
+    .from('workspaces')
+    .update({ join_code: newCode })
+    .eq('id', workspaceId)
+
+  if (error) throw error
+  return newCode
+}
+
+export async function updateDefaultJoinRole(workspaceId: string, role: 'editor' | 'viewer'): Promise<void> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const workspaces = db['workspaces'] || []
+    const ws = workspaces.find((w: any) => w.id === workspaceId)
+    if (!ws) throw new Error('Workspace not found')
+    ws.default_join_role = role
+    saveStoredData(db)
+    return
+  }
+
+  const supabase = getSupabaseClient()
+  const { error } = await supabase
+    .from('workspaces')
+    .update({ default_join_role: role })
     .eq('id', workspaceId)
 
   if (error) throw error

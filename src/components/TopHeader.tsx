@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, LogOut, User, Bell } from 'lucide-react'
+import { Search, LogOut, User, Bell, ChevronDown } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { Screen } from '@/types/navigation'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
+import { MobileWorkspaceSwitcher } from '@/features/workspace/components/WorkspaceSwitcher'
 import logoImg from '@/logo.png'
 
 interface TopHeaderProps {
@@ -12,7 +14,9 @@ interface TopHeaderProps {
 
 export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHeaderProps) {
   const { user, profile, signOut } = useAuth()
+  const { currentWorkspace } = useWorkspace()
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [mobileSwitcherOpen, setMobileSwitcherOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -38,8 +42,11 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
 
   return (
     <header className="lg:hidden flex items-center justify-between px-4 h-14 bg-card/85 backdrop-blur-md border-b border-border z-40 sticky top-0 w-full select-none">
-      {/* Title */}
-      <div className="flex items-center gap-2">
+      {/* Mobile Workspace Switcher Trigger */}
+      <button
+        onClick={() => setMobileSwitcherOpen(true)}
+        className="flex items-center gap-2 text-left hover:opacity-80 active:scale-95 transition-all outline-none"
+      >
         <img
           src={logoImg}
           alt="Day Zero OS"
@@ -50,8 +57,13 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
             borderRadius: '5px',
           }}
         />
-        <h1 className="text-base font-semibold tracking-tight text-foreground">Day Zero OS</h1>
-      </div>
+        <div className="flex items-center gap-1">
+          <span className="text-sm font-semibold tracking-tight text-foreground truncate max-w-[130px]">
+            {currentWorkspace?.name || 'Day Zero OS'}
+          </span>
+          <ChevronDown size={14} className="text-muted-foreground shrink-0" />
+        </div>
+      </button>
 
       {/* Actions */}
       <div className="flex items-center gap-3">
@@ -117,6 +129,11 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
           )}
         </div>
       </div>
+
+      <MobileWorkspaceSwitcher
+        isOpen={mobileSwitcherOpen}
+        onClose={() => setMobileSwitcherOpen(false)}
+      />
     </header>
   )
 }

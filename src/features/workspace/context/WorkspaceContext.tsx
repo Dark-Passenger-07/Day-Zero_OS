@@ -23,6 +23,9 @@ import {
   deleteWorkspace as deleteWorkspaceService,
   leaveWorkspace as leaveWorkspaceService,
   updateWorkspaceDetails as updateWorkspaceDetailsService,
+  joinWorkspaceByCode as joinWorkspaceByCodeService,
+  regenerateJoinCode as regenerateJoinCodeService,
+  updateDefaultJoinRole as updateDefaultJoinRoleService,
   type Workspace,
   type WorkspaceMember,
   type WorkspaceInvitation,
@@ -48,6 +51,9 @@ type WorkspaceContextValue = {
   deleteWorkspace: (workspaceId: string) => Promise<void>
   leaveWorkspace: (workspaceId: string) => Promise<void>
   updateWorkspaceDetails: (updates: { name?: string; logoUrl?: string | null; description?: string }) => Promise<void>
+  joinWorkspaceByCode: (code: string) => Promise<void>
+  regenerateJoinCode: () => Promise<string>
+  updateDefaultJoinRole: (role: 'editor' | 'viewer') => Promise<void>
   refreshWorkspaces: () => Promise<void>
 }
 
@@ -231,6 +237,38 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [currentWorkspace, loadWorkspaces],
   )
 
+  const joinWorkspaceByCodeHandler = useCallback(
+    async (code: string) => {
+      if (!user) throw new Error('User not authenticated')
+      const targetWsId = await joinWorkspaceByCodeService(code, user.id)
+      await loadWorkspaces()
+      await switchWorkspaceHandler(targetWsId)
+    },
+    [user, loadWorkspaces, switchWorkspaceHandler],
+  )
+
+  const regenerateJoinCodeHandler = useCallback(async () => {
+    if (!currentWorkspace) throw new Error('No active workspace selected')
+    const newCode = await regenerateJoinCodeService(currentWorkspace.id)
+    setCurrentWorkspaceState((prev) => (prev ? { ...prev, joinCode: newCode } : null))
+    setWorkspaces((prev) =>
+      prev.map((w) => (w.id === currentWorkspace.id ? { ...w, joinCode: newCode } : w)),
+    )
+    return newCode
+  }, [currentWorkspace])
+
+  const updateDefaultJoinRoleHandler = useCallback(
+    async (role: 'editor' | 'viewer') => {
+      if (!currentWorkspace) throw new Error('No active workspace selected')
+      await updateDefaultJoinRoleService(currentWorkspace.id, role)
+      setCurrentWorkspaceState((prev) => (prev ? { ...prev, defaultJoinRole: role } : null))
+      setWorkspaces((prev) =>
+        prev.map((w) => (w.id === currentWorkspace.id ? { ...w, defaultJoinRole: role } : w)),
+      )
+    },
+    [currentWorkspace],
+  )
+
   const userRole: WorkspaceRole | null =
     members.find((m) => m.userId === user?.id)?.role ??
     (currentWorkspace?.ownerId === user?.id ? 'owner' : null)
@@ -254,6 +292,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     deleteWorkspace: deleteWorkspaceHandler,
     leaveWorkspace: leaveWorkspaceHandler,
     updateWorkspaceDetails: updateWorkspaceDetailsHandler,
+    joinWorkspaceByCode: joinWorkspaceByCodeHandler,
+    regenerateJoinCode: regenerateJoinCodeHandler,
+    updateDefaultJoinRole: updateDefaultJoinRoleHandler,
     refreshWorkspaces: loadWorkspaces,
   }
 

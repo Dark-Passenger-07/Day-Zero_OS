@@ -10,6 +10,15 @@ export function setDemoModeEnabled(enabled: boolean) {
   localStorage.setItem('day_zero_os_demo_mode', enabled ? 'true' : 'false')
 }
 
+export function generateMockJoinCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  let code = ''
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
+}
+
 const DEFAULT_PROFILE = {
   id: 'mock-user-id',
   full_name: 'Aravindhnani',
@@ -47,6 +56,8 @@ const INITIAL_DATA: Record<string, any[]> = {
       is_personal: true,
       logo_url: null,
       storage_path: null,
+      join_code: 'PERSCODE',
+      default_join_role: 'editor',
       metadata: {},
       created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       updated_at: new Date().toISOString(),
@@ -59,6 +70,8 @@ const INITIAL_DATA: Record<string, any[]> = {
       is_personal: false,
       logo_url: null,
       storage_path: null,
+      join_code: 'TEAMCODE',
+      default_join_role: 'editor',
       metadata: {},
       created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
       updated_at: new Date().toISOString(),
@@ -389,7 +402,7 @@ const INITIAL_DATA: Record<string, any[]> = {
   ],
 }
 
-function getStoredData(): Record<string, any[]> {
+export function getStoredData(): Record<string, any[]> {
   const dataStr = localStorage.getItem('day_zero_os_mock_db')
   if (!dataStr) {
     localStorage.setItem('day_zero_os_mock_db', JSON.stringify(INITIAL_DATA))
@@ -402,7 +415,7 @@ function getStoredData(): Record<string, any[]> {
   }
 }
 
-function saveStoredData(data: Record<string, any[]>) {
+export function saveStoredData(data: Record<string, any[]>) {
   localStorage.setItem('day_zero_os_mock_db', JSON.stringify(data))
 }
 
@@ -738,7 +751,15 @@ export const mockSupabase = {
       async insert(row: any) {
         const db = getStoredData()
         const table = db[currentTable] || []
-        const newRow = { id: crypto.randomUUID(), created_at: new Date().toISOString(), ...row }
+        let preparedRow = { id: crypto.randomUUID(), created_at: new Date().toISOString(), ...row }
+        if (currentTable === 'workspaces') {
+          preparedRow = {
+            join_code: generateMockJoinCode(),
+            default_join_role: 'editor',
+            ...preparedRow,
+          }
+        }
+        const newRow = preparedRow
         table.unshift(newRow)
         db[currentTable] = table
         saveStoredData(db)

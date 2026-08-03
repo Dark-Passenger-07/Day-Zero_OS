@@ -1,28 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useWorkspace } from '../context/WorkspaceContext'
 import { useAuth } from '@/app/providers/AuthProvider'
 import {
-  createWorkspaceInvitation,
-  listWorkspaceInvitations,
-  resendWorkspaceInvitation,
-  revokeWorkspaceInvitation,
-  copyWorkspaceInvitationLink,
-  type WorkspaceInvitationItem,
-} from '../services/workspace-invitation.service'
-import {
   Users,
-  UserPlus,
   ShieldCheck,
-  RotateCcw,
   Copy,
   Trash2,
   Check,
   Loader2,
-  Mail,
-  Clock,
   Crown,
   AlertTriangle,
-  Search,
+  RefreshCw,
 } from 'lucide-react'
 
 export function WorkspaceTeamSection() {
@@ -34,178 +22,67 @@ export function WorkspaceTeamSection() {
     removeMember,
     updateMemberRole,
     transferOwnership,
+    regenerateJoinCode,
   } = useWorkspace()
 
-  const [invitations, setInvitations] = useState<WorkspaceInvitationItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'admin' | 'editor' | 'viewer'>('editor')
-  const [submitting, setSubmitting] = useState(false)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [copied, setCopied] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
-
-  // Search & Filter state for invitations
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<'created_at' | 'email' | 'role'>('created_at')
-
-  const loadInvitations = async () => {
-    if (!currentWorkspace) return
-    setLoading(true)
-    try {
-      const data = await listWorkspaceInvitations(currentWorkspace.id)
-      setInvitations(data)
-    } catch (err: any) {
-      console.error('Failed to load invitations:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    let active = true
-    if (currentWorkspace?.id) {
-      listWorkspaceInvitations(currentWorkspace.id)
-        .then((data) => {
-          if (active) setInvitations(data)
-        })
-        .catch((err) => console.error('Failed to load invitations:', err))
-        .finally(() => {
-          if (active) setLoading(false)
-        })
-    }
-    return () => {
-      active = false
-    }
-  }, [currentWorkspace?.id])
-
-  const handleSendInvite = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!currentWorkspace || !user || !inviteEmail.trim()) return
-
-    setSubmitting(true)
-    setErrorMsg(null)
-    setSuccessMsg(null)
-
-    try {
-      const { inviteUrl } = await createWorkspaceInvitation({
-        workspaceId: currentWorkspace.id,
-        inviterId: user.id,
-        inviterName: user.email?.split('@')[0] || 'Admin',
-        email: inviteEmail.trim(),
-        role: inviteRole,
-      })
-
-      setInviteEmail('')
-      setSuccessMsg(`Invitation dispatched to ${inviteEmail}. Link created: ${inviteUrl}`)
-      await loadInvitations()
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to send invitation.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  const handleResend = async (invitationId: string) => {
-    if (!currentWorkspace || !user) return
-    setErrorMsg(null)
-    setSuccessMsg(null)
-    try {
-      await resendWorkspaceInvitation(
-        currentWorkspace.id,
-        invitationId,
-        user.id,
-        user.email?.split('@')[0] || 'Admin',
-      )
-      setSuccessMsg('Invitation resent successfully.')
-      await loadInvitations()
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to resend invitation.')
-    }
-  }
-
-  const handleRevoke = async (invitationId: string) => {
-    if (!currentWorkspace || !user) return
-    setErrorMsg(null)
-    setSuccessMsg(null)
-    try {
-      await revokeWorkspaceInvitation(currentWorkspace.id, invitationId, user.id)
-      setSuccessMsg('Invitation cancelled.')
-      await loadInvitations()
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to cancel invitation.')
-    }
-  }
-
-  const handleCopyLink = async (invitationId: string) => {
-    if (!currentWorkspace) return
-    setErrorMsg(null)
-    setSuccessMsg(null)
-    try {
-      const url = await copyWorkspaceInvitationLink(currentWorkspace.id, invitationId)
-      await navigator.clipboard.writeText(url)
-      setCopiedId(invitationId)
-      setSuccessMsg('Invitation link copied to clipboard securely!')
-      setTimeout(() => setCopiedId(null), 2000)
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to copy link.')
-    }
-  }
 
   if (!currentWorkspace) return null
 
   const isOwnerOrAdmin = userRole === 'owner' || userRole === 'admin'
+  const formattedCode = currentWorkspace.joinCode
+    ? `${currentWorkspace.joinCode.slice(0, 4)}-${currentWorkspace.joinCode.slice(4)}`
+    : ''
 
-  // Filter & Sort Logic
-  const filteredAndSortedInvitations = invitations
-    .filter((inv) => {
-      const matchesSearch = inv.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            inv.role.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesStatus = statusFilter === 'all' || inv.status === statusFilter
-      return matchesSearch && matchesStatus
-    })
-    .sort((a, b) => {
-      if (sortBy === 'created_at') {
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      }
-      if (sortBy === 'email') {
-        return a.email.localeCompare(b.email)
-      }
-      if (sortBy === 'role') {
-        return a.role.localeCompare(b.role)
-      }
-      return 0
-    })
+  const handleCopyCode = () => {
+    if (!currentWorkspace.joinCode) return
+    navigator.clipboard.writeText(currentWorkspace.joinCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleRegenerate = async () => {
+    if (!isOwnerOrAdmin) return
+    setIsSubmitting(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+    try {
+      const newCode = await regenerateJoinCode()
+      setSuccessMsg(`Join code regenerated successfully: ${newCode.slice(0, 4)}-${newCode.slice(4)}`)
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to regenerate join code')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
-    <div className="space-y-8">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-slate-900 border border-slate-800">
+    <div className="space-y-6">
+      {/* Header Panel */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-800/80">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-md">
-            {currentWorkspace.name.charAt(0).toUpperCase()}
+          <div className="w-10 h-10 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+            <Users className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold text-white">{currentWorkspace.name}</h3>
-              <span
-                className={`text-[10px] px-2 py-0.5 rounded font-semibold border ${
-                  currentWorkspace.isPersonal
-                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                    : 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                }`}
-              >
-                {currentWorkspace.isPersonal ? 'Personal Workspace' : 'Team Workspace'}
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                Workspace Team
+              </h3>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300 font-medium">
+                {currentWorkspace.name}
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Manage workspace members, role permissions, and pending invitations.
+              Manage workspace members, roles, and collaboration join codes.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs font-medium text-slate-300 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 shrink-0">
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-300 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 shrink-0 self-start sm:self-center">
           <ShieldCheck className="w-4 h-4 text-indigo-400" />
           <span>Your Role: <strong className="text-white capitalize">{userRole || 'Member'}</strong></span>
         </div>
@@ -225,56 +102,60 @@ export function WorkspaceTeamSection() {
         </div>
       )}
 
-      {/* Send Invitation Form (Admins/Owners only) */}
-      {isOwnerOrAdmin && !currentWorkspace.isPersonal && (
+      {/* Share Join Code Section */}
+      {!currentWorkspace.isPersonal && (
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-white">
-            <UserPlus className="w-4 h-4 text-indigo-400" />
-            <span>Invite Team Member</span>
+          <div>
+            <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
+              Share Workspace Join Code
+            </h4>
+            <p className="text-xs text-slate-400 mt-1">
+              Give this 8-digit code to teammates so they can join this workspace instantly.
+            </p>
           </div>
 
-          <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative">
-              <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="email"
-                required
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="colleague@company.com"
-                className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-indigo-500"
-              />
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            {/* Visual Join Code Display */}
+            <div className="flex-1 w-full flex items-center justify-between px-4 py-3 rounded-xl bg-slate-950 border border-slate-850 font-mono text-lg font-bold tracking-widest text-slate-100 uppercase select-all">
+              <span>{formattedCode || '--------'}</span>
+              <button
+                onClick={handleCopyCode}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0 ml-2"
+                title="Copy Join Code"
+              >
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              </button>
             </div>
 
-            <select
-              value={inviteRole}
-              onChange={(e) => setInviteRole(e.target.value as any)}
-              className="px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
-            >
-              <option value="editor">Editor (Create & Edit)</option>
-              <option value="admin">Admin (Manage Members & Settings)</option>
-              <option value="viewer">Viewer (Read Only)</option>
-            </select>
+            {/* Regenerate Action (Owners & Admins only) */}
+            {isOwnerOrAdmin && (
+              <button
+                onClick={handleRegenerate}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition-colors disabled:opacity-50 shrink-0"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                <span>Regenerate Code</span>
+              </button>
+            )}
+          </div>
 
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors disabled:opacity-50 shrink-0"
-            >
-              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Invite'}
-            </button>
-          </form>
+          <div className="text-[11px] text-slate-500">
+            <strong>Join Instructions:</strong> Teammates must click the workspace title at the top header or sidebar, click <strong>"Join Workspace"</strong>, and enter this code.
+          </div>
         </div>
       )}
 
       {/* Active Members Table */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-            <Users className="w-4 h-4 text-slate-500" />
-            Active Members ({members.length})
-          </h4>
-        </div>
+        <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+          <Users className="w-4 h-4 text-slate-500" />
+          Active Members ({members.length})
+        </h4>
 
         <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-800/60">
           {members.map((member) => {
@@ -293,7 +174,9 @@ export function WorkspaceTeamSection() {
                       {isSelf && <span className="text-[10px] text-slate-400 font-normal">(You)</span>}
                       {isOwner && <Crown className="w-3.5 h-3.5 text-amber-400" />}
                     </div>
-                    <div className="text-slate-400 text-[11px]">Joined {new Date(member.joinedAt).toLocaleDateString()}</div>
+                    <div className="text-slate-400 text-[11px]">
+                      Joined {new Date(member.joinedAt).toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
 
@@ -339,123 +222,6 @@ export function WorkspaceTeamSection() {
           })}
         </div>
       </div>
-
-      {/* Invitations Management Panel */}
-      {!currentWorkspace.isPersonal && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-              <Clock className="w-4 h-4 text-slate-500" />
-              Invitations Directory ({filteredAndSortedInvitations.length})
-            </h4>
-
-            {/* Filter controls */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <div className="relative flex items-center">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5" />
-                <input
-                  type="text"
-                  placeholder="Search email/role..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 pr-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500 w-36 sm:w-48"
-                />
-              </div>
-
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 text-xs focus:outline-none"
-              >
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="accepted">Accepted</option>
-                <option value="declined">Declined</option>
-                <option value="expired">Expired</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="revoked">Revoked</option>
-              </select>
-
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-2 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300 text-xs focus:outline-none"
-              >
-                <option value="created_at">Sort by Date</option>
-                <option value="email">Sort by Email</option>
-                <option value="role">Sort by Role</option>
-              </select>
-            </div>
-          </div>
-
-          {loading ? (
-            <div className="p-8 text-center text-xs text-slate-400">Loading invitations...</div>
-          ) : filteredAndSortedInvitations.length === 0 ? (
-            <div className="p-8 border border-dashed border-slate-800 rounded-2xl text-center text-xs text-slate-400">
-              No matching invitations found.
-            </div>
-          ) : (
-            <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-800/60">
-              {filteredAndSortedInvitations.map((inv) => (
-                <div key={inv.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 text-xs">
-                  <div className="min-w-0">
-                    <div className="font-semibold text-slate-100 flex items-center gap-2">
-                      <span className="truncate">{inv.email}</span>
-                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">
-                        {inv.role}
-                      </span>
-                      <span
-                        className={`text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded border ${
-                          inv.status === 'accepted'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : inv.status === 'declined'
-                            ? 'bg-red-500/10 text-red-400 border-red-500/20'
-                            : inv.status === 'pending'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                            : 'bg-slate-800 text-slate-400 border-slate-700'
-                        }`}
-                      >
-                        {inv.status}
-                      </span>
-                    </div>
-                    <div className="text-slate-400 text-[11px] mt-0.5">
-                      Created {new Date(inv.createdAt).toLocaleDateString()} · Expires {new Date(inv.expiresAt).toLocaleDateString()} · Resent {inv.resendCount} times
-                    </div>
-                  </div>
-
-                  {isOwnerOrAdmin && inv.status === 'pending' && (
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleCopyLink(inv.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition-colors"
-                      >
-                        {copiedId === inv.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        <span>{copiedId === inv.id ? 'Copied' : 'Copy Link'}</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleResend(inv.id)}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-medium border border-indigo-500/20 transition-colors"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        <span>Resend</span>
-                      </button>
-
-                      <button
-                        onClick={() => handleRevoke(inv.id)}
-                        className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Cancel Invitation"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }

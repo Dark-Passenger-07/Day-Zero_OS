@@ -71,6 +71,8 @@ export default function Settings() {
     leaveWorkspace,
     updateWorkspaceDetails,
     refreshWorkspaces,
+    regenerateJoinCode,
+    updateDefaultJoinRole,
   } = useWorkspace()
 
   const importRef = useRef<HTMLInputElement | null>(null)
@@ -79,6 +81,9 @@ export default function Settings() {
   const [workspaceName, setWorkspaceName] = useState('')
   const [workspaceLogoUrl, setWorkspaceLogoUrl] = useState('')
   const [workspaceDescription, setWorkspaceDescription] = useState('')
+  const [defaultJoinRole, setDefaultJoinRole] = useState<'editor' | 'viewer'>('editor')
+  const [copied, setCopied] = useState(false)
+  const [isRegenerating, setIsRegenerating] = useState(false)
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('light')
   const [deadlineNotifications, setDeadlineNotifications] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(false)
@@ -103,6 +108,7 @@ export default function Settings() {
       setWorkspaceName(currentWorkspace.name)
       setWorkspaceLogoUrl(currentWorkspace.logoUrl ?? '')
       setWorkspaceDescription((currentWorkspace.metadata?.description as string) ?? '')
+      setDefaultJoinRole(currentWorkspace.defaultJoinRole ?? 'editor')
     }
   }, [currentWorkspace])
 
@@ -124,6 +130,9 @@ export default function Settings() {
           logoUrl: workspaceLogoUrl || null,
           description: workspaceDescription,
         })
+        if (!currentWorkspace.isPersonal) {
+          await updateDefaultJoinRole(defaultJoinRole)
+        }
       }
       await updateSettings({
         theme,
@@ -314,6 +323,72 @@ export default function Settings() {
               <SettingRow label="Workspace Description" description="Short purpose of this workspace">
                 <TextInput value={workspaceDescription} onChange={setWorkspaceDescription} placeholder="Workspace purpose..." />
               </SettingRow>
+
+              {currentWorkspace && !currentWorkspace.isPersonal && (
+                <>
+                  <SettingRow label="Workspace Join Code" description="Code used by teammates to join this workspace">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%' }}>
+                      <span className="font-mono font-bold tracking-wider text-sm bg-slate-950 px-3.5 py-2.5 rounded-xl border border-slate-800 flex-grow select-all min-w-[120px] text-center uppercase flex items-center justify-center">
+                        {currentWorkspace.joinCode ? `${currentWorkspace.joinCode.slice(0, 4)}-${currentWorkspace.joinCode.slice(4)}` : '--------'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentWorkspace.joinCode) {
+                            navigator.clipboard.writeText(currentWorkspace.joinCode)
+                            setCopied(true)
+                            setTimeout(() => setCopied(false), 2000)
+                          }
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        {copied ? 'Copied!' : 'Copy'}
+                      </button>
+                      {(userRole === 'owner' || userRole === 'admin') && (
+                        <button
+                          type="button"
+                          disabled={isRegenerating}
+                          onClick={async () => {
+                            setIsRegenerating(true)
+                            try {
+                              await regenerateJoinCode()
+                              setMessage('Join code regenerated successfully.')
+                            } catch (err: any) {
+                              setMessage(err.message || 'Failed to regenerate join code.')
+                            } finally {
+                              setIsRegenerating(false)
+                            }
+                          }}
+                          className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                        >
+                          {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+                        </button>
+                      )}
+                    </div>
+                  </SettingRow>
+
+                  <SettingRow label="Default Join Role" description="Role assigned automatically to new members joining via code">
+                    <select
+                      value={defaultJoinRole}
+                      disabled={!(userRole === 'owner' || userRole === 'admin')}
+                      onChange={(e) => setDefaultJoinRole(e.target.value as 'editor' | 'viewer')}
+                      style={{
+                        padding: '10px 14px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--border)',
+                        background: 'var(--slate-950, #09090b)',
+                        color: 'var(--foreground)',
+                        fontSize: '12px',
+                        outline: 'none',
+                        width: '100%',
+                      }}
+                    >
+                      <option value="editor">Editor (Can create and edit projects)</option>
+                      <option value="viewer">Viewer (Read-only access)</option>
+                    </select>
+                  </SettingRow>
+                </>
+              )}
             </Section>
           )}
 
