@@ -121,23 +121,23 @@ export async function createWorkspaceInvitation(input: {
   // 4. Fetch Workspace details for Email & Preview
   const { data: ws } = await supabase
     .from('workspaces')
-    .select('name, logo_url')
+    .select('name, logo_url, join_code')
     .eq('id', input.workspaceId)
     .single()
 
   const workspaceName = ws?.name ?? 'Workspace'
   const appUrl = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, '')
   const inviteUrl = `${appUrl}/invite/${invitationId}?secret=${rawSecret}`
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
 
   // 5. Render & Enqueue Invitation Email
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
   const emailPayload = renderInvitationEmail({
     workspaceName,
     workspaceLogo: ws?.logo_url,
     inviterName: input.inviterName,
     role,
-    inviteUrl,
-    expiresAt,
+    joinCode: ws?.join_code || 'WSCODE',
+    appUrl,
   })
 
   await emailQueueService.enqueue({

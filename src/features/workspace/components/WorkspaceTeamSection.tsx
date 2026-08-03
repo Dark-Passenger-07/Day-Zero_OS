@@ -11,6 +11,8 @@ import {
   Crown,
   AlertTriangle,
   RefreshCw,
+  Mail,
+  UserPlus,
 } from 'lucide-react'
 
 export function WorkspaceTeamSection() {
@@ -23,12 +25,34 @@ export function WorkspaceTeamSection() {
     updateMemberRole,
     transferOwnership,
     regenerateJoinCode,
+    inviteMember,
   } = useWorkspace()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [copied, setCopied] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor')
+  const [isSendingInvite, setIsSendingInvite] = useState(false)
+
+  const handleSendInvite = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inviteEmail.trim()) return
+    setIsSendingInvite(true)
+    setErrorMsg(null)
+    setSuccessMsg(null)
+    try {
+      await inviteMember(inviteEmail.trim(), inviteRole)
+      setSuccessMsg(`Invitation email containing the join code has been sent successfully to ${inviteEmail}`)
+      setInviteEmail('')
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Failed to send invitation.')
+    } finally {
+      setIsSendingInvite(false)
+    }
+  }
 
   if (!currentWorkspace) return null
 
@@ -147,6 +171,47 @@ export function WorkspaceTeamSection() {
           <div className="text-[11px] text-slate-500">
             <strong>Join Instructions:</strong> Teammates must click the workspace title at the top header or sidebar, click <strong>"Join Workspace"</strong>, and enter this code.
           </div>
+        </div>
+      )}
+
+      {/* Invite Member Section (Admins/Owners only) */}
+      {isOwnerOrAdmin && !currentWorkspace.isPersonal && (
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div className="flex items-center gap-2 text-sm font-semibold text-white">
+            <UserPlus className="w-4 h-4 text-indigo-400" />
+            <span>Invite Team Member</span>
+          </div>
+
+          <form onSubmit={handleSendInvite} className="flex flex-col sm:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="email"
+                required
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                placeholder="colleague@company.com"
+                className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as 'editor' | 'viewer')}
+              className="px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-indigo-500"
+            >
+              <option value="editor">Editor (Create & Edit)</option>
+              <option value="viewer">Viewer (Read Only)</option>
+            </select>
+
+            <button
+              type="submit"
+              disabled={isSendingInvite}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors disabled:opacity-50 shrink-0 cursor-pointer"
+            >
+              {isSendingInvite ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Send Invite'}
+            </button>
+          </form>
         </div>
       )}
 

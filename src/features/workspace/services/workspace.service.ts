@@ -1,5 +1,7 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { isDemoModeEnabled, getStoredData, saveStoredData, generateMockJoinCode } from '@/lib/supabase/mockClient'
+import { renderInvitationEmail } from '@/lib/email/templates/invitation-template'
+import { emailQueueService } from '@/lib/email/email-queue.service'
 
 export type WorkspaceRole = 'owner' | 'admin' | 'editor' | 'viewer'
 export type WorkspaceMemberStatus = 'pending' | 'active' | 'suspended' | 'removed'
@@ -58,6 +60,36 @@ export function setCachedActiveWorkspaceId(workspaceId: string): void {
 }
 
 export async function listUserWorkspaces(userId: string): Promise<Workspace[]> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const members = db['workspace_members'] || []
+    const workspaces = db['workspaces'] || []
+
+    const userMembers = members.filter((m: any) => m.user_id === userId && m.status === 'active')
+    const list: Workspace[] = []
+
+    for (const m of userMembers) {
+      const ws = workspaces.find((w: any) => w.id === m.workspace_id)
+      if (ws && !ws.deleted_at) {
+        list.push({
+          id: ws.id,
+          ownerId: ws.owner_id,
+          name: ws.name,
+          slug: ws.slug,
+          isPersonal: Boolean(ws.is_personal),
+          logoUrl: ws.logo_url ?? null,
+          storagePath: ws.storage_path ?? null,
+          joinCode: ws.join_code ?? '',
+          defaultJoinRole: (ws.default_join_role as 'editor' | 'viewer') ?? 'editor',
+          metadata: ws.metadata ?? {},
+          createdAt: ws.created_at,
+          updatedAt: ws.updated_at,
+        })
+      }
+    }
+    return list
+  }
+
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('workspace_members')
@@ -108,6 +140,12 @@ export async function resolveCurrentWorkspaceId(userId: string): Promise<string>
     return cachedId
   }
 
+  if (isDemoModeEnabled()) {
+    const personalWs = userWorkspaces.find((w) => w.isPersonal) ?? userWorkspaces[0]
+    setCachedActiveWorkspaceId(personalWs.id)
+    return personalWs.id
+  }
+
   // 3. Priority: user_settings.current_workspace_id
   const supabase = getSupabaseClient()
   const { data: setts } = await supabase
@@ -140,6 +178,58 @@ export async function setCurrentWorkspace(userId: string, workspaceId: string): 
 }
 
 export async function createWorkspace(userId: string, name: string): Promise<Workspace> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'workspace'
+    const slug = `${slugBase}-${Math.random().toString(36).substring(2, 6)}`
+    const wsId = crypto.randomUUID()
+    const joinCode = generateMockJoinCode()
+
+    const newWs = {
+      id: wsId,
+      owner_id: userId,
+      name,
+      slug,
+      is_personal: false,
+      join_code: joinCode,
+      default_join_role: 'editor',
+      metadata: {},
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }
+
+    db['workspaces'] = db['workspaces'] || []
+    db['workspaces'].push(newWs)
+
+    db['workspace_members'] = db['workspace_members'] || []
+    db['workspace_members'].push({
+      id: crypto.randomUUID(),
+      workspace_id: wsId,
+      user_id: userId,
+      role: 'owner',
+      status: 'active',
+      joined_at: new Date().toISOString(),
+    })
+
+    saveStoredData(db)
+    setCachedActiveWorkspaceId(wsId)
+
+    return {
+      id: newWs.id,
+      ownerId: newWs.owner_id,
+      name: newWs.name,
+      slug: newWs.slug,
+      isPersonal: false,
+      logoUrl: null,
+      storagePath: null,
+      joinCode,
+      defaultJoinRole: 'editor',
+      metadata: {},
+      createdAt: newWs.created_at,
+      updatedAt: newWs.updated_at,
+    }
+  }
+
   const supabase = getSupabaseClient()
   const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'workspace'
   const slug = `${slugBase}-${Math.random().toString(36).substring(2, 6)}`
@@ -185,6 +275,32 @@ export async function createWorkspace(userId: string, name: string): Promise<Wor
 }
 
 export async function getWorkspaceMembers(workspaceId: string): Promise<WorkspaceMember[]> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const members = db['workspace_members'] || []
+    const profiles = db['profiles'] || []
+
+    const wsMembers = members.filter((m: any) => m.workspace_id === workspaceId && m.status !== 'removed')
+    return wsMembers.map((item: any) => {
+      const prof = profiles.find((p: any) => p.id === item.user_id)
+      return {
+        id: item.id,
+        workspaceId: item.workspace_id,
+        userId: item.user_id,
+        role: item.role,
+        status: item.status,
+        joinedAt: item.joined_at,
+        profile: prof
+          ? {
+              fullName: prof.full_name ?? null,
+              username: prof.username ?? null,
+              avatarUrl: prof.avatar_url ?? null,
+            }
+          : undefined,
+      }
+    })
+  }
+
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('workspace_members')
@@ -212,6 +328,22 @@ export async function getWorkspaceMembers(workspaceId: string): Promise<Workspac
 }
 
 export async function getWorkspaceInvitations(workspaceId: string): Promise<WorkspaceInvitation[]> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const invitations = db['workspace_invitations'] || []
+    const wsInvs = invitations.filter((i: any) => i.workspace_id === workspaceId && i.status === 'pending')
+    return wsInvs.map((item: any) => ({
+      id: item.id,
+      workspaceId: item.workspace_id,
+      email: item.email,
+      role: item.role,
+      invitedBy: item.invited_by,
+      status: item.status,
+      expiresAt: item.expires_at,
+      createdAt: item.created_at || new Date().toISOString(),
+    }))
+  }
+
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('workspace_invitations')
@@ -239,25 +371,140 @@ export async function inviteWorkspaceMember(
   email: string,
   role: 'admin' | 'editor' | 'viewer' = 'editor',
 ): Promise<void> {
+  const cleanEmail = email.trim().toLowerCase()
+  if (!cleanEmail) throw new Error('Email address is required.')
+
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const workspaces = db['workspaces'] || []
+    const ws = workspaces.find((w: any) => w.id === workspaceId)
+    if (!ws) throw new Error('Workspace not found')
+
+    const members = db['workspace_members'] || []
+    const existingMember = members.find((m: any) => m.workspace_id === workspaceId && m.user_id === cleanEmail)
+    if (existingMember && existingMember.status === 'active') {
+      throw new Error('This user is already an active member of this workspace.')
+    }
+
+    const invitations = db['workspace_invitations'] || []
+    invitations.push({
+      id: `inv-${crypto.randomUUID()}`,
+      workspace_id: workspaceId,
+      email: cleanEmail,
+      role,
+      invited_by: invitedByUserId,
+      status: 'pending',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString(),
+    })
+    saveStoredData(db)
+
+    const inviterProfile = (db['profiles'] || []).find((p: any) => p.id === invitedByUserId)
+    const inviterName = inviterProfile?.full_name || 'A team member'
+
+    const appUrl = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, '')
+    const emailPayload = renderInvitationEmail({
+      workspaceName: ws.name,
+      workspaceLogo: ws.logo_url,
+      inviterName,
+      role,
+      joinCode: ws.join_code || 'WSCODE',
+      appUrl,
+    })
+
+    await emailQueueService.enqueue({
+      to: cleanEmail,
+      subject: emailPayload.subject,
+      html: emailPayload.html,
+      text: emailPayload.text,
+      replyTo: 'dayzeromedia.co@gmail.com',
+    })
+
+    return
+  }
+
   const supabase = getSupabaseClient()
 
-  const rawToken = crypto.randomUUID() + '-' + crypto.randomUUID()
+  // 1. Check if user is already an active member
+  const { data: memberProfiles } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('username', cleanEmail.split('@')[0])
+
+  if (memberProfiles && memberProfiles.length > 0) {
+    const userIds = memberProfiles.map((p: any) => p.id)
+    const { data: activeMembers } = await supabase
+      .from('workspace_members')
+      .select('id')
+      .eq('workspace_id', workspaceId)
+      .eq('status', 'active')
+      .in('user_id', userIds)
+
+    if (activeMembers && activeMembers.length > 0) {
+      throw new Error('This user is already an active member of this workspace.')
+    }
+  }
+
+  // 2. Fetch workspace details
+  const { data: ws, error: wsErr } = await supabase
+    .from('workspaces')
+    .select('name, logo_url, join_code')
+    .eq('id', workspaceId)
+    .single()
+
+  if (wsErr || !ws) throw new Error('Workspace not found.')
+
+  // 3. Fetch inviter profile name
+  const { data: inviter } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', invitedByUserId)
+    .single()
+
+  const inviterName = inviter?.full_name || 'A team member'
+
+  // 4. Generate random token hash for DB audit compatibility
+  const rawToken = crypto.randomUUID()
   const encoder = new TextEncoder()
   const data = encoder.encode(rawToken)
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   const tokenHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 
-  const { error } = await supabase.from('workspace_invitations').insert({
-    workspace_id: workspaceId,
-    email,
+  // 5. Insert audit record in workspace_invitations
+  const { error: inviteErr } = await supabase
+    .from('workspace_invitations')
+    .insert({
+      workspace_id: workspaceId,
+      email: cleanEmail,
+      role,
+      invited_by: invitedByUserId,
+      token_hash: tokenHash,
+      secret_hash: tokenHash,
+      status: 'pending',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    })
+
+  if (inviteErr) throw inviteErr
+
+  // 6. Send Invitation Email containing the join code
+  const appUrl = (import.meta.env.VITE_APP_URL || window.location.origin).replace(/\/$/, '')
+  const emailPayload = renderInvitationEmail({
+    workspaceName: ws.name,
+    workspaceLogo: ws.logo_url,
+    inviterName,
     role,
-    invited_by: invitedByUserId,
-    token_hash: tokenHash,
-    status: 'pending',
+    joinCode: ws.join_code,
+    appUrl,
   })
 
-  if (error) throw error
+  await emailQueueService.enqueue({
+    to: cleanEmail,
+    subject: emailPayload.subject,
+    html: emailPayload.html,
+    text: emailPayload.text,
+    replyTo: 'dayzeromedia.co@gmail.com',
+  })
 }
 
 export async function revokeWorkspaceInvitation(workspaceId: string, invitationId: string): Promise<void> {
@@ -273,9 +520,25 @@ export async function revokeWorkspaceInvitation(workspaceId: string, invitationI
 
 export async function transferWorkspaceOwnership(
   workspaceId: string,
-  _currentOwnerId: string,
+  currentOwnerId: string,
   newOwnerId: string,
 ): Promise<void> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const members = db['workspace_members'] || []
+    const oldOwner = members.find((m: any) => m.workspace_id === workspaceId && m.user_id === currentOwnerId)
+    const newOwner = members.find((m: any) => m.workspace_id === workspaceId && m.user_id === newOwnerId)
+    if (newOwner) newOwner.role = 'owner'
+    if (oldOwner) oldOwner.role = 'admin'
+
+    const workspaces = db['workspaces'] || []
+    const ws = workspaces.find((w: any) => w.id === workspaceId)
+    if (ws) ws.owner_id = newOwnerId
+
+    saveStoredData(db)
+    return
+  }
+
   const supabase = getSupabaseClient()
   const { error } = await supabase.rpc('transfer_workspace_ownership', {
     target_workspace_id: workspaceId,
@@ -286,6 +549,17 @@ export async function transferWorkspaceOwnership(
 }
 
 export async function removeWorkspaceMember(workspaceId: string, memberUserId: string): Promise<void> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const members = db['workspace_members'] || []
+    const member = members.find((m: any) => m.workspace_id === workspaceId && m.user_id === memberUserId)
+    if (member) {
+      member.status = 'removed'
+      saveStoredData(db)
+    }
+    return
+  }
+
   const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('workspace_members')
@@ -301,6 +575,17 @@ export async function updateWorkspaceMemberRole(
   memberUserId: string,
   newRole: 'admin' | 'editor' | 'viewer',
 ): Promise<void> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const members = db['workspace_members'] || []
+    const member = members.find((m: any) => m.workspace_id === workspaceId && m.user_id === memberUserId)
+    if (member) {
+      member.role = newRole
+      saveStoredData(db)
+    }
+    return
+  }
+
   const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('workspace_members')
@@ -312,6 +597,17 @@ export async function updateWorkspaceMemberRole(
 }
 
 export async function deleteWorkspace(workspaceId: string): Promise<void> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const workspaces = db['workspaces'] || []
+    const ws = workspaces.find((w: any) => w.id === workspaceId)
+    if (ws) {
+      ws.deleted_at = new Date().toISOString()
+      saveStoredData(db)
+    }
+    return
+  }
+
   const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('workspaces')
@@ -322,6 +618,17 @@ export async function deleteWorkspace(workspaceId: string): Promise<void> {
 }
 
 export async function leaveWorkspace(workspaceId: string, userId: string): Promise<void> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const members = db['workspace_members'] || []
+    const member = members.find((m: any) => m.workspace_id === workspaceId && m.user_id === userId)
+    if (member) {
+      member.status = 'removed'
+      saveStoredData(db)
+    }
+    return
+  }
+
   const supabase = getSupabaseClient()
   const { error } = await supabase
     .from('workspace_members')
@@ -336,6 +643,21 @@ export async function updateWorkspaceDetails(
   workspaceId: string,
   updates: { name?: string; logoUrl?: string | null; description?: string },
 ): Promise<void> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const workspaces = db['workspaces'] || []
+    const ws = workspaces.find((w: any) => w.id === workspaceId)
+    if (ws) {
+      if (updates.name !== undefined) ws.name = updates.name
+      if (updates.logoUrl !== undefined) ws.logo_url = updates.logoUrl
+      if (updates.description !== undefined) {
+        ws.metadata = { ...(ws.metadata || {}), description: updates.description }
+      }
+      saveStoredData(db)
+    }
+    return
+  }
+
   const supabase = getSupabaseClient()
   const payload: any = {}
   if (updates.name !== undefined) payload.name = updates.name
