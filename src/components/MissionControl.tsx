@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import type { Screen } from '@/types/navigation'
 import { useAuth } from '@/app/providers/AuthProvider'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import {
   fetchDashboardData,
   type DashboardData,
@@ -29,14 +30,16 @@ interface Props {
 
 export default function MissionControl({ onNavigate }: Props) {
   const { profile, user } = useAuth()
+  const { workspaceId } = useWorkspace()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
     async function loadData() {
+      if (!workspaceId) return
       try {
-        const dashboard = await fetchDashboardData()
+        const dashboard = await fetchDashboardData(workspaceId)
         if (active) {
           setData(dashboard)
         }
@@ -52,7 +55,7 @@ export default function MissionControl({ onNavigate }: Props) {
     return () => {
       active = false
     }
-  }, [])
+  }, [workspaceId])
 
   if (loading) {
     return (

@@ -12,6 +12,9 @@ const PrivacyPolicy = lazy(() => import('@/components/legal/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('@/components/legal/TermsOfService'))
 const About = lazy(() => import('@/components/legal/About'))
 const Support = lazy(() => import('@/components/legal/Support'))
+const InviteAcceptance = lazy(() =>
+  import('@/features/workspace/pages/InviteAcceptance').then((m) => ({ default: m.InviteAcceptance })),
+)
 const MissionControl = lazy(() => import('@/components/MissionControl'))
 const Projects = lazy(() => import('@/components/Projects'))
 const ProjectWorkspace = lazy(() => import('@/components/ProjectWorkspace'))
@@ -129,6 +132,8 @@ export function AppRoutes() {
           <Route path="/about" element={<About />} />
           <Route path="/support" element={<Support />} />
         </Route>
+
+        <Route path="/invite/:id" element={<InviteAcceptance />} />
 
         <Route
           element={

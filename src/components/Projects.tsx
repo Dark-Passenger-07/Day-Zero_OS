@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import type { Screen } from '@/types/navigation'
 import { useAuth } from '@/app/providers/AuthProvider'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import {
   archiveProject,
@@ -48,6 +49,7 @@ interface Props {
 
 export default function Projects({ onNavigate, onOpenProject }: Props) {
   const { user } = useAuth()
+  const { workspaceId } = useWorkspace()
   const [view, setView] = useState<ViewMode>('table')
   const [filter, setFilter] = useState<Status | 'all'>('all')
   const [query, setQuery] = useState('')
@@ -62,11 +64,12 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
     let active = true
 
     async function loadProjects() {
+      if (!workspaceId) return
       setLoading(true)
       setError(null)
 
       try {
-        const result = await listProjects(showArchived)
+        const result = await listProjects(workspaceId, showArchived)
         if (active) setProjects(result)
       } catch (err) {
         if (active) setError(err instanceof Error ? err.message : 'Failed to load projects.')
@@ -80,7 +83,7 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
     return () => {
       active = false
     }
-  }, [showArchived])
+  }, [showArchived, workspaceId])
 
   const filtered = (
     filter === 'all' ? projects : projects.filter((project) => project.status === filter)
@@ -123,6 +126,7 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
     try {
       const created = await createProject({
         ownerId: user.id,
+        workspaceId: workspaceId || undefined,
         name: values.name.trim(),
         description: values.description?.trim(),
       })
@@ -135,7 +139,7 @@ export default function Projects({ onNavigate, onOpenProject }: Props) {
     }
   }
 
-  const refresh = async () => setProjects(await listProjects(showArchived))
+  const refresh = async () => setProjects(await listProjects(workspaceId || undefined, showArchived))
 
   const handleArchive = async (project: ProjectListItem) => {
     const confirm = await openForm({

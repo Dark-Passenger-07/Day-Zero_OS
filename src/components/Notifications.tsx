@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Bell, CheckCheck, Search, Trash2 } from 'lucide-react'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import {
   deleteNotification,
@@ -10,6 +11,7 @@ import {
 } from '@/features/notifications/services/notifications.service'
 
 export default function Notifications() {
+  const { workspaceId } = useWorkspace()
   const [items, setItems] = useState<NotificationItem[]>([])
   const [query, setQuery] = useState('')
   const [unreadOnly, setUnreadOnly] = useState(false)
@@ -18,16 +20,17 @@ export default function Notifications() {
   const [message, setMessage] = useState<string | null>(null)
 
   const load = useCallback(async () => {
+    if (!workspaceId) return
     setLoading(true)
     setError(null)
     try {
-      setItems(await listNotifications(query, unreadOnly))
+      setItems(await listNotifications(workspaceId, query, unreadOnly))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load notifications.')
     } finally {
       setLoading(false)
     }
-  }, [query, unreadOnly])
+  }, [workspaceId, query, unreadOnly])
 
   useEffect(() => {
     const timer = window.setTimeout(load, 150)
@@ -63,7 +66,7 @@ export default function Notifications() {
           </p>
         </div>
         <button
-          onClick={() => act(markAllNotificationsRead, 'All notifications marked read.')}
+          onClick={() => act(() => markAllNotificationsRead(workspaceId || undefined), 'All notifications marked read.')}
           style={buttonStyle}
         >
           <CheckCheck size={13} /> Mark all read

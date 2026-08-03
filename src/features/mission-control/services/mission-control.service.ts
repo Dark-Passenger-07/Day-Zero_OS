@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { requireWorkspaceId } from '@/features/workspace/services/workspace-helpers'
 
 export type UpcomingDeadline = {
   name: string
@@ -61,22 +62,25 @@ function getProjectName(project: any) {
   return project?.name
 }
 
-export async function fetchDashboardData(): Promise<DashboardData> {
+export async function fetchDashboardData(workspaceId?: string): Promise<DashboardData> {
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
 
-  // 1. Fetch active projects count
+  // 1. Fetch active projects count in target workspace
   const { data: projects } = await supabase
     .from('projects')
     .select('id, status')
+    .eq('workspace_id', targetWorkspaceId)
     .is('deleted_at', null)
     .neq('status', 'archived')
 
   const activeProjectsCount = (projects || []).length
 
-  // 2. Fetch upcoming deadlines (both Milestones and Tasks)
+  // 2. Fetch upcoming deadlines (both Milestones and Tasks) for workspace projects
   const { data: upcomingMilestones } = await supabase
     .from('milestones')
-    .select('title, due_date, project:projects(name)')
+    .select('title, due_date, project:projects!inner(name, workspace_id)')
+    .eq('project.workspace_id', targetWorkspaceId)
     .neq('status', 'completed')
     .not('due_date', 'is', null)
     .order('due_date', { ascending: true })
@@ -84,7 +88,8 @@ export async function fetchDashboardData(): Promise<DashboardData> {
 
   const { data: upcomingTasks } = await supabase
     .from('project_tasks')
-    .select('title, due_date, project:projects(name)')
+    .select('title, due_date, project:projects!inner(name, workspace_id)')
+    .eq('project.workspace_id', targetWorkspaceId)
     .neq('status', 'done')
     .not('due_date', 'is', null)
     .order('due_date', { ascending: true })
@@ -117,10 +122,11 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     }
   })
 
-  // 3. Fetch recent activities
+  // 3. Fetch recent activities for workspace
   const { data: logs } = await supabase
     .from('activity_log')
     .select('id, action, created_at, project:projects(name)')
+    .eq('workspace_id', targetWorkspaceId)
     .order('created_at', { ascending: false })
     .limit(5)
 
@@ -142,10 +148,11 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     }
   })
 
-  // 4. Fetch recent knowledge
+  // 4. Fetch recent knowledge in workspace
   const { data: knowledge } = await supabase
     .from('knowledge_entries')
     .select('title, tags')
+    .eq('workspace_id', targetWorkspaceId)
     .order('created_at', { ascending: false })
     .limit(5)
 
@@ -154,26 +161,29 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     tag: k.tags && k.tags.length > 0 ? k.tags[0] : 'General',
   }))
 
-  // 5. Fetch weekly progress metrics
+  // 5. Fetch weekly progress metrics for workspace
   const startOfWeek = new Date()
   startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay())
   const startOfWeekStr = startOfWeek.toISOString().split('T')[0]
 
   const { count: weeklyCompletedCount } = await supabase
     .from('milestones')
-    .select('*', { count: 'exact', head: true })
+    .select('id, project:projects!inner(workspace_id)', { count: 'exact', head: true })
+    .eq('project.workspace_id', targetWorkspaceId)
     .eq('status', 'completed')
     .gte('completed_date', startOfWeekStr)
 
   const { count: weeklyTotalCount } = await supabase
     .from('milestones')
-    .select('*', { count: 'exact', head: true })
+    .select('id, project:projects!inner(workspace_id)', { count: 'exact', head: true })
+    .eq('project.workspace_id', targetWorkspaceId)
     .gte('due_date', startOfWeekStr)
 
-  // 6. Get today's top-priority action (highest priority incomplete task, or milestone, or fallback)
+  // 6. Get today's top-priority action in workspace
   const { data: topPriorityTask } = await supabase
     .from('project_tasks')
-    .select('title, priority, due_date, project:projects(name)')
+    .select('title, priority, due_date, project:projects!inner(name, workspace_id)')
+    .eq('project.workspace_id', targetWorkspaceId)
     .neq('status', 'done')
     .order('priority', { ascending: false })
     .limit(1)
@@ -198,11 +208,12 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     }
   }
 
-  // 7. Get current sprint dynamically based on Milestones
+  // 7. Get current sprint dynamically based on Milestones in workspace
   let currentSprint: DashboardData['currentSprint'] = null
   const { data: activeSprint } = await supabase
     .from('milestones')
-    .select('title, status, progress')
+    .select('title, status, progress, project:projects!inner(workspace_id)')
+    .eq('project.workspace_id', targetWorkspaceId)
     .neq('status', 'completed')
     .order('due_date', { ascending: true })
     .limit(1)
@@ -216,7 +227,8 @@ export async function fetchDashboardData(): Promise<DashboardData> {
   } else {
     const { data: lastCompleted } = await supabase
       .from('milestones')
-      .select('title, status, progress')
+      .select('title, status, progress, project:projects!inner(workspace_id)')
+      .eq('project.workspace_id', targetWorkspaceId)
       .eq('status', 'completed')
       .order('completed_date', { ascending: false })
       .limit(1)

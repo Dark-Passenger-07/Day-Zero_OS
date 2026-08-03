@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Search, Plus, BookOpen, Globe, FileText, Tag, Clock, Star, Pencil, Trash2 } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import {
   createKnowledgeEntry,
@@ -26,6 +27,7 @@ const categoryConfig: Record<KBTab, { label: string; icon: React.ReactNode }> = 
 
 export default function KnowledgeBase() {
   const { user } = useAuth()
+  const { workspaceId } = useWorkspace()
   const [tab, setTab] = useState<KBTab>('all')
   const [search, setSearch] = useState('')
   const [items, setItems] = useState<KnowledgeEntry[]>([])
@@ -97,10 +99,11 @@ export default function KnowledgeBase() {
   }
 
   const load = async () => {
+    if (!workspaceId) return
     setLoading(true)
     setError(null)
     try {
-      setItems(await listKnowledge())
+      setItems(await listKnowledge(workspaceId))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load knowledge.')
     } finally {
@@ -110,7 +113,7 @@ export default function KnowledgeBase() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [workspaceId])
 
   const handleCreate = async () => {
     if (!user) return
@@ -136,6 +139,7 @@ export default function KnowledgeBase() {
     try {
       await createKnowledgeEntry({
         ownerId: user.id,
+        workspaceId: workspaceId || undefined,
         title: values.title.trim(),
         body: values.body || '',
         category: values.category as any,

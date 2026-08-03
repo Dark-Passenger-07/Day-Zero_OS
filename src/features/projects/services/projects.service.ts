@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { requireWorkspaceId } from '@/features/workspace/services/workspace-helpers'
 import type { Priority, ProjectStatus } from '@/types/enums'
 
 export type ProjectListItem = {
@@ -23,33 +24,6 @@ type ProjectRow = {
   technologies: string[] | null
   priority: Priority
   created_at: string
-}
-
-async function resolveWorkspaceId(ownerId: string): Promise<string> {
-  const supabase = getSupabaseClient()
-
-  const { data: existing, error: existingError } = await supabase
-    .from('workspaces')
-    .select('id')
-    .eq('owner_id', ownerId)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-
-  if (existingError) throw existingError
-  if (existing?.id) return existing.id
-
-  const { data: created, error: createError } = await supabase
-    .from('workspaces')
-    .insert({
-      owner_id: ownerId,
-      name: 'My Workspace',
-    })
-    .select('id')
-    .single()
-
-  if (createError) throw createError
-  return created.id
 }
 
 function formatDeadline(deadline: string | null) {
@@ -77,16 +51,30 @@ function mapProject(row: ProjectRow): ProjectListItem {
   }
 }
 
-export async function listProjects(includeArchived = false): Promise<ProjectListItem[]> {
+export async function listProjects(
+  includeArchivedOrWorkspaceId?: boolean | string,
+  includeArchivedParam = false,
+): Promise<ProjectListItem[]> {
+  let targetWorkspaceId: string
+  let showArchived = includeArchivedParam
+
+  if (typeof includeArchivedOrWorkspaceId === 'boolean') {
+    showArchived = includeArchivedOrWorkspaceId
+    targetWorkspaceId = requireWorkspaceId()
+  } else {
+    targetWorkspaceId = requireWorkspaceId(includeArchivedOrWorkspaceId)
+  }
+
   const supabase = getSupabaseClient()
 
   let query = supabase
     .from('projects')
     .select('id, name, description, status, progress, deadline, technologies, priority, created_at')
+    .eq('workspace_id', targetWorkspaceId)
     .is('deleted_at', null)
     .order('updated_at', { ascending: false })
 
-  if (!includeArchived) query = query.neq('status', 'archived')
+  if (!showArchived) query = query.neq('status', 'archived')
   const { data, error } = await query
   if (error) throw error
 
@@ -95,17 +83,18 @@ export async function listProjects(includeArchived = false): Promise<ProjectList
 
 export async function createProject(input: {
   ownerId: string
+  workspaceId?: string
   name: string
   description?: string
 }): Promise<ProjectListItem> {
+  const targetWorkspaceId = requireWorkspaceId(input.workspaceId)
   const supabase = getSupabaseClient()
-  const workspaceId = await resolveWorkspaceId(input.ownerId)
 
   const { data, error } = await supabase
     .from('projects')
     .insert({
       owner_id: input.ownerId,
-      workspace_id: workspaceId,
+      workspace_id: targetWorkspaceId,
       name: input.name,
       description: input.description ?? null,
       status: 'active',
@@ -118,6 +107,7 @@ export async function createProject(input: {
   if (error) throw error
 
   await supabase.from('activity_log').insert({
+    workspace_id: targetWorkspaceId,
     project_id: data.id,
     user_id: input.ownerId,
     action: `Created project "${data.name}"`,
@@ -146,9 +136,14 @@ export async function restoreProject(id: string): Promise<void> {
   if (error) throw error
 }
 
-export async function duplicateProject(ownerId: string, source: ProjectListItem): Promise<ProjectListItem> {
+export async function duplicateProject(
+  ownerId: string,
+  source: ProjectListItem,
+  workspaceId?: string,
+): Promise<ProjectListItem> {
   return createProject({
     ownerId,
+    workspaceId,
     name: `${source.name} Copy`,
     description: source.description,
   })

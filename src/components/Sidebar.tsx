@@ -16,6 +16,8 @@ import logoImg from '@/logo.png'
 import type { Screen } from '@/types/navigation'
 import { useAuth } from '@/app/providers/AuthProvider'
 
+import { WorkspaceSwitcher } from '@/features/workspace/components/WorkspaceSwitcher'
+
 interface NavItem {
   id: Screen
   label: string
@@ -106,6 +108,13 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
           </div>
         )}
       </div>
+
+      {/* Workspace Switcher */}
+      {!collapsed && (
+        <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)' }}>
+          <WorkspaceSwitcher />
+        </div>
+      )}
 
       {/* Search */}
       {!collapsed && (

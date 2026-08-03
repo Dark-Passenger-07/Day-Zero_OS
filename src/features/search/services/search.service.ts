@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { requireWorkspaceId } from '@/features/workspace/services/workspace-helpers'
 
 export type SearchResult = {
   id: string
@@ -17,10 +18,11 @@ export type SearchResult = {
   path: string
 }
 
-export async function searchWorkspace(query: string): Promise<SearchResult[]> {
+export async function searchWorkspace(query: string, workspaceId?: string): Promise<SearchResult[]> {
   const trimmed = query.trim()
   if (!trimmed) return []
 
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
   const pattern = `%${trimmed}%`
 
@@ -28,23 +30,45 @@ export async function searchWorkspace(query: string): Promise<SearchResult[]> {
     supabase
       .from('projects')
       .select('id, name, description')
+      .eq('workspace_id', targetWorkspaceId)
       .ilike('name', pattern)
       .is('deleted_at', null)
       .limit(5),
-    supabase.from('knowledge_entries').select('id, title, category').ilike('title', pattern).limit(5),
-    supabase.from('content_items').select('id, title, platform').ilike('title', pattern).limit(5),
-    supabase.from('assets').select('id, file_name, asset_type').ilike('file_name', pattern).limit(5),
+    supabase
+      .from('knowledge_entries')
+      .select('id, title, category')
+      .eq('workspace_id', targetWorkspaceId)
+      .ilike('title', pattern)
+      .limit(5),
+    supabase
+      .from('content_items')
+      .select('id, title, platform, project:projects!inner(workspace_id)')
+      .eq('project.workspace_id', targetWorkspaceId)
+      .ilike('title', pattern)
+      .limit(5),
+    supabase
+      .from('assets')
+      .select('id, file_name, asset_type')
+      .eq('workspace_id', targetWorkspaceId)
+      .ilike('file_name', pattern)
+      .limit(5),
     supabase
       .from('architecture_decisions')
-      .select('id, project_id, decision, impact')
+      .select('id, project_id, decision, impact, project:projects!inner(workspace_id)')
+      .eq('project.workspace_id', targetWorkspaceId)
       .ilike('decision', pattern)
       .limit(5),
     supabase
       .from('activity_logs')
       .select('id, project_id, action, entity_type')
+      .eq('workspace_id', targetWorkspaceId)
       .ilike('action', pattern)
       .limit(5),
-    supabase.from('weekly_debriefs').select('id, week_start, wins, lessons').limit(5),
+    supabase
+      .from('weekly_debriefs')
+      .select('id, week_start, wins, lessons')
+      .eq('workspace_id', targetWorkspaceId)
+      .limit(5),
   ])
 
   for (const response of [projects, knowledge, content, assets, architecture, activity, weekly]) {

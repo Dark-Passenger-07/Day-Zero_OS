@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { requireWorkspaceId } from '@/features/workspace/services/workspace-helpers'
 
 export type WeeklyDebriefRecord = {
   id: string
@@ -53,11 +54,13 @@ export function currentWeekRange(now = new Date()) {
   }
 }
 
-export async function listWeeklyDebriefs(): Promise<WeeklyDebriefRecord[]> {
+export async function listWeeklyDebriefs(workspaceId?: string): Promise<WeeklyDebriefRecord[]> {
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('weekly_debriefs')
     .select('id, week_start, week_end, wins, challenges, lessons, ai_discoveries, next_week_goals, metrics')
+    .eq('workspace_id', targetWorkspaceId)
     .order('week_start', { ascending: false })
 
   if (error) throw error
@@ -65,13 +68,15 @@ export async function listWeeklyDebriefs(): Promise<WeeklyDebriefRecord[]> {
   return ((data ?? []) as WeeklyDebriefRow[]).map(toRecord)
 }
 
-export async function createWeeklyDebrief(userId: string): Promise<WeeklyDebriefRecord> {
+export async function createWeeklyDebrief(userId: string, workspaceId?: string): Promise<WeeklyDebriefRecord> {
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
   const { weekStart, weekEnd } = currentWeekRange()
   const { data, error } = await supabase
     .from('weekly_debriefs')
     .insert({
       user_id: userId,
+      workspace_id: targetWorkspaceId,
       week_start: weekStart,
       week_end: weekEnd,
       wins: [],

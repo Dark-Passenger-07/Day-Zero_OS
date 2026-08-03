@@ -1,11 +1,12 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { requireWorkspaceId } from '@/features/workspace/services/workspace-helpers'
 
 export type ContentItem = {
   id: string
   title: string
   platform: string
   status:
-    'idea' | 'outline' | 'script' | 'recording' | 'editing' | 'thumbnail' | 'seo' | 'published' | 'analytics'
+    | 'idea' | 'outline' | 'script' | 'recording' | 'editing' | 'thumbnail' | 'seo' | 'published' | 'analytics'
   publishDate: string | null
   analytics: Record<string, unknown>
   projectName: string
@@ -26,11 +27,13 @@ function projectName(project: ContentRow['project']) {
   return project?.name ?? 'Unlinked'
 }
 
-export async function listContentItems(): Promise<ContentItem[]> {
+export async function listContentItems(workspaceId?: string): Promise<ContentItem[]> {
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('content_items')
-    .select('id, title, platform, status, publish_date, analytics, project:projects(name)')
+    .select('id, title, platform, status, publish_date, analytics, project:projects!inner(name, workspace_id)')
+    .eq('project.workspace_id', targetWorkspaceId)
     .order('updated_at', { ascending: false })
 
   if (error) throw error
@@ -46,11 +49,13 @@ export async function listContentItems(): Promise<ContentItem[]> {
   }))
 }
 
-export async function createContentItem(title: string, platform: string): Promise<void> {
+export async function createContentItem(title: string, platform: string, workspaceId?: string): Promise<void> {
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
   const { data: project, error: projectError } = await supabase
     .from('projects')
     .select('id')
+    .eq('workspace_id', targetWorkspaceId)
     .is('deleted_at', null)
     .is('archived_at', null)
     .order('updated_at', { ascending: false })
@@ -59,7 +64,7 @@ export async function createContentItem(title: string, platform: string): Promis
 
   if (projectError) throw projectError
   if (!project?.id) {
-    throw new Error('Create a project before adding content. Content must belong to a project.')
+    throw new Error('Create a project in this workspace before adding content.')
   }
 
   const { error } = await supabase.from('content_items').insert({

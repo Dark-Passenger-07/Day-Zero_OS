@@ -1,0 +1,2 @@
+-- DEPRECATED: Superceded by 20260803000600_workspace_invitation_system.sql
+-- Do not execute this file.

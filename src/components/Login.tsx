@@ -69,6 +69,25 @@ export default function Login() {
           password,
         })
         if (error) throw error
+
+        const pendingStr = localStorage.getItem('day_zero_os_pending_invite')
+        if (pendingStr) {
+          try {
+            const parsed = JSON.parse(pendingStr)
+            if (parsed.id && parsed.secret) {
+              navigate(`/invite/${parsed.id}?secret=${parsed.secret}`)
+              return
+            }
+          } catch (_err) {
+            // ignore invalid JSON
+          }
+        }
+
+        const urlParams = new URLSearchParams(window.location.search)
+        const redirectUrl = urlParams.get('redirect')
+        if (redirectUrl) {
+          navigate(redirectUrl)
+        }
       }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'An error occurred during authentication.')

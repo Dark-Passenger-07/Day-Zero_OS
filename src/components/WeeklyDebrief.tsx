@@ -12,6 +12,7 @@ import {
   ChevronRight,
 } from 'lucide-react'
 import { useAuth } from '@/app/providers/AuthProvider'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import { useFormDialog } from '@/components/ui/FormDialog'
 import {
@@ -41,6 +42,7 @@ function weekLabel(debrief?: WeeklyDebriefRecord) {
 
 export default function WeeklyDebrief() {
   const { user } = useAuth()
+  const { workspaceId } = useWorkspace()
   const [weekIndex, setWeekIndex] = useState(0)
   const [debriefs, setDebriefs] = useState<WeeklyDebriefRecord[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,10 +52,11 @@ export default function WeeklyDebrief() {
   const { openForm, FormDialog } = useFormDialog()
 
   async function load() {
+    if (!workspaceId) return
     setLoading(true)
     setError(null)
     try {
-      setDebriefs(await listWeeklyDebriefs())
+      setDebriefs(await listWeeklyDebriefs(workspaceId))
       setWeekIndex(0)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load weekly debriefs.')
@@ -64,7 +67,7 @@ export default function WeeklyDebrief() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [workspaceId])
 
   const current = debriefs[weekIndex]
   const thisWeekData: DebriefSection[] = [
@@ -110,7 +113,7 @@ export default function WeeklyDebrief() {
     setSaving(true)
     setError(null)
     try {
-      await createWeeklyDebrief(user.id)
+      await createWeeklyDebrief(user.id, workspaceId || undefined)
       await load()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create weekly debrief.')

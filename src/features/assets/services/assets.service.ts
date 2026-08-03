@@ -1,4 +1,5 @@
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { requireWorkspaceId } from '@/features/workspace/services/workspace-helpers'
 
 export type AssetItem = {
   id: string
@@ -12,13 +13,15 @@ export type AssetItem = {
   versions: number
 }
 
-export async function listAssets(): Promise<AssetItem[]> {
+export async function listAssets(workspaceId?: string): Promise<AssetItem[]> {
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('assets')
     .select(
       'id, file_name, asset_type, file_url, storage_path, tags, uploaded_at, metadata, versions:asset_versions(id)',
     )
+    .eq('workspace_id', targetWorkspaceId)
     .order('uploaded_at', { ascending: false })
 
   if (error) throw error
@@ -76,10 +79,17 @@ export async function uploadAssetVersion(ownerId: string, asset: AssetItem, file
   if (error) throw error
 }
 
-export async function createAssetLink(ownerId: string, name: string, url: string): Promise<void> {
+export async function createAssetLink(
+  ownerId: string,
+  name: string,
+  url: string,
+  workspaceId?: string,
+): Promise<void> {
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
   const { error } = await supabase.from('assets').insert({
     owner_id: ownerId,
+    workspace_id: targetWorkspaceId,
     asset_type: 'link',
     file_name: name,
     file_url: url,
@@ -89,9 +99,10 @@ export async function createAssetLink(ownerId: string, name: string, url: string
   if (error) throw error
 }
 
-export async function uploadAssetFile(ownerId: string, file: File): Promise<void> {
+export async function uploadAssetFile(ownerId: string, file: File, workspaceId?: string): Promise<void> {
+  const targetWorkspaceId = requireWorkspaceId(workspaceId)
   const supabase = getSupabaseClient()
-  const storagePath = `${ownerId}/${crypto.randomUUID()}-${file.name}`
+  const storagePath = `${targetWorkspaceId}/${crypto.randomUUID()}-${file.name}`
   const { error: uploadError } = await supabase.storage.from('assets').upload(storagePath, file, {
     cacheControl: '3600',
     upsert: false,
@@ -110,6 +121,7 @@ export async function uploadAssetFile(ownerId: string, file: File): Promise<void
 
   const { error } = await supabase.from('assets').insert({
     owner_id: ownerId,
+    workspace_id: targetWorkspaceId,
     asset_type: assetType,
     file_name: file.name,
     file_url: data.publicUrl,

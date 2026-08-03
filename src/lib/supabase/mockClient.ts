@@ -21,6 +21,7 @@ const DEFAULT_PROFILE = {
 
 const DEFAULT_SETTINGS = {
   user_id: 'mock-user-id',
+  current_workspace_id: 'ws-personal-1',
   theme: 'light',
   accent_color: 'blue',
   sidebar_layout: 'default',
@@ -29,14 +30,89 @@ const DEFAULT_SETTINGS = {
   ai_enabled: true,
   ai_provider: 'openai',
   language: 'en',
+  timezone: 'UTC',
+  date_format: 'MMM D, YYYY',
+  time_format: '12h',
 }
 
 const INITIAL_DATA: Record<string, any[]> = {
   profiles: [DEFAULT_PROFILE],
   user_settings: [DEFAULT_SETTINGS],
+  workspaces: [
+    {
+      id: 'ws-personal-1',
+      owner_id: 'mock-user-id',
+      name: 'Personal Workspace',
+      slug: 'personal-workspace',
+      is_personal: true,
+      logo_url: null,
+      storage_path: null,
+      metadata: {},
+      created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: 'ws-team-1',
+      owner_id: 'mock-user-id',
+      name: 'Builder Team Workspace',
+      slug: 'builder-team',
+      is_personal: false,
+      logo_url: null,
+      storage_path: null,
+      metadata: {},
+      created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ],
+  workspace_members: [
+    {
+      id: 'wm-1',
+      workspace_id: 'ws-personal-1',
+      user_id: 'mock-user-id',
+      role: 'owner',
+      status: 'active',
+      joined_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'wm-2',
+      workspace_id: 'ws-team-1',
+      user_id: 'mock-user-id',
+      role: 'owner',
+      status: 'active',
+      joined_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'wm-3',
+      workspace_id: 'ws-team-1',
+      user_id: 'mock-member-2',
+      role: 'editor',
+      status: 'active',
+      joined_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      profile: {
+        full_name: 'Alex Rivera',
+        username: 'alexr',
+        avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80',
+      },
+    },
+  ],
+  workspace_invitations: [
+    {
+      id: 'inv-1',
+      workspace_id: 'ws-team-1',
+      email: 'dev@startup.io',
+      role: 'editor',
+      invited_by: 'mock-user-id',
+      token_hash: 'mock-token-hash-1',
+      status: 'pending',
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      created_at: new Date().toISOString(),
+    },
+  ],
   projects: [
     {
       id: 'proj-1',
+      workspace_id: 'ws-personal-1',
+      owner_id: 'mock-user-id',
       name: 'Day Zero OS',
       description:
         'Building the ultimate project-centric operating system for developers, hackers, and creators.',
@@ -51,6 +127,8 @@ const INITIAL_DATA: Record<string, any[]> = {
     },
     {
       id: 'proj-2',
+      workspace_id: 'ws-personal-1',
+      owner_id: 'mock-user-id',
       name: 'Veloce AI',
       description: 'AI-assisted code translation engine from Legacy Fortran to Modern Rust.',
       status: 'in-progress',
@@ -113,7 +191,7 @@ const INITIAL_DATA: Record<string, any[]> = {
       updated_at: new Date().toISOString(),
     },
   ],
-  decisions: [
+  architecture_decisions: [
     {
       id: 'dec-1',
       project_id: 'proj-1',
@@ -130,7 +208,9 @@ const INITIAL_DATA: Record<string, any[]> = {
   knowledge_entries: [
     {
       id: 'kn-1',
+      workspace_id: 'ws-personal-1',
       project_id: 'proj-1',
+      owner_id: 'mock-user-id',
       title: 'Postgrest Query Builder Patterns',
       body: 'Always typecast the returning payload properties. Supabase JS yields plain JSON records which might not align with custom frontend types.\n\nExample:\n`const status = values.status as ProjectStatus;`',
       category: 'research',
@@ -143,7 +223,9 @@ const INITIAL_DATA: Record<string, any[]> = {
   assets: [
     {
       id: 'as-1',
+      workspace_id: 'ws-personal-1',
       project_id: 'proj-1',
+      owner_id: 'mock-user-id',
       file_name: 'figma_workspace_v1.png',
       asset_type: 'image',
       file_url:
@@ -251,6 +333,7 @@ const INITIAL_DATA: Record<string, any[]> = {
   activity_log: [
     {
       id: 'act-1',
+      workspace_id: 'ws-personal-1',
       project_id: 'proj-1',
       action: 'Completed Milestone: V1.0 UI Mockups',
       entity_type: 'milestone',
@@ -259,6 +342,7 @@ const INITIAL_DATA: Record<string, any[]> = {
     },
     {
       id: 'act-2',
+      workspace_id: 'ws-personal-1',
       project_id: 'proj-1',
       action: 'Completed Milestone: Database Schema Setup',
       entity_type: 'milestone',
@@ -267,6 +351,7 @@ const INITIAL_DATA: Record<string, any[]> = {
     },
     {
       id: 'act-3',
+      workspace_id: 'ws-personal-1',
       project_id: 'proj-1',
       action: 'Created task "Implement Mock Client Demo Mode"',
       entity_type: 'task',
@@ -274,18 +359,31 @@ const INITIAL_DATA: Record<string, any[]> = {
       created_at: new Date().toISOString(),
     },
   ],
-  weekly_reviews: [
+  weekly_debriefs: [
     {
       id: 'wr-1',
+      workspace_id: 'ws-personal-1',
+      user_id: 'mock-user-id',
       week_start: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-      wins: 'Setup Vite project + configured base layout structures.',
-      mistakes: 'Spent too much time adjusting border colors early on.',
-      lessons: 'Focus on working state logic first, then style details.',
-      time_wasted: '3 hours',
-      automation_ideas: 'Generate new workspace milestones automatically.',
-      next_week_priorities: 'Implement client dashboard and assets upload mocks.',
-      completed_projects_count: 0,
-      published_videos_count: 0,
+      week_end: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      wins: ['Setup Vite project + configured base layout structures.'],
+      challenges: ['Spent time adjusting border colors early on.'],
+      lessons: ['Focus on working state logic first, then style details.'],
+      ai_discoveries: [],
+      next_week_goals: ['Implement client dashboard and assets upload mocks.'],
+      metrics: {},
+      created_at: new Date().toISOString(),
+    },
+  ],
+  notifications: [
+    {
+      id: 'notif-1',
+      workspace_id: 'ws-personal-1',
+      user_id: 'mock-user-id',
+      type: 'system',
+      title: 'Welcome to Day Zero OS',
+      body: 'Your workspace environment is configured and ready for production.',
+      read_at: null,
       created_at: new Date().toISOString(),
     },
   ],
@@ -332,7 +430,6 @@ export const mockSupabase = {
     async signInWithPassword({ email }: { email: string }) {
       localStorage.setItem('day_zero_os_mock_auth', 'true')
       localStorage.setItem('day_zero_os_mock_email', email)
-
       const mockSession = {
         access_token: 'mock-token',
         token_type: 'bearer',
@@ -344,7 +441,7 @@ export const mockSupabase = {
         authCallbacks.forEach((cb) => cb('SIGNED_IN', mockSession))
       }, 50)
 
-      return { data: { session: mockSession }, error: null }
+      return { data: { user: mockSession.user, session: mockSession }, error: null }
     },
 
     async signUp({ email }: { email: string }) {
@@ -390,9 +487,52 @@ export const mockSupabase = {
     },
   },
 
+  async rpc(fnName: string, args?: any) {
+    if (fnName === 'get_invitation_preview' || fnName === 'get_invitation_by_id_and_secret') {
+      const db = getStoredData()
+      const invList = db.workspace_invitations || []
+      const wsList = db.workspaces || []
+      const invite = invList.find(
+        (i: any) => i.id === args?.p_invitation_id || i.id === args?.p_secret_hash,
+      )
+      if (!invite) return { data: null, error: { message: 'Not found' } }
+
+      const ws = wsList.find((w: any) => w.id === invite.workspace_id)
+      return {
+        data: [
+          {
+            invitation_id: invite.id,
+            workspace_id: invite.workspace_id,
+            workspace_name: ws?.name ?? 'Builder Team Workspace',
+            workspace_logo: ws?.logo_url ?? null,
+            inviter_name: 'Workspace Admin',
+            email: invite.email,
+            role: invite.role,
+            status: invite.status,
+            version: invite.version ?? 1,
+            expires_at: invite.expires_at,
+            is_expired: new Date(invite.expires_at).getTime() < Date.now(),
+          },
+        ],
+        error: null,
+      }
+    }
+    if (fnName === 'transfer_workspace_ownership') {
+      const db = getStoredData()
+      const { target_workspace_id, new_owner_id } = args ?? {}
+      const ws = (db['workspaces'] || []).find((w: any) => w.id === target_workspace_id)
+      if (ws) {
+        ws.owner_id = new_owner_id
+        saveStoredData(db)
+      }
+      return { data: null, error: null }
+    }
+    return { data: null, error: null }
+  },
+
   from(tableName: string) {
     let currentTable = tableName
-    if (tableName === 'knowledge_entries') currentTable = 'knowledge_entries'
+    if (tableName === 'architecture_decisions') currentTable = 'architecture_decisions'
 
     const db = getStoredData()
     let records = [...(db[currentTable] || [])]
@@ -406,10 +546,48 @@ export const mockSupabase = {
             error: null,
           } as any
         }
+
+        // Attach join relationships if specified in query string
+        if (_fields?.includes('workspace:workspaces')) {
+          const workspaces = db['workspaces'] || []
+          records = records.map((r) => {
+            const ws = workspaces.find((w) => w.id === r.workspace_id)
+            return { ...r, workspace: ws }
+          })
+        }
+        if (_fields?.includes('project:projects')) {
+          const projects = db['projects'] || []
+          records = records.map((r) => {
+            const proj = projects.find((p) => p.id === r.project_id)
+            return { ...r, project: proj }
+          })
+        }
+        if (_fields?.includes('profile:profiles')) {
+          records = records.map((r) => {
+            return {
+              ...r,
+              profile: r.profile || {
+                full_name: 'Team Member',
+                username: 'member',
+                avatar_url: null,
+              },
+            }
+          })
+        }
+
         return builder
       },
       eq(col: string, val: any) {
-        records = records.filter((row) => row[col] === val)
+        if (col.startsWith('project.')) {
+          const subProp = col.split('.')[1]
+          const projects = db['projects'] || []
+          records = records.filter((row) => {
+            const proj = projects.find((p) => p.id === row.project_id)
+            return proj && proj[subProp] === val
+          })
+        } else {
+          records = records.filter((row) => row[col] === val)
+        }
         return builder
       },
       neq(col: string, val: any) {
@@ -518,6 +696,7 @@ export const mockSupabase = {
               const notifications = db['notifications'] || []
               notifications.unshift({
                 id: crypto.randomUUID(),
+                workspace_id: updatedRow.workspace_id || 'ws-personal-1',
                 type: notificationType,
                 title: notificationTitle,
                 body: notificationBody,
@@ -537,7 +716,6 @@ export const mockSupabase = {
           const table = db[currentTable] || []
           const idCol = currentTable === 'user_settings' ? 'user_id' : 'id'
 
-          // Identify IDs of records filtered by query builder
           const idsToDelete = new Set(records.map((row) => row[idCol]))
 
           db[currentTable] = table.filter((row) => !idsToDelete.has(row[idCol]))
@@ -569,6 +747,7 @@ export const mockSupabase = {
           const actLog = db['activity_log'] || []
           actLog.unshift({
             id: crypto.randomUUID(),
+            workspace_id: row.workspace_id || 'ws-personal-1',
             project_id: row.project_id || null,
             action: `Added ${currentTable.replace('_', ' ')}: "${row.title || row.name || row.decision || 'Item'}"`,
             entity_type: currentTable,

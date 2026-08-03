@@ -17,9 +17,15 @@ import {
   MessageSquare,
   Bug,
   Lightbulb,
+  Users,
+  LogOut,
+  Trash2,
+  Crown,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
+import { WorkspaceTeamSection } from '@/features/workspace/components/WorkspaceTeamSection'
 import { Toggle } from '@/components/ui/Toggle'
 import {
   exportWorkspaceData,
@@ -29,6 +35,7 @@ import {
 
 type SettingsTab =
   | 'general'
+  | 'members'
   | 'appearance'
   | 'notifications'
   | 'storage'
@@ -40,6 +47,7 @@ type SettingsTab =
 
 const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <User size={14} /> },
+  { id: 'members', label: 'Team & Invitations', icon: <Users size={14} /> },
   { id: 'appearance', label: 'Appearance', icon: <Palette size={14} /> },
   { id: 'notifications', label: 'Notifications', icon: <Bell size={14} /> },
   { id: 'storage', label: 'Storage', icon: <Database size={14} /> },
@@ -53,10 +61,24 @@ const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
 export default function Settings() {
   const navigate = useNavigate()
   const { user, profile, userSettings, updateProfile, updateSettings } = useAuth()
+  const {
+    currentWorkspace,
+    workspaceId,
+    userRole,
+    members,
+    transferOwnership,
+    deleteWorkspace,
+    leaveWorkspace,
+    updateWorkspaceDetails,
+    refreshWorkspaces,
+  } = useWorkspace()
+
   const importRef = useRef<HTMLInputElement | null>(null)
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
   const [displayName, setDisplayName] = useState('')
   const [workspaceName, setWorkspaceName] = useState('')
+  const [workspaceLogoUrl, setWorkspaceLogoUrl] = useState('')
+  const [workspaceDescription, setWorkspaceDescription] = useState('')
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('light')
   const [deadlineNotifications, setDeadlineNotifications] = useState(true)
   const [emailNotifications, setEmailNotifications] = useState(false)
@@ -65,9 +87,11 @@ export default function Settings() {
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
+  // Ownership transfer target
+  const [transferTargetId, setTransferTargetId] = useState('')
+
   useEffect(() => {
     setDisplayName(profile?.full_name ?? '')
-    setWorkspaceName(profile?.workspace_name ?? 'My Workspace')
     setTheme((userSettings?.theme as 'dark' | 'light' | 'system') ?? 'light')
     setDeadlineNotifications(Boolean(userSettings?.notifications?.push ?? true))
     setEmailNotifications(Boolean(userSettings?.notifications?.email ?? false))
@@ -75,22 +99,38 @@ export default function Settings() {
   }, [profile, userSettings])
 
   useEffect(() => {
-    storageUsage()
+    if (currentWorkspace) {
+      setWorkspaceName(currentWorkspace.name)
+      setWorkspaceLogoUrl(currentWorkspace.logoUrl ?? '')
+      setWorkspaceDescription((currentWorkspace.metadata?.description as string) ?? '')
+    }
+  }, [currentWorkspace])
+
+  useEffect(() => {
+    if (!workspaceId) return
+    storageUsage(workspaceId)
       .then(setStorageSummary)
       .catch(() => setStorageSummary(null))
-  }, [])
+  }, [workspaceId])
 
   const save = async () => {
     setSaving(true)
     setMessage(null)
     try {
-      await updateProfile({ full_name: displayName || null, workspace_name: workspaceName })
+      await updateProfile({ full_name: displayName || null })
+      if (currentWorkspace) {
+        await updateWorkspaceDetails({
+          name: workspaceName,
+          logoUrl: workspaceLogoUrl || null,
+          description: workspaceDescription,
+        })
+      }
       await updateSettings({
         theme,
         notifications: { push: deadlineNotifications, email: emailNotifications },
         ai_enabled: aiEnabled,
       })
-      setMessage('Settings saved.')
+      setMessage('Settings saved successfully.')
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Failed to save settings.')
     } finally {
@@ -98,9 +138,67 @@ export default function Settings() {
     }
   }
 
+  const handleLeaveWorkspace = async () => {
+    if (!workspaceId || !user) return
+    if (userRole === 'owner') {
+      setMessage('Workspace owners cannot leave. You must transfer ownership first or delete the workspace.')
+      return
+    }
+    if (confirm('Are you sure you want to leave this workspace?')) {
+      try {
+        await leaveWorkspace(workspaceId)
+        setMessage('You left the workspace.')
+        // Redirect to a remaining workspace or refresh
+        await refreshWorkspaces()
+        navigate('/mission-control')
+      } catch (err: any) {
+        setMessage(err.message || 'Failed to leave workspace.')
+      }
+    }
+  }
+
+  const handleDeleteWorkspace = async () => {
+    if (!workspaceId) return
+    if (currentWorkspace?.isPersonal) {
+      setMessage('Cannot delete personal workspace.')
+      return
+    }
+    if (userRole !== 'owner') {
+      setMessage('Only the workspace owner can delete it.')
+      return
+    }
+    if (confirm('Are you absolutely sure you want to delete this workspace? This action is permanent and cannot be undone.')) {
+      try {
+        await deleteWorkspace(workspaceId)
+        setMessage('Workspace deleted.')
+        await refreshWorkspaces()
+        navigate('/mission-control')
+      } catch (err: any) {
+        setMessage(err.message || 'Failed to delete workspace.')
+      }
+    }
+  }
+
+  const handleTransferOwnership = async () => {
+    if (!workspaceId || !transferTargetId) return
+    if (userRole !== 'owner') {
+      setMessage('Only the owner can transfer ownership.')
+      return
+    }
+    if (confirm('Are you sure you want to transfer workspace ownership? Your role will be changed to admin.')) {
+      try {
+        await transferOwnership(transferTargetId)
+        setMessage('Workspace ownership transferred successfully.')
+        await refreshWorkspaces()
+      } catch (err: any) {
+        setMessage(err.message || 'Failed to transfer ownership.')
+      }
+    }
+  }
+
   const exportData = async () => {
     try {
-      const data = await exportWorkspaceData()
+      const data = await exportWorkspaceData(workspaceId || undefined)
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
@@ -120,7 +218,7 @@ export default function Settings() {
       const parsed = JSON.parse(await file.text()) as {
         knowledge?: Array<{ title?: unknown; body?: unknown; category?: unknown; tags?: unknown }>
       }
-      const count = await importKnowledgeEntries(parsed.knowledge ?? [], user.id)
+      const count = await importKnowledgeEntries(parsed.knowledge ?? [], user.id, workspaceId || undefined)
       setMessage(`Imported ${count} knowledge entries.`)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Import failed.')
@@ -128,6 +226,8 @@ export default function Settings() {
       if (importRef.current) importRef.current.value = ''
     }
   }
+
+  const otherMembers = members.filter((m) => m.userId !== user?.id && m.status === 'active')
 
   return (
     <div className="h-full w-full flex overflow-hidden">
@@ -171,7 +271,7 @@ export default function Settings() {
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-grow flex flex-col overflow-hidden">
         {/* Horizontal tabs selector for settings (Mobile/Tablet Only) */}
         <div className="lg:hidden flex gap-1 overflow-x-auto whitespace-nowrap scrollbar-none p-4 border-b border-border flex-shrink-0 bg-card">
           {tabs.map((tab) => (
@@ -203,13 +303,21 @@ export default function Settings() {
           {activeTab === 'general' && (
             <Section title="General" description="Workspace and profile settings">
               <SettingRow label="Display Name" description="Shown across your workspace">
-                <TextInput value={displayName} onChange={setDisplayName} placeholder="Builder" />
+                <TextInput value={displayName} onChange={setDisplayName} placeholder="Builder Name" />
               </SettingRow>
-              <SettingRow label="Workspace Name">
-                <TextInput value={workspaceName} onChange={setWorkspaceName} placeholder="My Workspace" />
+              <SettingRow label="Workspace Name" description="Used in workspace switcher and invites">
+                <TextInput value={workspaceName} onChange={setWorkspaceName} placeholder="Workspace Name" />
+              </SettingRow>
+              <SettingRow label="Logo URL" description="Direct link to image logo">
+                <TextInput value={workspaceLogoUrl} onChange={setWorkspaceLogoUrl} placeholder="https://example.com/logo.png" />
+              </SettingRow>
+              <SettingRow label="Workspace Description" description="Short purpose of this workspace">
+                <TextInput value={workspaceDescription} onChange={setWorkspaceDescription} placeholder="Workspace purpose..." />
               </SettingRow>
             </Section>
           )}
+
+          {activeTab === 'members' && <WorkspaceTeamSection />}
 
           {activeTab === 'appearance' && (
             <Section title="Appearance" description="Customize the look and feel">
@@ -372,18 +480,73 @@ export default function Settings() {
 
           {activeTab === 'danger' && (
             <Section title="Danger Zone" description="Destructive account and workspace actions">
-              <SettingRow
-                label="Sign out all sessions"
-                description="Use Supabase dashboard for forced session revocation in MVP"
-              >
-                <span style={{ fontSize: '13px', color: 'var(--muted-foreground)' }}>Protected</span>
-              </SettingRow>
-              <SettingRow
-                label="Delete Workspace"
-                description="Permanent workspace deletion is intentionally manual for MVP safety"
-              >
-                <span style={{ fontSize: '13px', color: 'var(--status-red)' }}>Manual only</span>
-              </SettingRow>
+              {/* Leave workspace */}
+              {!currentWorkspace?.isPersonal && (
+                <SettingRow
+                  label="Leave Workspace"
+                  description="Revoke your access to this workspace. Other members remain."
+                >
+                  <button
+                    onClick={handleLeaveWorkspace}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-semibold border border-amber-500/20 transition-all"
+                  >
+                    <LogOut size={13} /> Leave Workspace
+                  </button>
+                </SettingRow>
+              )}
+
+              {/* Transfer ownership */}
+              {userRole === 'owner' && !currentWorkspace?.isPersonal && (
+                <SettingRow
+                  label="Transfer Workspace Ownership"
+                  description="Appoint a new owner. Your role will change to Admin."
+                >
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={transferTargetId}
+                      onChange={(e) => setTransferTargetId(e.target.value)}
+                      className="bg-secondary border border-border rounded-lg py-2 px-3 text-foreground text-xs outline-none w-[180px]"
+                    >
+                      <option value="">Select new owner...</option>
+                      {otherMembers.map((m) => (
+                        <option key={m.userId} value={m.userId}>
+                          {m.profile?.fullName || m.userId}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={handleTransferOwnership}
+                      disabled={!transferTargetId}
+                      className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold disabled:opacity-40 transition-all"
+                    >
+                      <Crown size={13} /> Transfer
+                    </button>
+                  </div>
+                </SettingRow>
+              )}
+
+              {/* Delete workspace */}
+              {userRole === 'owner' && !currentWorkspace?.isPersonal && (
+                <SettingRow
+                  label="Delete Workspace"
+                  description="Permanently delete this workspace and all its data. This cannot be undone."
+                >
+                  <button
+                    onClick={handleDeleteWorkspace}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition-all"
+                  >
+                    <Trash2 size={13} /> Delete Workspace
+                  </button>
+                </SettingRow>
+              )}
+
+              {/* Protected Personal workspace details */}
+              {currentWorkspace?.isPersonal && (
+                <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-400">
+                  <div className="font-semibold text-slate-300 mb-1">Personal Workspace Sandbox</div>
+                  Your personal workspace holds your private entities. It cannot be deleted or transferred.
+                </div>
+              )}
             </Section>
           )}
 
@@ -409,7 +572,7 @@ export default function Settings() {
             <div
               style={{
                 marginTop: '16px',
-                color: message.includes('Failed') ? 'var(--status-red)' : 'var(--status-green)',
+                color: message.includes('Failed') || message.includes('Cannot') || message.includes('owners cannot') ? 'var(--status-red)' : 'var(--status-green)',
                 fontSize: '13px',
               }}
             >

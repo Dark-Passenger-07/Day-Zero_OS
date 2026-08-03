@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search } from 'lucide-react'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import { searchWorkspace, type SearchResult } from '@/features/search/services/search.service'
 
 type CommandPaletteProps = {
@@ -19,6 +20,7 @@ const commands: SearchResult[] = [
 
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const navigate = useNavigate()
+  const { workspaceId } = useWorkspace()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -45,7 +47,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     let active = true
     const timer = window.setTimeout(async () => {
       try {
-        const workspaceResults = await searchWorkspace(query)
+        const workspaceResults = await searchWorkspace(query, workspaceId || undefined)
         if (active) {
           setResults([...matchingCommands, ...workspaceResults])
           setError(null)

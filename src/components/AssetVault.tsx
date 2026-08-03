@@ -26,6 +26,7 @@ import {
   uploadAssetVersion,
 } from '@/features/assets/services/assets.service'
 import { useAuth } from '@/app/providers/AuthProvider'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import { useFormDialog } from '@/components/ui/FormDialog'
 
 type AssetCategory = 'all' | AssetItem['assetType']
@@ -53,6 +54,7 @@ const categoryIcon = (type: AssetItem['assetType']) => {
 
 export default function AssetVault() {
   const { user } = useAuth()
+  const { workspaceId } = useWorkspace()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const versionInputRef = useRef<HTMLInputElement | null>(null)
   const [category, setCategory] = useState<AssetCategory>('all')
@@ -66,10 +68,11 @@ export default function AssetVault() {
   const { openForm, FormDialog } = useFormDialog()
 
   async function load() {
+    if (!workspaceId) return
     setLoading(true)
     setError(null)
     try {
-      setAssets(await listAssets())
+      setAssets(await listAssets(workspaceId))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load assets.')
     } finally {
@@ -79,7 +82,7 @@ export default function AssetVault() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [workspaceId])
 
   async function handleAddLink() {
     if (!user) return
@@ -95,7 +98,7 @@ export default function AssetVault() {
     setCreating(true)
     setError(null)
     try {
-      await createAssetLink(user.id, values.name.trim(), values.url.trim())
+      await createAssetLink(user.id, values.name.trim(), values.url.trim(), workspaceId || undefined)
       await load()
       setCategory('link')
     } catch (err) {
@@ -110,7 +113,7 @@ export default function AssetVault() {
     setCreating(true)
     setError(null)
     try {
-      await uploadAssetFile(user.id, file)
+      await uploadAssetFile(user.id, file, workspaceId || undefined)
       await load()
       setCategory('all')
     } catch (err) {

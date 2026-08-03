@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Play, BarChart2, Lightbulb, CheckCircle2, Edit3, Pencil, Trash2 } from 'lucide-react'
+import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
 import { LoadingState } from '@/components/feedback/LoadingState'
 import {
   createContentItem,
@@ -36,6 +37,7 @@ const workflowStages = [
 ]
 
 export default function ContentEngine() {
+  const { workspaceId } = useWorkspace()
   const [tab, setTab] = useState<ContentTab>('ideas')
   const [items, setItems] = useState<ContentItem[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -137,10 +139,11 @@ export default function ContentEngine() {
   }
 
   async function load() {
+    if (!workspaceId) return
     setLoading(true)
     setError(null)
     try {
-      const loaded = await listContentItems()
+      const loaded = await listContentItems(workspaceId)
       setItems(loaded)
       if (loaded.length > 0) {
         setSelectedId((current) => {
@@ -159,7 +162,7 @@ export default function ContentEngine() {
 
   useEffect(() => {
     load()
-  }, [])
+  }, [workspaceId])
 
   async function handleCreateContent() {
     const values = await openForm({
@@ -174,7 +177,7 @@ export default function ContentEngine() {
     setCreating(true)
     setError(null)
     try {
-      await createContentItem(values.title.trim(), values.platform.trim() || 'YouTube')
+      await createContentItem(values.title.trim(), values.platform.trim() || 'YouTube', workspaceId || undefined)
       await load()
       setTab('ideas')
     } catch (err) {
