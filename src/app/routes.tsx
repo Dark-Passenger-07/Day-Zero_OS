@@ -7,6 +7,11 @@ import { useAuth } from '@/app/providers/AuthProvider'
 import { LoadingState } from '@/components/feedback/LoadingState'
 
 const Login = lazy(() => import('@/components/Login'))
+const ResetPassword = lazy(() => import('@/components/ResetPassword'))
+const PrivacyPolicy = lazy(() => import('@/components/legal/PrivacyPolicy'))
+const TermsOfService = lazy(() => import('@/components/legal/TermsOfService'))
+const About = lazy(() => import('@/components/legal/About'))
+const Support = lazy(() => import('@/components/legal/Support'))
 const MissionControl = lazy(() => import('@/components/MissionControl'))
 const Projects = lazy(() => import('@/components/Projects'))
 const ProjectWorkspace = lazy(() => import('@/components/ProjectWorkspace'))
@@ -118,6 +123,11 @@ export function AppRoutes() {
       <Routes>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<LoginRoute />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/support" element={<Support />} />
         </Route>
 
         <Route

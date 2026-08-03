@@ -4,11 +4,13 @@ import Sidebar from '@/components/layout/Sidebar'
 import TopHeader from '@/components/TopHeader'
 import BottomBar from '@/components/BottomBar'
 import { CommandPalette } from '@/components/ui/CommandPalette'
+import { OfflineFallback } from '@/components/feedback/OfflineFallback'
 import { getScreenFromPath, screenPaths, type Screen } from '@/types/navigation'
 
 export function WorkspaceLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [commandOpen, setCommandOpen] = useState(false)
+  const [isOffline, setIsOffline] = useState(!navigator.onLine)
   const navigate = useNavigate()
   const location = useLocation()
   const current = getScreenFromPath(location.pathname)
@@ -18,6 +20,12 @@ export function WorkspaceLayout() {
   }
 
   useEffect(() => {
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
     const onKeyDown = (event: KeyboardEvent) => {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
         event.preventDefault()
@@ -25,8 +33,16 @@ export function WorkspaceLayout() {
       }
     }
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+      window.removeEventListener('keydown', onKeyDown)
+    }
   }, [])
+
+  if (isOffline) {
+    return <OfflineFallback onRetry={() => setIsOffline(!navigator.onLine)} />
+  }
 
   return (
     <div className="flex h-screen w-screen bg-background overflow-hidden">

@@ -12,7 +12,13 @@ import {
   Download,
   Upload,
   AlertTriangle,
+  HelpCircle,
+  Info,
+  MessageSquare,
+  Bug,
+  Lightbulb,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { Toggle } from '@/components/ui/Toggle'
 import {
@@ -21,7 +27,16 @@ import {
   storageUsage,
 } from '@/features/settings/services/settings.service'
 
-type SettingsTab = 'general' | 'appearance' | 'notifications' | 'storage' | 'import-export' | 'ai' | 'danger'
+type SettingsTab =
+  | 'general'
+  | 'appearance'
+  | 'notifications'
+  | 'storage'
+  | 'import-export'
+  | 'feedback'
+  | 'ai'
+  | 'about'
+  | 'danger'
 
 const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
   { id: 'general', label: 'General', icon: <User size={14} /> },
@@ -29,11 +44,14 @@ const tabs: { id: SettingsTab; label: string; icon: React.ReactNode }[] = [
   { id: 'notifications', label: 'Notifications', icon: <Bell size={14} /> },
   { id: 'storage', label: 'Storage', icon: <Database size={14} /> },
   { id: 'import-export', label: 'Import / Export', icon: <Download size={14} /> },
+  { id: 'feedback', label: 'Feedback & Support', icon: <HelpCircle size={14} /> },
   { id: 'ai', label: 'AI', icon: <Cpu size={14} /> },
+  { id: 'about', label: 'About & Version', icon: <Info size={14} /> },
   { id: 'danger', label: 'Danger Zone', icon: <AlertTriangle size={14} /> },
 ]
 
 export default function Settings() {
+  const navigate = useNavigate()
   const { user, profile, userSettings, updateProfile, updateSettings } = useAuth()
   const importRef = useRef<HTMLInputElement | null>(null)
   const [activeTab, setActiveTab] = useState<SettingsTab>('general')
@@ -312,6 +330,46 @@ export default function Settings() {
             </Section>
           )}
 
+          {activeTab === 'feedback' && (
+            <Section title="Feedback & Support" description="Help us improve Day Zero OS">
+              <SettingRow label="Send Feedback" description="Share your thoughts on workspace features">
+                <button onClick={() => navigate('/support')} style={smallButtonStyle}>
+                  <MessageSquare size={13} /> Send Feedback
+                </button>
+              </SettingRow>
+              <SettingRow label="Report Bug" description="Report unexpected behavior or errors">
+                <button onClick={() => navigate('/support')} style={smallButtonStyle}>
+                  <Bug size={13} /> Report Bug
+                </button>
+              </SettingRow>
+              <SettingRow label="Request Feature" description="Suggest new capabilities for builders">
+                <button onClick={() => navigate('/support')} style={smallButtonStyle}>
+                  <Lightbulb size={13} /> Request Feature
+                </button>
+              </SettingRow>
+            </Section>
+          )}
+
+          {activeTab === 'about' && (
+            <Section title="About & Version" description="Application information and build details">
+              <SettingRow label="Application" description="Operating System for Builders">
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--foreground)' }}>
+                  Day Zero OS
+                </span>
+              </SettingRow>
+              <SettingRow label="Version" description="Current public release">
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--foreground)' }}>
+                  Version 1.0.0 (Build 1)
+                </span>
+              </SettingRow>
+              <SettingRow label="Documentation" description="Product details and architecture">
+                <button onClick={() => navigate('/about')} style={smallButtonStyle}>
+                  <Info size={13} /> View About Page
+                </button>
+              </SettingRow>
+            </Section>
+          )}
+
           {activeTab === 'danger' && (
             <Section title="Danger Zone" description="Destructive account and workspace actions">
               <SettingRow
@@ -328,6 +386,24 @@ export default function Settings() {
               </SettingRow>
             </Section>
           )}
+
+          {/* Footer inside Settings */}
+          <div className="mt-12 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground gap-3">
+            <div>© 2026 Day Zero OS • Version 1.0.0 (Build 1)</div>
+            <div className="flex items-center gap-3">
+              <button onClick={() => navigate('/privacy')} className="hover:text-foreground transition-colors">
+                Privacy
+              </button>
+              <span>•</span>
+              <button onClick={() => navigate('/terms')} className="hover:text-foreground transition-colors">
+                Terms
+              </button>
+              <span>•</span>
+              <button onClick={() => navigate('/support')} className="hover:text-foreground transition-colors">
+                Support
+              </button>
+            </div>
+          </div>
 
           {message && (
             <div

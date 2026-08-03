@@ -96,9 +96,12 @@ export default function Sidebar({ current, collapsed, onNavigate, onSearchOpen, 
         />
         {!collapsed && (
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 600, lineHeight: 1.2 }}>Day Zero OS</div>
+            <div className="flex items-center gap-1.5">
+              <span style={{ fontSize: '13px', fontWeight: 600, lineHeight: 1.2 }}>Day Zero OS</span>
+              <span className="text-[10px] bg-secondary text-muted-foreground px-1.5 py-0.5 rounded font-mono font-medium border border-border">v1.0.0</span>
+            </div>
             <div style={{ fontSize: '11px', color: 'var(--muted-foreground)', lineHeight: 1.2 }}>
-              Workspace
+              Operating System
             </div>
           </div>
         )}

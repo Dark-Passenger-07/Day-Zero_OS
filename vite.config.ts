@@ -34,16 +34,34 @@ export default defineConfig({
         'pwa-512x512.png',
       ],
       manifest: {
+        id: '/',
         name: 'Day Zero OS',
         short_name: 'Day Zero',
         description:
-          'Effortlessly convert markdown content into various formats, streamlining documentation and content creation for writers and developers.',
+          'Day Zero OS is a next-generation operating system for builders—a unified digital workspace designed to help software engineers, AI builders, freelancers, startup founders, and creators manage the complete lifecycle of building products.',
         theme_color: '#09090b',
         background_color: '#09090b',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         scope: '/',
+        categories: ['productivity', 'utilities', 'developer tools'],
+        shortcuts: [
+          {
+            name: 'Mission Control',
+            short_name: 'Control',
+            description: 'Open Mission Control Dashboard',
+            url: '/mission-control',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+          },
+          {
+            name: 'Projects',
+            short_name: 'Projects',
+            description: 'View active builder projects',
+            url: '/projects',
+            icons: [{ src: '/pwa-192x192.png', sizes: '192x192' }],
+          },
+        ],
         icons: [
           {
             src: '/pwa-192x192.png',
