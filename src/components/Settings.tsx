@@ -324,6 +324,25 @@ export default function Settings() {
                 <TextInput value={workspaceDescription} onChange={setWorkspaceDescription} placeholder="Workspace purpose..." />
               </SettingRow>
 
+              {currentWorkspace && (
+                <>
+                  <SettingRow label="Workspace Type" description="Personal or shared team workspace">
+                    <span style={{ fontSize: '12px', padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--secondary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      {currentWorkspace.isPersonal ? '👤 Personal' : '👥 Team'}
+                    </span>
+                  </SettingRow>
+                  <SettingRow label="Members" description="Total active workspace members">
+                    <span style={{ fontSize: '12px', fontWeight: 600, padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--secondary)' }}>
+                      {members.length} {members.length === 1 ? 'member' : 'members'}
+                    </span>
+                  </SettingRow>
+                  <SettingRow label="Created" description="When this workspace was created">
+                    <span style={{ fontSize: '12px', padding: '8px 14px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--secondary)' }}>
+                      {new Date(currentWorkspace.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </SettingRow>
+                </>
+              )}
               {currentWorkspace && !currentWorkspace.isPersonal && (
                 <>
                   <SettingRow label="Workspace Join Code" description="Code used by teammates to join this workspace">

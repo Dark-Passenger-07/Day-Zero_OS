@@ -33,6 +33,9 @@ export type WorkspaceMember = {
     fullName: string | null
     username: string | null
     avatarUrl: string | null
+    email: string | null
+    teamTitle: string | null
+    aboutBio: string | null
   }
 }
 
@@ -295,6 +298,9 @@ export async function getWorkspaceMembers(workspaceId: string): Promise<Workspac
               fullName: prof.full_name ?? null,
               username: prof.username ?? null,
               avatarUrl: prof.avatar_url ?? null,
+              email: prof.email ?? null,
+              teamTitle: prof.team_title ?? null,
+              aboutBio: prof.about_bio ?? null,
             }
           : undefined,
       }
@@ -304,7 +310,7 @@ export async function getWorkspaceMembers(workspaceId: string): Promise<Workspac
   const supabase = getSupabaseClient()
   const { data, error } = await supabase
     .from('workspace_members')
-    .select('id, workspace_id, user_id, role, status, joined_at, profile:profiles(full_name, username, avatar_url)')
+    .select('id, workspace_id, user_id, role, status, joined_at, profile:profiles(full_name, username, avatar_url, email, team_title, about_bio)')
     .eq('workspace_id', workspaceId)
     .neq('status', 'removed')
 
@@ -322,6 +328,9 @@ export async function getWorkspaceMembers(workspaceId: string): Promise<Workspac
           fullName: item.profile.full_name ?? null,
           username: item.profile.username ?? null,
           avatarUrl: item.profile.avatar_url ?? null,
+          email: item.profile.email ?? null,
+          teamTitle: item.profile.team_title ?? null,
+          aboutBio: item.profile.about_bio ?? null,
         }
       : undefined,
   }))
@@ -794,6 +803,39 @@ export async function updateDefaultJoinRole(workspaceId: string, role: 'editor' 
     .from('workspaces')
     .update({ default_join_role: role })
     .eq('id', workspaceId)
+
+  if (error) throw error
+}
+
+export async function updateMemberProfile(
+  userId: string,
+  updates: { teamTitle?: string; aboutBio?: string; fullName?: string; avatarUrl?: string },
+): Promise<void> {
+  if (isDemoModeEnabled()) {
+    const db = getStoredData()
+    const profiles = db['profiles'] || []
+    const prof = profiles.find((p: any) => p.id === userId)
+    if (prof) {
+      if (updates.teamTitle !== undefined) prof.team_title = updates.teamTitle
+      if (updates.aboutBio !== undefined) prof.about_bio = updates.aboutBio
+      if (updates.fullName !== undefined) prof.full_name = updates.fullName
+      if (updates.avatarUrl !== undefined) prof.avatar_url = updates.avatarUrl
+      saveStoredData(db)
+    }
+    return
+  }
+
+  const supabase = getSupabaseClient()
+  const payload: any = {}
+  if (updates.teamTitle !== undefined) payload.team_title = updates.teamTitle
+  if (updates.aboutBio !== undefined) payload.about_bio = updates.aboutBio
+  if (updates.fullName !== undefined) payload.full_name = updates.fullName
+  if (updates.avatarUrl !== undefined) payload.avatar_url = updates.avatarUrl
+
+  const { error } = await supabase
+    .from('profiles')
+    .update(payload)
+    .eq('id', userId)
 
   if (error) throw error
 }

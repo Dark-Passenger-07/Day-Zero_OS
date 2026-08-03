@@ -236,23 +236,23 @@ export function CreateWorkspaceDialog({
   if (!isOpen) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-[#161F36] border border-white/[.08] rounded-2xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-[#707B95] hover:text-white transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         <h3 className="text-lg font-semibold text-white mb-1">Create Team Workspace</h3>
-        <p className="text-xs text-slate-400 mb-5">
+        <p className="text-xs text-[#707B95] mb-5">
           Workspaces let your team collaborate across projects, assets, notes, and tasks.
         </p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">
               Workspace Name
             </label>
             <input
@@ -261,12 +261,12 @@ export function CreateWorkspaceDialog({
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder="e.g. Acme Engineering"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="w-full px-3.5 py-3 rounded-xl bg-[#0D1427] border border-white/[.08] text-white placeholder-[#707B95] text-sm focus:outline-none focus:border-[#6C5CFF] transition-colors"
             />
           </div>
 
           {errorMsg && (
-            <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg">
+            <div className="text-xs text-[#EF5350] bg-[#EF5350]/10 border border-[#EF5350]/20 p-2.5 rounded-lg">
               {errorMsg}
             </div>
           )}
@@ -275,16 +275,16 @@ export function CreateWorkspaceDialog({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors"
+              className="px-4 py-2.5 text-xs font-medium text-[#A9B1C7] hover:text-white hover:bg-white/[.06] rounded-xl transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#6C5CFF] hover:bg-[#7E70FF] text-white text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create'}
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Workspace'}
             </button>
           </div>
         </form>
@@ -311,40 +311,62 @@ export function JoinWorkspaceDialog({
   errorMsg: string
 }) {
   if (!isOpen) return null
+
+  // Strip dashes/spaces and uppercase for validation
+  const rawCode = value.replace(/[-\s]/g, '').toUpperCase()
+  const isValid = rawCode.length === 8
+
+  const handleCodeChange = (input: string) => {
+    // Allow only alphanumeric, strip everything else, uppercase
+    const clean = input.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8)
+    onChange(clean)
+  }
+
+  // Format code with dash for display
+  const displayValue = rawCode.length > 4
+    ? `${rawCode.slice(0, 4)}-${rawCode.slice(4)}`
+    : rawCode
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-[#161F36] border border-white/[.08] rounded-2xl p-6 w-full max-w-md shadow-2xl relative max-h-[90vh] overflow-y-auto">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 text-[#707B95] hover:text-white transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h3 className="text-lg font-semibold text-white mb-1">Join Workspace by Code</h3>
-        <p className="text-xs text-slate-400 mb-5">
-          Enter the 8-digit team join code (e.g., AB12-CD34) to gain access instantly.
+        <h3 className="text-lg font-semibold text-white mb-1">Join Workspace</h3>
+        <p className="text-xs text-[#707B95] mb-5">
+          Enter the 8-character team join code shared by your team owner.
         </p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <label className="block text-xs font-medium text-[#A9B1C7] mb-1.5">
               Workspace Code
             </label>
             <input
               type="text"
               required
-              maxLength={15}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="e.g. AB12-CD34"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 tracking-wider text-center uppercase font-mono font-semibold"
+              maxLength={9}
+              value={displayValue}
+              onChange={(e) => handleCodeChange(e.target.value)}
+              placeholder="AB12-CD34"
+              className="w-full px-4 py-3 rounded-xl bg-[#0D1427] border border-white/[.08] text-white placeholder-[#707B95] text-lg focus:outline-none focus:border-[#6C5CFF] tracking-[0.25em] text-center uppercase font-mono font-bold transition-colors"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
             />
+            <p className="text-[11px] text-[#707B95] mt-1.5 text-center">
+              {rawCode.length}/8 characters {isValid && <span className="text-[#16C784]">✓ Ready</span>}
+            </p>
           </div>
 
           {errorMsg && (
-            <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg">
+            <div className="text-xs text-[#EF5350] bg-[#EF5350]/10 border border-[#EF5350]/20 p-2.5 rounded-lg">
               {errorMsg}
             </div>
           )}
@@ -353,16 +375,16 @@ export function JoinWorkspaceDialog({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white transition-colors"
+              className="px-4 py-2.5 text-xs font-medium text-[#A9B1C7] hover:text-white hover:bg-white/[.06] rounded-xl transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium transition-colors disabled:opacity-50"
+              disabled={isSubmitting || !isValid}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#6C5CFF] hover:bg-[#7E70FF] text-white text-xs font-semibold transition-colors disabled:opacity-50"
             >
-              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Join'}
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Join Workspace'}
             </button>
           </div>
         </form>
