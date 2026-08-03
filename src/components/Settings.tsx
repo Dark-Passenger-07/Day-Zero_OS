@@ -315,13 +315,13 @@ export default function Settings() {
                 <TextInput value={displayName} onChange={setDisplayName} placeholder="Builder Name" />
               </SettingRow>
               <SettingRow label="Workspace Name" description="Used in workspace switcher and invites">
-                <TextInput value={workspaceName} onChange={setWorkspaceName} placeholder="Workspace Name" />
+                <TextInput value={workspaceName} onChange={setWorkspaceName} placeholder="Workspace Name" disabled={!(userRole === 'owner' || userRole === 'admin')} />
               </SettingRow>
               <SettingRow label="Logo URL" description="Direct link to image logo">
-                <TextInput value={workspaceLogoUrl} onChange={setWorkspaceLogoUrl} placeholder="https://example.com/logo.png" />
+                <TextInput value={workspaceLogoUrl} onChange={setWorkspaceLogoUrl} placeholder="https://example.com/logo.png" disabled={!(userRole === 'owner' || userRole === 'admin')} />
               </SettingRow>
               <SettingRow label="Workspace Description" description="Short purpose of this workspace">
-                <TextInput value={workspaceDescription} onChange={setWorkspaceDescription} placeholder="Workspace purpose..." />
+                <TextInput value={workspaceDescription} onChange={setWorkspaceDescription} placeholder="Workspace purpose..." disabled={!(userRole === 'owner' || userRole === 'admin')} />
               </SettingRow>
 
               {currentWorkspace && (
@@ -401,7 +401,7 @@ export default function Settings() {
                         outline: 'none',
                         width: '100%',
                       }}
-                      className="cursor-pointer"
+                      className="cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <option value="editor" className="bg-card text-foreground">Editor (Can create and edit projects)</option>
                       <option value="viewer" className="bg-card text-foreground">Viewer (Read-only access)</option>
@@ -774,17 +774,20 @@ function TextInput({
   value,
   onChange,
   placeholder,
+  disabled,
 }: {
   value: string
   onChange: (value: string) => void
   placeholder: string
+  disabled?: boolean
 }) {
   return (
     <input
       value={value}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
-      className="bg-secondary border border-border rounded-lg py-2 px-3 text-foreground text-xs outline-none w-full sm:w-[220px]"
+      disabled={disabled}
+      className="bg-secondary border border-border rounded-lg py-2 px-3 text-foreground text-xs outline-none w-full sm:w-[220px] disabled:opacity-50 disabled:cursor-not-allowed"
     />
   )
 }
