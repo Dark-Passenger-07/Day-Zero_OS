@@ -347,7 +347,7 @@ export default function Settings() {
                 <>
                   <SettingRow label="Workspace Join Code" description="Code used by teammates to join this workspace">
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', width: '100%' }}>
-                      <span className="font-mono font-bold tracking-wider text-sm bg-slate-950 px-3.5 py-2.5 rounded-xl border border-slate-800 flex-grow select-all min-w-[120px] text-center uppercase flex items-center justify-center">
+                      <span className="font-mono font-bold tracking-wider text-sm bg-secondary text-foreground px-3.5 py-2.5 rounded-xl border border-border flex-grow select-all min-w-[120px] text-center uppercase flex items-center justify-center">
                         {currentWorkspace.joinCode ? `${currentWorkspace.joinCode.slice(0, 4)}-${currentWorkspace.joinCode.slice(4)}` : '--------'}
                       </span>
                       <button
@@ -359,7 +359,7 @@ export default function Settings() {
                             setTimeout(() => setCopied(false), 2000)
                           }
                         }}
-                        className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition-colors cursor-pointer"
+                        className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground hover:bg-secondary/80 text-xs font-semibold transition-colors cursor-pointer select-none"
                       >
                         {copied ? 'Copied!' : 'Copy'}
                       </button>
@@ -378,7 +378,7 @@ export default function Settings() {
                               setIsRegenerating(false)
                             }
                           }}
-                          className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                          className="px-4 py-2.5 rounded-xl bg-secondary border border-border text-foreground hover:bg-secondary/80 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-50 select-none"
                         >
                           {isRegenerating ? 'Regenerating...' : 'Regenerate'}
                         </button>
@@ -395,15 +395,16 @@ export default function Settings() {
                         padding: '10px 14px',
                         borderRadius: '8px',
                         border: '1px solid var(--border)',
-                        background: 'var(--slate-950, #09090b)',
+                        background: 'var(--secondary)',
                         color: 'var(--foreground)',
                         fontSize: '12px',
                         outline: 'none',
                         width: '100%',
                       }}
+                      className="cursor-pointer"
                     >
-                      <option value="editor">Editor (Can create and edit projects)</option>
-                      <option value="viewer">Viewer (Read-only access)</option>
+                      <option value="editor" className="bg-card text-foreground">Editor (Can create and edit projects)</option>
+                      <option value="viewer" className="bg-card text-foreground">Viewer (Read-only access)</option>
                     </select>
                   </SettingRow>
                 </>
