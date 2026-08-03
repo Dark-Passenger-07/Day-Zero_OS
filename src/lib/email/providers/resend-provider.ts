@@ -15,7 +15,7 @@ export class ResendEmailProvider implements EmailProvider {
     const fromAddress = message.from || this.defaultFrom
 
     try {
-      const response = await fetch('https://api.resend.com/emails', {
+      const response = await fetch('/api/resend/emails', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
