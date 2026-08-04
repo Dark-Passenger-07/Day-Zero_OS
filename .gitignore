@@ -10,3 +10,5 @@ src-tauri/target/
 *.msix
 *.msixbundle
 *.appxbundle
+rustup-init.exe
+winsdksetup.exe
