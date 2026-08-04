@@ -12,3 +12,5 @@ src-tauri/target/
 *.appxbundle
 rustup-init.exe
 winsdksetup.exe
+vs_BuildTools.exe
+dist-native-msix/
