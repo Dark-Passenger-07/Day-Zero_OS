@@ -1,7 +1,7 @@
 {
   "productName": "Day Zero OS",
   "version": "1.0.0",
-  "identifier": "com.dayzeroos.desktop",
+  "identifier": "AravindGabbi.DayZeroOS",
   "bundle": {
     "active": true,
     "targets": "all",
@@ -12,7 +12,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "Day Zero"
+    "publisher": "CN=076A002A-EC30-46DA-B1D1-EB3C7277923C"
   },
   "app": {
     "windows": [

@@ -5,3 +5,8 @@ dist/
 .env.local
 .env.*.local
 dev-dist/
+dist-windows/
+src-tauri/target/
+*.msix
+*.msixbundle
+*.appxbundle

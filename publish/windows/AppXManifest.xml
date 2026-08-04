@@ -6,8 +6,8 @@
   IgnorableNamespaces="uap rescap">
 
   <Identity
-    Name="com.dayzeroos.app"
-    Publisher="CN=Day Zero Team, O=Day Zero, C=US"
+    Name="AravindGabbi.DayZeroOS"
+    Publisher="CN=076A002A-EC30-46DA-B1D1-EB3C7277923C"
     Version="1.0.0.0" />
 
   <Properties>

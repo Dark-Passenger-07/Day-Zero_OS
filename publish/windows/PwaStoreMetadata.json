@@ -1,9 +1,9 @@
 {
   "pwaUrl": "https://day-zero-os.vercel.app",
   "name": "Day Zero OS",
-  "publisherId": "CN=Day Zero Team, O=Day Zero, C=US",
-  "publisherDisplayName": "Day Zero",
-  "packageId": "com.dayzeroos.app",
+  "publisherId": "CN=076A002A-EC30-46DA-B1D1-EB3C7277923C",
+  "publisherDisplayName": "CN=076A002A-EC30-46DA-B1D1-EB3C7277923C",
+  "packageId": "AravindGabbi.DayZeroOS",
   "version": "1.0.0.0",
   "storeListing": {
     "title": "Day Zero OS — Operating System for Builders",
