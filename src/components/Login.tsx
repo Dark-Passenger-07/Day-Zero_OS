@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Mail, CheckCircle, Shield, FileText, HelpCircle, Info } from 'lucide-react'
+import { ArrowRight, Mail, CheckCircle, Shield, FileText, HelpCircle, Info, Loader2 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
+import { env } from '@/lib/config/env'
+import { isDemoModeEnabled } from '@/lib/supabase/mockClient'
 import logoImg from '@/logo.png'
 
 export default function Login() {
@@ -13,6 +15,60 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [resetSent, setResetSent] = useState(false)
+  const [verifyPending, setVerifyPending] = useState(false)
+  const [verifySuccess, setVerifySuccess] = useState(false)
+
+  useEffect(() => {
+    if (!verifyPending || !email || !password) return
+
+    // In mock/demo mode, simulate verification completion in 3 seconds
+    if (isDemoModeEnabled()) {
+      const timeout = setTimeout(() => {
+        setVerifySuccess(true)
+        setTimeout(() => {
+          setVerifyPending(false)
+          setVerifySuccess(false)
+          navigate('/mission-control')
+        }, 1500)
+      }, 3000)
+      return () => clearTimeout(timeout)
+    }
+
+    const interval = setInterval(async () => {
+      try {
+        const supabase = getSupabaseClient()
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+        if (!error && data.session) {
+          clearInterval(interval)
+          setVerifySuccess(true)
+          setTimeout(() => {
+            setVerifyPending(false)
+            setVerifySuccess(false)
+            const pendingStr = localStorage.getItem('day_zero_os_pending_invite')
+            if (pendingStr) {
+              try {
+                const parsed = JSON.parse(pendingStr)
+                if (parsed.id && parsed.secret) {
+                  navigate(`/invite/${parsed.id}?secret=${parsed.secret}`)
+                  return
+                }
+              } catch {
+                // ignore
+              }
+            }
+            navigate('/mission-control')
+          }, 1500)
+        }
+      } catch {
+        // ignore errors during background check
+      }
+    }, 3000)
+
+    return () => clearInterval(interval)
+  }, [verifyPending, email, password, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,10 +106,16 @@ export default function Login() {
 
     try {
       if (isSignUp) {
+        const isProduction = import.meta.env.PROD || env.appEnv === 'production'
+        const redirectUrl = isProduction
+          ? 'https://day-zero-os.vercel.app/auth/callback'
+          : 'http://localhost:8443/auth/callback'
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
+            emailRedirectTo: redirectUrl,
             data: {
               full_name: email.split('@')[0],
               username: email.split('@')[0],
@@ -61,8 +123,7 @@ export default function Login() {
           },
         })
         if (error) throw error
-        setErrorMsg('Verification link sent or account created! Please sign in.')
-        setIsSignUp(false)
+        setVerifyPending(true)
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -178,7 +239,142 @@ export default function Login() {
             padding: '32px',
           }}
         >
-          {isForgotPassword ? (
+          {verifyPending ? (
+            <div style={{ textAlign: 'center', padding: '8px 0' }}>
+              {verifySuccess ? (
+                <div>
+                  <CheckCircle
+                    size={44}
+                    color="var(--status-green)"
+                    style={{
+                      margin: '0 auto 16px',
+                      filter: 'drop-shadow(0 0 8px rgba(34, 197, 94, 0.2))',
+                    }}
+                  />
+                  <h1 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 8px', letterSpacing: '-0.02em' }}>
+                    ✓ Verified!
+                  </h1>
+                  <p style={{ color: 'var(--muted-foreground)', fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+                    Email verified successfully. Logging you in automatically...
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <Loader2
+                    size={40}
+                    color="var(--primary)"
+                    className="animate-spin"
+                    style={{
+                      margin: '0 auto 16px',
+                    }}
+                  />
+                  <h1 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 8px', letterSpacing: '-0.02em' }}>
+                    Verify your email
+                  </h1>
+                  <p style={{ color: 'var(--foreground)', fontSize: '13.5px', fontWeight: 500, margin: '0 0 8px' }}>
+                    We sent a verification link to:
+                  </p>
+                  <p style={{ color: 'var(--primary)', fontSize: '14px', fontWeight: 600, margin: '0 0 16px', wordBreak: 'break-all' }}>
+                    {email}
+                  </p>
+                  <div
+                    style={{
+                      background: 'rgba(59, 130, 246, 0.05)',
+                      border: '1px solid rgba(59, 130, 246, 0.15)',
+                      borderRadius: '8px',
+                      padding: '12px 14px',
+                      fontSize: '12.5px',
+                      color: 'var(--muted-foreground)',
+                      lineHeight: 1.5,
+                      marginBottom: '24px',
+                    }}
+                  >
+                    {isDemoModeEnabled() 
+                      ? "Demo Mode: Simulating secure auth confirmation in 3 seconds..." 
+                      : "Please check your inbox and click the confirmation link. Day Zero OS will automatically detect your confirmation."}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const supabase = getSupabaseClient()
+                          const isProduction = import.meta.env.PROD || env.appEnv === 'production'
+                          const redirectUrl = isProduction
+                            ? 'https://day-zero-os.vercel.app/auth/callback'
+                            : 'http://localhost:8443/auth/callback'
+
+                          const { error } = await supabase.auth.resend({
+                            type: 'signup',
+                            email,
+                            options: {
+                              emailRedirectTo: redirectUrl,
+                            }
+                          })
+                          if (error) throw error
+                          setErrorMsg('Verification link resent!')
+                          setTimeout(() => setErrorMsg(null), 3000)
+                        } catch (err: unknown) {
+                          setErrorMsg(err instanceof Error ? err.message : 'Failed to resend confirmation email.')
+                        }
+                      }}
+                      style={{
+                        background: 'var(--secondary)',
+                        border: '1px solid var(--border)',
+                        color: 'var(--foreground)',
+                        padding: '10px 16px',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'background 0.2s',
+                      }}
+                      onMouseOver={(e) => (e.currentTarget.style.background = 'var(--border)')}
+                      onMouseOut={(e) => (e.currentTarget.style.background = 'var(--secondary)')}
+                    >
+                      Resend email
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVerifyPending(false)
+                        setIsSignUp(false)
+                        setErrorMsg(null)
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--muted-foreground)',
+                        padding: '6px',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Cancel and back to sign in
+                    </button>
+                  </div>
+
+                  {errorMsg && (
+                    <div
+                      style={{
+                        marginTop: '16px',
+                        background: errorMsg.includes('resent') ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        border: errorMsg.includes('resent') ? '1px solid rgba(34, 197, 94, 0.2)' : '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '6px',
+                        padding: '8px 12px',
+                        fontSize: '12px',
+                        color: errorMsg.includes('resent') ? '#4ade80' : '#f87171',
+                      }}
+                    >
+                      {errorMsg}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : isForgotPassword ? (
             <div>
               <h1 style={{ fontSize: '20px', fontWeight: 600, margin: '0 0 6px', letterSpacing: '-0.02em' }}>
                 Reset password

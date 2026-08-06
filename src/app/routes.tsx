@@ -8,6 +8,7 @@ import { LoadingState } from '@/components/feedback/LoadingState'
 
 const Login = lazy(() => import('@/components/Login'))
 const ResetPassword = lazy(() => import('@/components/ResetPassword'))
+const AuthCallback = lazy(() => import('@/components/AuthCallback'))
 const PrivacyPolicy = lazy(() => import('@/components/legal/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('@/components/legal/TermsOfService'))
 const About = lazy(() => import('@/components/legal/About'))
@@ -129,6 +130,7 @@ export function AppRoutes() {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/about" element={<About />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
         </Route>
 
 
