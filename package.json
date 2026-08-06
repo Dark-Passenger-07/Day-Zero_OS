@@ -1,7 +1,7 @@
 {
   "name": "day-zero-os",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Day Zero OS — The unified digital workspace & operating system for builders",
   "license": "UNLICENSED",
   "type": "module",

@@ -12,8 +12,17 @@ export default function AuthCallback() {
       try {
         const supabase = getSupabaseClient()
         
-        // Wait briefly for Supabase to auto-parse hash fragment parameters
-        await new Promise((resolve) => setTimeout(resolve, 1500))
+        // Check if there is a 'code' query parameter (PKCE flow redirect)
+        const params = new URLSearchParams(window.location.search)
+        const code = params.get('code')
+        
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+          if (exchangeError) throw exchangeError
+        }
+        
+        // Wait briefly for Supabase to propagate session state
+        await new Promise((resolve) => setTimeout(resolve, 1000))
         
         const { data: { session }, error } = await supabase.auth.getSession()
         

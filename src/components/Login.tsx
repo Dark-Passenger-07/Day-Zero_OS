@@ -106,10 +106,7 @@ export default function Login() {
 
     try {
       if (isSignUp) {
-        const isProduction = import.meta.env.PROD || env.appEnv === 'production'
-        const redirectUrl = isProduction
-          ? 'https://day-zero-os.vercel.app/auth/callback'
-          : 'http://localhost:8443/auth/callback'
+        const redirectUrl = `${env.appUrl}/auth/callback`
 
         const { error } = await supabase.auth.signUp({
           email,
@@ -300,10 +297,7 @@ export default function Login() {
                       onClick={async () => {
                         try {
                           const supabase = getSupabaseClient()
-                          const isProduction = import.meta.env.PROD || env.appEnv === 'production'
-                          const redirectUrl = isProduction
-                            ? 'https://day-zero-os.vercel.app/auth/callback'
-                            : 'http://localhost:8443/auth/callback'
+                          const redirectUrl = `${env.appUrl}/auth/callback`
 
                           const { error } = await supabase.auth.resend({
                             type: 'signup',
