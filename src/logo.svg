@@ -1,0 +1,17 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Top arc -->
+  <path d="M 139 489 A 381 381 0 0 1 901 489" 
+        fill="none" stroke="black" stroke-width="38" stroke-linecap="round" />
+  
+  <!-- Horizontal line -->
+  <line x1="59" y1="489" x2="968" y2="489" 
+        stroke="black" stroke-width="38" stroke-linecap="round" />
+        
+  <!-- Bottom arc (elliptical) -->
+  <path d="M 139 489 A 394 393 0 0 0 836 740" 
+        fill="none" stroke="black" stroke-width="38" stroke-linecap="round" />
+        
+  <!-- Arrowhead -->
+  <path d="M 775 802 L 862 692 L 865 766" 
+        fill="none" stroke="black" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

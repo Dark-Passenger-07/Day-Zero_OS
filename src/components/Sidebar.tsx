@@ -12,7 +12,7 @@ import {
   LogOut,
   Bell,
 } from 'lucide-react'
-import logoImg from '@/logo.png'
+import logoImg from '@/logo.svg'
 import type { Screen } from '@/types/navigation'
 import { useAuth } from '@/app/providers/AuthProvider'
 

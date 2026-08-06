@@ -112,3 +112,31 @@ pre,
     transition-delay: 0s !important;
   }
 }
+
+/* React Splash Screen Custom Animations */
+@keyframes progressAnim {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-progress-bar {
+  animation: progressAnim 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+@keyframes fadeOutSplash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.animate-fade-out-splash {
+  animation: fadeOutSplash 0.4s ease-in-out forwards;
+}

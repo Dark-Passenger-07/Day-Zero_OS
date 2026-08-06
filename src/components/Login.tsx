@@ -4,7 +4,7 @@ import { ArrowRight, Mail, CheckCircle, Shield, FileText, HelpCircle, Info, Load
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { env } from '@/lib/config/env'
 import { isDemoModeEnabled } from '@/lib/supabase/mockClient'
-import logoImg from '@/logo.png'
+import logoImg from '@/logo.svg'
 import { getUrlParam } from '@/lib/platform/url'
 import { getAuthRedirectUrl } from '@/lib/platform/auth'
 

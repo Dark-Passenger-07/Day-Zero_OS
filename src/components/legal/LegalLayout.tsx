@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Shield, FileText, HelpCircle, Info } from 'lucide-react'
-import logoImg from '@/logo.png'
+import logoImg from '@/logo.svg'
 
 interface LegalLayoutProps {
   title: string

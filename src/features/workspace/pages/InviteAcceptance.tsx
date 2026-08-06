@@ -18,7 +18,7 @@ import {
   Loader2,
   AlertTriangle,
 } from 'lucide-react'
-import logoImg from '@/logo.png'
+import logoImg from '@/logo.svg'
 
 export function InviteAcceptance() {
   const { id } = useParams<{ id: string }>()

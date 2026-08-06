@@ -14,7 +14,7 @@ import {
   Link as LinkIcon,
   ChevronDown
 } from 'lucide-react'
-import logoImg from '@/logo.png'
+import logoImg from '@/logo.svg'
 
 interface SwitcherProps {
   variant?: 'sidebar' | 'header'
