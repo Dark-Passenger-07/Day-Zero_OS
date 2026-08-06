@@ -5,6 +5,8 @@ import { getSupabaseClient } from '@/lib/supabase/client'
 import { env } from '@/lib/config/env'
 import { isDemoModeEnabled } from '@/lib/supabase/mockClient'
 import logoImg from '@/logo.png'
+import { getUrlParam } from '@/lib/platform/url'
+import { getAuthRedirectUrl } from '@/lib/platform/auth'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -83,7 +85,7 @@ export default function Login() {
       try {
         const supabase = getSupabaseClient()
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password`,
+          redirectTo: getAuthRedirectUrl('/reset-password'),
         })
         if (error) throw error
         setResetSent(true)
@@ -106,7 +108,7 @@ export default function Login() {
 
     try {
       if (isSignUp) {
-        const redirectUrl = `${env.appUrl}/auth/callback`
+        const redirectUrl = getAuthRedirectUrl('/auth/callback')
 
         const { error } = await supabase.auth.signUp({
           email,
@@ -141,8 +143,7 @@ export default function Login() {
           }
         }
 
-        const urlParams = new URLSearchParams(window.location.search)
-        const redirectUrl = urlParams.get('redirect')
+        const redirectUrl = getUrlParam('redirect')
         if (redirectUrl) {
           navigate(redirectUrl)
         }

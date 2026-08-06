@@ -1,4 +1,5 @@
 import { isDemoModeEnabled } from '@/lib/supabase/mockClient'
+import { getUrlParam } from '@/lib/platform/url'
 import { SupabaseWorkspaceRepository } from './supabase-workspace.repository'
 import { MockWorkspaceRepository } from './mock-workspace.repository'
 import type { WorkspaceRepository } from './workspace.repository'
@@ -235,8 +236,7 @@ export async function resolveCurrentWorkspaceId(userId: string): Promise<string>
 
   // 1. Priority: URL parameter
   if (typeof window !== 'undefined') {
-    const urlParams = new URLSearchParams(window.location.search)
-    const urlWsId = urlParams.get('ws')
+    const urlWsId = getUrlParam('ws')
     if (urlWsId && userWorkspaces.some((w) => w.id === urlWsId)) {
       setCachedActiveWorkspaceId(urlWsId)
       return urlWsId

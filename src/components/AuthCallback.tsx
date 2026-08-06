@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { CheckCircle, AlertTriangle, Loader2 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import logoImg from '@/logo.png'
+import { getUrlParam } from '@/lib/platform/url'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
@@ -13,8 +14,7 @@ export default function AuthCallback() {
         const supabase = getSupabaseClient()
         
         // Check if there is a 'code' query parameter (PKCE flow redirect)
-        const params = new URLSearchParams(window.location.search)
-        const code = params.get('code')
+        const code = getUrlParam('code')
         
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
@@ -32,8 +32,7 @@ export default function AuthCallback() {
           setStatus('success')
         } else {
           // If no session is found, check if there's an error in the query parameters (e.g. expired link)
-          const params = new URLSearchParams(window.location.search)
-          const errorDescription = params.get('error_description')
+          const errorDescription = getUrlParam('error_description')
           if (errorDescription) {
             throw new Error(errorDescription)
           }

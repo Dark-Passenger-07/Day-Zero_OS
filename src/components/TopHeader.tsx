@@ -37,7 +37,7 @@ export default function TopHeader({ current, onSearchOpen, onNavigate }: TopHead
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Builder'
 
   return (
-    <header className="lg:hidden flex items-center justify-between px-4 h-14 bg-card/85 backdrop-blur-md border-b border-border z-40 sticky top-0 w-full select-none">
+    <header className="lg:hidden flex items-center justify-between px-4 h-[calc(3.5rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] bg-card/85 backdrop-blur-md border-b border-border z-40 sticky top-0 w-full select-none">
       {/* Responsive Workspace Switcher (Header Trigger Variant) */}
       <WorkspaceSwitcher variant="header" />
 

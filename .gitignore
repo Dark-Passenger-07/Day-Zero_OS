@@ -14,3 +14,11 @@ rustup-init.exe
 winsdksetup.exe
 vs_BuildTools.exe
 dist-native-msix/
+
+# Local Development Tools (Capacitor/Android setup)
+dev-tools/
+.local-tools/
+android-sdk/
+jdk/
+*.zip
+pnpm-workspace.yaml
