@@ -4,6 +4,7 @@ import { ArrowLeft, Compass, Share, PlusSquare, AlertTriangle } from 'lucide-rea
 import { DownloadCard } from './DownloadCard';
 import { InstallButton } from './InstallButton';
 import { WEB_APP_URL, IOS_INSTALL_STEPS } from '@/config/downloads';
+import logoImg from '@/logo.png';
 
 export default function DownloadIos() {
   useEffect(() => {
@@ -138,7 +139,7 @@ export default function DownloadIos() {
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <div className="w-8 h-8 rounded-2xl bg-white p-1.5 border border-zinc-800 shadow-lg transform scale-110">
-                      <img src="/logo.png" alt="Day Zero OS" className="w-full h-full object-contain" />
+                      <img src={logoImg} alt="Day Zero OS" className="w-full h-full object-contain" />
                     </div>
                     <span className="text-[8px] font-semibold text-zinc-200">Day Zero OS</span>
                   </div>

@@ -4,6 +4,7 @@ import { ArrowLeft, Compass, Share, PlusSquare } from 'lucide-react';
 import { DownloadCard } from './DownloadCard';
 import { InstallButton } from './InstallButton';
 import { WEB_APP_URL, MAC_INSTALL_STEPS } from '@/config/downloads';
+import logoImg from '@/logo.png';
 
 export default function DownloadMac() {
   useEffect(() => {
@@ -130,7 +131,7 @@ export default function DownloadMac() {
                   {/* Day Zero OS Icon in Dock */}
                   <div className="relative group flex flex-col items-center">
                     <div className="w-7 h-7 rounded-lg bg-white p-1 border border-zinc-800 shadow-md transform hover:scale-110 transition-transform">
-                      <img src="/logo.png" alt="Day Zero OS" className="w-full h-full object-contain" />
+                      <img src={logoImg} alt="Day Zero OS" className="w-full h-full object-contain" />
                     </div>
                     {/* Active dot */}
                     <span className="w-1 h-1 rounded-full bg-white mt-1" />

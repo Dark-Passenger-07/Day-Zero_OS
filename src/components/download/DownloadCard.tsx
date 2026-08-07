@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { PlatformBadge } from './PlatformBadge';
 import type { Platform } from '@/lib/platform/device-detection';
 import { CURRENT_VERSION, RELEASE_CHANNEL } from '@/config/downloads';
+import logoImg from '@/logo.png';
 
 interface DownloadCardProps {
   platform: Platform;
@@ -25,7 +26,7 @@ export function DownloadCard({
       {/* Header Logo branding */}
       <div className="flex flex-col items-center mb-6">
         <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center p-2 mb-4 shadow-lg shadow-white/10">
-          <img src="/logo.png" alt="Day Zero OS logo" className="w-12 h-12 object-contain" />
+          <img src={logoImg} alt="Day Zero OS logo" className="w-12 h-12 object-contain" />
         </div>
         <h1 className="text-2xl font-bold text-zinc-50 tracking-tight">Day Zero OS</h1>
         <p className="text-sm text-zinc-400 mt-1">BUILD • FOCUS • LAUNCH</p>
