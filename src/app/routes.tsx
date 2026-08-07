@@ -14,6 +14,12 @@ const TermsOfService = lazy(() => import('@/components/legal/TermsOfService'))
 const About = lazy(() => import('@/components/legal/About'))
 const Support = lazy(() => import('@/components/legal/Support'))
 
+const DownloadHome = lazy(() => import('@/components/download/DownloadHome'))
+const DownloadWindows = lazy(() => import('@/components/download/DownloadWindows'))
+const DownloadAndroid = lazy(() => import('@/components/download/DownloadAndroid'))
+const DownloadMac = lazy(() => import('@/components/download/DownloadMac'))
+const DownloadIos = lazy(() => import('@/components/download/DownloadIos'))
+
 const MissionControl = lazy(() => import('@/components/MissionControl'))
 const Projects = lazy(() => import('@/components/Projects'))
 const ProjectWorkspace = lazy(() => import('@/components/ProjectWorkspace'))
@@ -131,6 +137,11 @@ export function AppRoutes() {
           <Route path="/about" element={<About />} />
           <Route path="/support" element={<Support />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/download" element={<DownloadHome />} />
+          <Route path="/download/windows" element={<DownloadWindows />} />
+          <Route path="/download/android" element={<DownloadAndroid />} />
+          <Route path="/download/macos" element={<DownloadMac />} />
+          <Route path="/download/ios" element={<DownloadIos />} />
         </Route>
 
 

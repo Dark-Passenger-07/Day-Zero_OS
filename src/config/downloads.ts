@@ -1,0 +1,10 @@
+export const WINDOWS_STORE_URL = 'https://apps.microsoft.com/store/detail/day-zero-os/9n0w8j3j3j3j';
+export const ANDROID_APK_URL = '/downloads/dayzeroos-release.apk'; // Route/URL for direct APK download
+export const WEB_APP_URL = 'https://day-zero-os.vercel.app';
+export const CURRENT_VERSION = '1.0.1';
+export const BUILD_NUMBER = '10001';
+export const APK_SIZE = '5.91 MB';
+export const APK_SHA256 = '1ff4902642d385d1aa506500447d84fe333266d7f14f0fd0a0c2a27f0e6ea1eb';
+export const ANDROID_MIN_VERSION = 'Android 8.0 (API level 26)';
+export const RELEASE_DATE = '2026-08-07';
+export const RELEASE_CHANNEL = 'Stable Production';
