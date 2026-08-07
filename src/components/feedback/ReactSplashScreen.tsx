@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/app/providers/AuthProvider'
 import { useWorkspace } from '@/features/workspace/context/WorkspaceContext'
-import logoUrl from '@/logo.svg'
+import logoUrl from '@/logo.png'
 
 interface ReactSplashScreenProps {
   onComplete: () => void

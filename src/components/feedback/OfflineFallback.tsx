@@ -1,5 +1,5 @@
 import { WifiOff, RefreshCw } from 'lucide-react'
-import logoImg from '@/logo.svg'
+import logoImg from '@/logo.png'
 
 interface OfflineFallbackProps {
   onRetry?: () => void

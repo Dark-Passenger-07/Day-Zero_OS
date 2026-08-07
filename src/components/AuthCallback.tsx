@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { CheckCircle, AlertTriangle, Loader2 } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import logoImg from '@/logo.svg'
+import logoImg from '@/logo.png'
 import { getUrlParam } from '@/lib/platform/url'
 
 export default function AuthCallback() {

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, CheckCircle, Lock } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import logoImg from '@/logo.svg'
+import logoImg from '@/logo.png'
 
 export default function ResetPassword() {
   const navigate = useNavigate()
