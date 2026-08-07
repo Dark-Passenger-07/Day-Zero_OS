@@ -132,7 +132,10 @@ Write-Host "Building Release AAB Bundle (Unsigned)..."
 
 # Resolve paths of compiled outputs
 $debugApkPath = [System.IO.Path]::GetFullPath("$rootDir\android\app\build\outputs\apk\debug\app-debug.apk")
-$releaseApkPath = [System.IO.Path]::GetFullPath("$rootDir\android\app\build\outputs\apk\release\app-release-unsigned.apk")
+$releaseApkPath = [System.IO.Path]::GetFullPath("$rootDir\android\app\build\outputs\apk\release\app-release.apk")
+if (-not (Test-Path $releaseApkPath)) {
+    $releaseApkPath = [System.IO.Path]::GetFullPath("$rootDir\android\app\build\outputs\apk\release\app-release-unsigned.apk")
+}
 $releaseAabPath = [System.IO.Path]::GetFullPath("$rootDir\android\app\build\outputs\bundle\release\app-release.aab")
 
 # Print report of outputs
@@ -145,7 +148,7 @@ Write-Host ""
 Write-Host "1. Debug APK (for local testing):"
 Write-Host "   $debugApkPath"
 Write-Host ""
-Write-Host "2. Release APK (unsigned):"
+Write-Host "2. Release APK (Signed):"
 Write-Host "   $releaseApkPath"
 Write-Host ""
 Write-Host "3. Release AAB Bundle (for Google Play):"

@@ -22,3 +22,9 @@ android-sdk/
 jdk/
 *.zip
 pnpm-workspace.yaml
+
+# Secure Keystores & Signing Properties
+*.keystore
+*.jks
+signing.properties
+
