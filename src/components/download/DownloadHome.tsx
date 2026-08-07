@@ -29,13 +29,16 @@ export default function DownloadHome() {
       </header>
 
       {/* Main recommendation widget container */}
-      <main className="max-w-4xl mx-auto w-full flex-grow flex flex-col justify-center items-center my-6">
-        <div className="w-full text-center max-w-xl mb-10">
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white mb-3">
-            Get Day Zero OS
-          </h2>
-          <p className="text-sm md:text-base text-zinc-400 leading-relaxed">
-            Unify your workspace, manage missions, track projects, and build offline-first. Available across desktop and mobile form-factors.
+      <main className="max-w-6xl mx-auto w-full flex-grow flex flex-col justify-center items-center my-6">
+        <div className="w-full text-center max-w-2xl mb-12">
+          <p className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">
+            Day Zero OS
+          </p>
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white mb-4">
+            Download for your device
+          </h1>
+          <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+            Choose the best installation method for your platform.
           </p>
         </div>
 

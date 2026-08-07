@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle, ShieldCheck, RefreshCw } from 'lucide-react';
 import { DownloadCard } from './DownloadCard';
-import { WINDOWS_STORE_URL } from '@/config/downloads';
+import { WINDOWS_STORE_URL, WINDOWS_SYSTEM_REQUIREMENTS, WINDOWS_BENEFITS } from '@/config/downloads';
 
 export default function DownloadWindows() {
   useEffect(() => {
@@ -61,13 +61,53 @@ export default function DownloadWindows() {
               </div>
             </a>
 
-            <div className="w-full flex items-center justify-center gap-2 mt-4 text-xs text-zinc-500">
-              <span>Includes Automatic Updates</span>
+            <div className="w-full flex items-center justify-center gap-4 mt-4 text-xs text-zinc-500">
+              <span className="flex items-center gap-1.5">
+                <RefreshCw className="w-3.5 h-3.5 text-zinc-500" />
+                Automatic Updates
+              </span>
               <span>•</span>
-              <span>Secure Sandboxing</span>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-zinc-500" />
+                Secure Installation
+              </span>
             </div>
           </div>
         </DownloadCard>
+
+        {/* Windows Benefits & Specs */}
+        <div className="w-full max-w-xl space-y-6 mt-8">
+          {/* Benefits Section */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-5 md:p-6 text-left space-y-4">
+            <h3 className="text-base font-semibold text-zinc-200">Installation Benefits</h3>
+            <div className="grid grid-cols-1 gap-4">
+              {WINDOWS_BENEFITS.map((benefit, index) => (
+                <div key={index} className="flex gap-3 items-start">
+                  <div className="p-1 rounded-md bg-zinc-900 border border-zinc-800 text-emerald-400 mt-0.5 shrink-0">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-zinc-200">{benefit.title}</h4>
+                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">{benefit.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* System Requirements */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-5 md:p-6 text-left">
+            <h3 className="text-base font-semibold text-zinc-200 mb-4">System Requirements</h3>
+            <div className="space-y-2 text-xs">
+              {WINDOWS_SYSTEM_REQUIREMENTS.map((req, index) => (
+                <div key={index} className="flex justify-between py-2 border-b border-zinc-900 last:border-0">
+                  <span className="text-zinc-500 font-medium">{req.label}</span>
+                  <span className="text-zinc-300 font-semibold text-right">{req.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </main>
 
       <footer className="max-w-7xl mx-auto w-full text-center mt-12 pt-6 border-t border-zinc-900">

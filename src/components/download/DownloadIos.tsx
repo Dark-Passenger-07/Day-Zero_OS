@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Compass, Share, PlusSquare } from 'lucide-react';
+import { ArrowLeft, Compass, Share, PlusSquare, AlertTriangle } from 'lucide-react';
 import { DownloadCard } from './DownloadCard';
 import { InstallButton } from './InstallButton';
-import { WEB_APP_URL } from '@/config/downloads';
+import { WEB_APP_URL, IOS_INSTALL_STEPS } from '@/config/downloads';
 
 export default function DownloadIos() {
   useEffect(() => {
@@ -49,55 +49,108 @@ export default function DownloadIos() {
                 iOS Installation Steps
               </h3>
               
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-zinc-400 shrink-0 mt-0.5">
-                    1
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
-                      <Compass className="w-4 h-4 text-blue-400" />
-                      Open Safari
-                    </h4>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                      Launch the system Safari browser and go to <a href={WEB_APP_URL} className="text-zinc-300 underline font-medium" target="_blank" rel="noopener noreferrer">Day Zero OS</a>.
-                    </p>
-                  </div>
-                </div>
+              <div className="space-y-6">
+                {IOS_INSTALL_STEPS.map((step) => {
+                  return (
+                    <div key={step.step} className="flex gap-4">
+                      <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-zinc-400 shrink-0 mt-0.5">
+                        {step.step}
+                      </div>
+                      <div className="flex-grow">
+                        <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
+                          {step.step === '1' && <Compass className="w-4 h-4 text-blue-400" />}
+                          {step.step === '2' && <Share className="w-4 h-4 text-zinc-400" />}
+                          {step.step === '3' && <PlusSquare className="w-4 h-4 text-emerald-400" />}
+                          {step.title}
+                        </h4>
+                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                          {step.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </DownloadCard>
 
-                <div className="flex gap-4">
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-zinc-400 shrink-0 mt-0.5">
-                    2
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
-                      <Share className="w-4 h-4 text-zinc-400" />
-                      Tap the Share Button
-                    </h4>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                      Find and tap the **Share** icon (represented by a square with an upward arrow) in Safari's bottom navigation bar.
-                    </p>
-                  </div>
-                </div>
+        {/* iOS Browser Limitation Alert Note */}
+        <div className="w-full max-w-xl p-5 md:p-6 rounded-xl border border-amber-500/20 bg-amber-500/5 text-left flex gap-4">
+          <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-sm font-semibold text-amber-400">iOS browser limitation notice</h3>
+            <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+              Google Chrome and third-party browsers on iOS cannot install Progressive Web Applications (PWAs) to the Home Screen. You **must** open this page in Apple's native **Safari** browser to complete the installation.
+            </p>
+          </div>
+        </div>
 
-                <div className="flex gap-4">
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-zinc-400 shrink-0 mt-0.5">
-                    3
+        {/* Visual iOS Mockup Placeholders */}
+        <div className="w-full max-w-xl space-y-6">
+          <div className="text-center">
+            <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
+              iOS Installation Mockups
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Mockup 1: iOS Share Sheet */}
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-left">
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
+                <span className="text-[10px] uppercase font-bold text-zinc-500 font-mono">1. iOS Safari Share</span>
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+              </div>
+              <div className="aspect-[4/3] rounded-lg bg-zinc-900/60 border border-zinc-800 flex flex-col p-3 text-[10px] text-zinc-400 justify-between select-none">
+                {/* Safari Bottom Bar simulation */}
+                <div className="flex justify-around items-center bg-zinc-950 p-2 rounded border border-zinc-800">
+                  <Compass className="w-3.5 h-3.5 opacity-40" />
+                  <Share className="w-4 h-4 text-zinc-300 animate-pulse" />
+                  <PlusSquare className="w-3.5 h-3.5 opacity-40" />
+                </div>
+                {/* Share Sheet popup simulation */}
+                <div className="w-full bg-zinc-950 border border-zinc-850 rounded-xl p-2.5 space-y-2 shadow-2xl">
+                  <div className="flex items-center justify-between text-[8px] font-bold text-zinc-500 uppercase px-1">
+                    <span>Safari Options</span>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
-                      <PlusSquare className="w-4 h-4 text-emerald-400" />
-                      Add to Home Screen
-                    </h4>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                      Scroll down the share sheet options and tap **Add to Home Screen**. Name it and click **Add** in the top right.
-                    </p>
+                  <div className="p-2 rounded bg-zinc-900/60 border border-zinc-800 flex justify-between items-center text-zinc-200">
+                    <span>Add to Home Screen</span>
+                    <PlusSquare className="w-3 h-3 text-emerald-400" />
+                  </div>
+                  <div className="p-2 opacity-35">Copy Link</div>
+                  <div className="p-2 opacity-35">Add to Reading List</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mockup 2: Home Screen shortcut launch */}
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-left">
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
+                <span className="text-[10px] uppercase font-bold text-zinc-500 font-mono">2. Mobile Home Screen</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              </div>
+              <div className="aspect-[4/3] rounded-lg bg-zinc-900/60 border border-zinc-800 flex items-center justify-center p-4 select-none">
+                {/* Screen Grid simulation */}
+                <div className="grid grid-cols-3 gap-6 text-center">
+                  <div className="flex flex-col items-center gap-1 opacity-40">
+                    <span className="w-8 h-8 rounded-2xl bg-zinc-800 flex items-center justify-center text-[10px] font-bold">M</span>
+                    <span className="text-[8px]">Messages</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="w-8 h-8 rounded-2xl bg-white p-1.5 border border-zinc-800 shadow-lg transform scale-110">
+                      <img src="/logo.png" alt="Day Zero OS" className="w-full h-full object-contain" />
+                    </div>
+                    <span className="text-[8px] font-semibold text-zinc-200">Day Zero OS</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 opacity-40">
+                    <span className="w-8 h-8 rounded-2xl bg-zinc-800 flex items-center justify-center text-[10px] font-bold">S</span>
+                    <span className="text-[8px]">Safari</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </DownloadCard>
+        </div>
       </main>
 
       <footer className="max-w-7xl mx-auto w-full text-center mt-12 pt-6 border-t border-zinc-900">

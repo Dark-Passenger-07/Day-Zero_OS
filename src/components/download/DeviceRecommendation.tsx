@@ -97,9 +97,9 @@ export function DeviceRecommendation({ onPlatformDetected }: DeviceRecommendatio
 
   return (
     <div className="w-full space-y-12 animate-fade-in">
-      <div className="text-center">
-        <span className="text-[10px] tracking-widest font-bold text-zinc-500 uppercase">
-          Recommended for you
+      <div className="text-center flex justify-center">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded-full">
+          Recommended for your device
         </span>
       </div>
 

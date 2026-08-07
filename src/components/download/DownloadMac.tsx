@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Compass, Share, PlusSquare } from 'lucide-react';
 import { DownloadCard } from './DownloadCard';
 import { InstallButton } from './InstallButton';
-import { WEB_APP_URL } from '@/config/downloads';
+import { WEB_APP_URL, MAC_INSTALL_STEPS } from '@/config/downloads';
 
 export default function DownloadMac() {
   useEffect(() => {
@@ -49,55 +49,97 @@ export default function DownloadMac() {
                 Safari Installation Steps
               </h3>
               
-              <div className="space-y-4">
-                <div className="flex gap-4">
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-zinc-400 shrink-0 mt-0.5">
-                    1
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
-                      <Compass className="w-4 h-4 text-blue-400" />
-                      Open Safari
-                    </h4>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                      Launch Safari on your Mac and open the <a href={WEB_APP_URL} className="text-zinc-300 underline font-medium" target="_blank" rel="noopener noreferrer">Day Zero OS</a> web page.
-                    </p>
-                  </div>
-                </div>
+              <div className="space-y-6">
+                {MAC_INSTALL_STEPS.map((step) => {
+                  return (
+                    <div key={step.step} className="flex gap-4">
+                      <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-zinc-400 shrink-0 mt-0.5">
+                        {step.step}
+                      </div>
+                      <div className="flex-grow">
+                        <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
+                          {step.step === '1' && <Compass className="w-4 h-4 text-blue-400" />}
+                          {step.step === '2' && <Share className="w-4 h-4 text-zinc-400" />}
+                          {step.step === '3' && <PlusSquare className="w-4 h-4 text-emerald-400" />}
+                          {step.title}
+                        </h4>
+                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                          {step.desc}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </DownloadCard>
 
-                <div className="flex gap-4">
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-zinc-400 shrink-0 mt-0.5">
-                    2
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
-                      <Share className="w-4 h-4 text-zinc-400" />
-                      Click File / Share Icon
-                    </h4>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                      Locate the **Share** button in the Safari toolbar (or select **File** in the menu bar at the top of your screen).
-                    </p>
-                  </div>
-                </div>
+        {/* Visual Screenshot Mockup Placeholders */}
+        <div className="w-full max-w-xl space-y-6">
+          <div className="text-center">
+            <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4">
+              Installation Mockups
+            </h3>
+          </div>
 
-                <div className="flex gap-4">
-                  <div className="w-7 h-7 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-xs font-mono font-bold text-zinc-400 shrink-0 mt-0.5">
-                    3
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Mockup 1: Safari Share Menu */}
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-left">
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
+                <span className="text-[10px] uppercase font-bold text-zinc-500 font-mono">1. Safari Share Menu</span>
+                <span className="w-2 h-2 rounded-full bg-blue-500" />
+              </div>
+              <div className="aspect-[4/3] rounded-lg bg-zinc-900/60 border border-zinc-800 flex flex-col p-3 text-[10px] text-zinc-400 justify-between select-none">
+                {/* Browser Toolbar simulation */}
+                <div className="flex justify-between items-center bg-zinc-950 p-1.5 rounded border border-zinc-800">
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-zinc-200 flex items-center gap-1.5">
-                      <PlusSquare className="w-4 h-4 text-emerald-400" />
-                      Add to Dock
-                    </h4>
-                    <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                      Select **Add to Dock...** from the list, name the application, and confirm to install it as a standalone app.
-                    </p>
+                  <span className="font-mono text-[8px] text-zinc-600 truncate max-w-[80px]">day-zero-os.app</span>
+                  <Share className="w-3 h-3 text-zinc-400 animate-pulse" />
+                </div>
+                {/* Dropdown Menu simulation */}
+                <div className="self-end w-[110px] bg-zinc-950 border border-zinc-800 rounded p-1.5 space-y-1.5 shadow-lg shadow-black/80">
+                  <div className="p-1 rounded bg-zinc-900/40 border border-zinc-800 flex justify-between items-center text-zinc-300">
+                    <span>Add to Dock...</span>
+                    <PlusSquare className="w-2.5 h-2.5 text-emerald-400" />
+                  </div>
+                  <div className="p-1 opacity-45">Add Bookmark...</div>
+                  <div className="p-1 opacity-45">Add to Reading List</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mockup 2: macOS Dock app launch */}
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 text-left">
+              <div className="flex items-center justify-between border-b border-zinc-900 pb-2 mb-3">
+                <span className="text-[10px] uppercase font-bold text-zinc-500 font-mono">2. macOS Dock Shortcut</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              </div>
+              <div className="aspect-[4/3] rounded-lg bg-zinc-900/60 border border-zinc-800 flex items-center justify-center p-4 select-none">
+                {/* Dock simulation */}
+                <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-zinc-950/80 border border-zinc-850 shadow-2xl">
+                  {/* System Apps */}
+                  <span className="w-7 h-7 rounded-lg bg-blue-500/20 border border-blue-500/10 flex items-center justify-center text-[10px] text-blue-400 font-bold">SF</span>
+                  <span className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 flex items-center justify-center text-[10px] text-zinc-500 font-bold">FS</span>
+                  {/* Divider */}
+                  <span className="w-[1px] h-6 bg-zinc-800" />
+                  {/* Day Zero OS Icon in Dock */}
+                  <div className="relative group flex flex-col items-center">
+                    <div className="w-7 h-7 rounded-lg bg-white p-1 border border-zinc-800 shadow-md transform hover:scale-110 transition-transform">
+                      <img src="/logo.png" alt="Day Zero OS" className="w-full h-full object-contain" />
+                    </div>
+                    {/* Active dot */}
+                    <span className="w-1 h-1 rounded-full bg-white mt-1" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </DownloadCard>
+        </div>
       </main>
 
       <footer className="max-w-7xl mx-auto w-full text-center mt-12 pt-6 border-t border-zinc-900">
