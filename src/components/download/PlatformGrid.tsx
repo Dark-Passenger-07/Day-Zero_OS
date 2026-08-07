@@ -83,7 +83,7 @@ export function PlatformGrid({ excludePlatform }: PlatformGridProps) {
   return (
     <div className="w-full">
       <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-6 text-center">
-        Supported Platforms
+        Other Platforms
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
         {filteredOptions.map((opt) => {
