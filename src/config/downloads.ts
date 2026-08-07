@@ -1,5 +1,5 @@
 export const WINDOWS_STORE_URL = 'https://apps.microsoft.com/store/detail/day-zero-os/9n0w8j3j3j3j';
-export const ANDROID_APK_URL = '/downloads/dayzeroos-release.apk';
+export const ANDROID_APK_URL = 'https://github.com/Dark-Passenger-07/Day-Zero_OS/releases/download/v1.0.1/app-release.apk';
 export const WEB_APP_URL = 'https://day-zero-os.vercel.app';
 export const CURRENT_VERSION = '1.0.1';
 export const BUILD_NUMBER = '10001';

@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowRight, Mail, CheckCircle, Shield, FileText, HelpCircle, Info, Loader2 } from 'lucide-react'
+import { ArrowRight, Mail, CheckCircle, Shield, FileText, HelpCircle, Info, Loader2, Download } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { env } from '@/lib/config/env'
 import { isDemoModeEnabled } from '@/lib/supabase/mockClient'
 import logoImg from '@/logo.png'
 import { getUrlParam } from '@/lib/platform/url'
 import { getAuthRedirectUrl } from '@/lib/platform/auth'
+import { CURRENT_VERSION, BUILD_NUMBER } from '@/config/downloads'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -168,6 +169,31 @@ export default function Login() {
         overflow: 'hidden',
       }}
     >
+      {/* Absolute Download Button */}
+      <div style={{ position: 'absolute', top: '24px', right: '24px', zIndex: 20 }}>
+        <button
+          onClick={() => navigate('/download')}
+          style={{
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            color: 'var(--foreground)',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            transition: 'background 0.2s',
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.background = 'var(--secondary)')}
+          onMouseOut={(e) => (e.currentTarget.style.background = 'var(--card)')}
+        >
+          <Download size={13} />
+          Download App
+        </button>
+      </div>
       {/* Subtle grid background */}
       <div
         style={{
@@ -671,8 +697,8 @@ export default function Login() {
 
         {/* Footer Links */}
         <div className="mt-8 text-center text-xs text-muted-foreground space-y-2">
-          <div>© 2026 Day Zero OS • v1.0.0 (Build 1)</div>
-          <div className="flex items-center justify-center gap-3">
+          <div>© 2026 Day Zero OS • v{CURRENT_VERSION} (Build {BUILD_NUMBER})</div>
+          <div className="flex items-center justify-center gap-3 flex-wrap">
             <button onClick={() => navigate('/privacy')} className="hover:text-foreground transition-colors flex items-center gap-1">
               <Shield size={11} /> Privacy
             </button>
@@ -687,6 +713,10 @@ export default function Login() {
             <span>•</span>
             <button onClick={() => navigate('/support')} className="hover:text-foreground transition-colors flex items-center gap-1">
               <HelpCircle size={11} /> Support
+            </button>
+            <span>•</span>
+            <button onClick={() => navigate('/download')} className="hover:text-foreground transition-colors flex items-center gap-1">
+              <Download size={11} /> Download
             </button>
           </div>
         </div>
